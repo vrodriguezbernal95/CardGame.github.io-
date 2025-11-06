@@ -1,7 +1,7 @@
 // Configuración de la API (se detecta automáticamente desarrollo vs producción)
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'  // Desarrollo local
-    : 'https://cardgame-api.onrender.com/api';  // Producción (actualizar después del despliegue)
+    : 'https://cardgame-api-kqm4.onrender.com/api';  // Producción
 
 // Clase para manejar las peticiones a la API
 class API {
