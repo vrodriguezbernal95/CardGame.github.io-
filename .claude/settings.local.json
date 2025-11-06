@@ -1,11 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install)",
-      "Bash(where:*)",
-      "Bash(node -e:*)",
-      "Bash(\"/c/Program Files/MySQL/MySQL Server 8.0/bin/mysql\" -u root -pacenoa0205 CardGame -e \"DELETE FROM usuarios; ALTER TABLE usuarios AUTO_INCREMENT = 1;\")",
-      "Bash(git add:*)"
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

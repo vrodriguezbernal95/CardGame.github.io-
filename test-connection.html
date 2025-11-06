@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Conexión - Card Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #667eea; }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🧪 Test de Conexión - Card Game API</h1>
+        <p>Esta página te ayudará a verificar que el backend está funcionando correctamente.</p>
+
+        <button onclick="testConnection()">🔌 Probar Conexión</button>
+        <button onclick="testPartidas()">📋 Obtener Partidas</button>
+        <button onclick="testMazos()">🎴 Obtener Mazos</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function showResult(title, success, message, data = null) {
+            const results = document.getElementById('results');
+            const statusClass = success ? 'success' : 'error';
+
+            let html = `
+                <div class="status ${statusClass}">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+                </div>
+            `;
+
+            results.innerHTML = html;
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(
+                        '✅ Conexión Exitosa',
+                        true,
+                        'El backend está funcionando correctamente',
+                        data
+                    );
+                } else {
+                    showResult(
+                        '❌ Error',
+                        false,
+                        'El backend respondió pero con un error',
+                        data
+                    );
+                }
+            } catch (error) {
+                showResult(
+                    '❌ Error de Conexión',
+                    false,
+                    `No se pudo conectar al backend: ${error.message}.
+
+                    Asegúrate de que:
+                    1. El backend está corriendo (ejecuta: cd backend && npm start)
+                    2. El servidor está en http://localhost:3000
+                    3. No hay firewalls bloqueando la conexión`
+                );
+            }
+        }
+
+        async function testPartidas() {
+            try {
+                const response = await fetch(`${API_URL}/partidas`);
+                const data = await response.json();
+
+                if (data.success && data.partidas) {
+                    showResult(
+                        `✅ ${data.partidas.length} Partidas Encontradas`,
+                        true,
+                        'Las partidas se están obteniendo correctamente',
+                        { total: data.partidas.length, primeras_3: data.partidas.slice(0, 3) }
+                    );
+                } else {
+                    showResult(
+                        '⚠️ Sin Partidas',
+                        true,
+                        'El API funciona pero no hay partidas registradas'
+                    );
+                }
+            } catch (error) {
+                showResult(
+                    '❌ Error',
+                    false,
+                    `Error al obtener partidas: ${error.message}`
+                );
+            }
+        }
+
+        async function testMazos() {
+            try {
+                const response = await fetch(`${API_URL}/mazos`);
+                const data = await response.json();
+
+                if (data.success && data.mazos) {
+                    showResult(
+                        `✅ ${data.mazos.length} Mazos Encontrados`,
+                        true,
+                        'Los mazos se están obteniendo correctamente',
+                        { total: data.mazos.length, mazos: data.mazos.map(m => m.nombre) }
+                    );
+                } else {
+                    showResult(
+                        '⚠️ Sin Mazos',
+                        true,
+                        'El API funciona pero no hay mazos registrados'
+                    );
+                }
+            } catch (error) {
+                showResult(
+                    '❌ Error',
+                    false,
+                    `Error al obtener mazos: ${error.message}`
+                );
+            }
+        }
+
+        // Test automático al cargar
+        window.addEventListener('load', testConnection);
+    </script>
+</body>
+</html>
