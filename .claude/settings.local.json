@@ -10,7 +10,8 @@
       "Bash(\"/c/Program Files/MySQL/MySQL Server 8.0/bin/mysql\" -u root -pacenoa0205 --default-character-set=utf8mb4 CardGame -e \"SET NAMES utf8mb4; DELETE FROM partidas; DELETE FROM cartas; DELETE FROM mazos; DELETE FROM usuarios; ALTER TABLE partidas AUTO_INCREMENT = 1; ALTER TABLE cartas AUTO_INCREMENT = 1; ALTER TABLE mazos AUTO_INCREMENT = 1; ALTER TABLE usuarios AUTO_INCREMENT = 1;\")",
       "Bash(\"/c/Program Files/MySQL/MySQL Server 8.0/bin/mysql\" -u root -pacenoa0205 --default-character-set=utf8mb4 CardGame -e \"SELECT id, nombre FROM usuarios WHERE id = 1;\")",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
