@@ -1,0 +1,34 @@
+# Dependencias de Node.js
+node_modules/
+package-lock.json
+
+# Variables de entorno
+.env
+backend/config/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+dist/
+build/
+
+# Archivos temporales de Excel
+*.xlsx
+*.XLSX
+*.xls
+*.XLS

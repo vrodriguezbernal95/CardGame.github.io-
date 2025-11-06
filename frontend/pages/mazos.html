@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mazos - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .mazo-card {
+            border: 3px solid var(--primary-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .mazo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .mazo-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .mazo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .mazo-serie {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .mazo-body {
+            padding: 1.5rem;
+            background: white;
+        }
+
+        .carta-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--primary-color);
+            transition: background 0.2s;
+        }
+
+        .carta-item:hover {
+            background: #f3f4f6;
+        }
+
+        .carta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .carta-nombre {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .carta-poder {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .carta-tipo {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .carta-descripcion {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .no-cartas {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .series-nav {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .series-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .series-btn:hover, .series-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li id="admin-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">🎴 Spoiler de Mazos</h1>
+                <p class="card-subtitle">Explora todos los mazos y sus cartas</p>
+            </div>
+
+            <div class="series-nav" id="series-nav">
+                <button class="series-btn active" onclick="filtrarSerie('todas')">Todas</button>
+            </div>
+
+            <div id="mazos-container" class="grid grid-2">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando mazos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        let todosLosMazos = [];
+
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        async function cargarMazos() {
+            const container = document.getElementById('mazos-container');
+            const seriesNav = document.getElementById('series-nav');
+
+            try {
+                // Obtener todos los mazos con sus cartas
+                const mazosPromises = [];
+                const resultMazos = await API.getMazos();
+
+                if (!resultMazos.success || resultMazos.mazos.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay mazos disponibles.
+                        </p>
+                    `;
+                    return;
+                }
+
+                // Obtener detalles de cada mazo con sus cartas
+                for (const mazo of resultMazos.mazos) {
+                    mazosPromises.push(API.getMazo(mazo.id));
+                }
+
+                const resultados = await Promise.all(mazosPromises);
+                todosLosMazos = resultados.map(r => r.mazo);
+
+                // Obtener series únicas
+                const seriesUnicas = [...new Set(todosLosMazos.map(m => m.serie))];
+
+                // Agregar botones de series
+                seriesUnicas.forEach(serie => {
+                    const btn = document.createElement('button');
+                    btn.className = 'series-btn';
+                    btn.textContent = serie;
+                    btn.onclick = () => filtrarSerie(serie);
+                    seriesNav.appendChild(btn);
+                });
+
+                mostrarMazos(todosLosMazos);
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar mazos: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function mostrarMazos(mazos) {
+            const container = document.getElementById('mazos-container');
+
+            if (mazos.length === 0) {
+                container.innerHTML = `
+                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        No hay mazos en esta categoría.
+                    </p>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            mazos.forEach(mazo => {
+                html += `
+                    <div class="mazo-card">
+                        <div class="mazo-header">
+                            <div class="mazo-title">${mazo.nombre}</div>
+                            <div class="mazo-serie">${mazo.serie}</div>
+                        </div>
+                        <div class="mazo-body">
+                            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                                ${mazo.descripcion}
+                            </p>
+                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                Cartas (${mazo.cartas.length})
+                            </h4>
+                `;
+
+                if (mazo.cartas.length === 0) {
+                    html += '<div class="no-cartas">No hay cartas en este mazo</div>';
+                } else {
+                    mazo.cartas.forEach(carta => {
+                        html += `
+                            <div class="carta-item">
+                                <div class="carta-header">
+                                    <div class="carta-nombre">${carta.nombre}</div>
+                                    ${carta.poder ? `<div class="carta-poder">⚡ ${carta.poder}</div>` : ''}
+                                </div>
+                                ${carta.tipo ? `<div class="carta-tipo">${carta.tipo}</div>` : ''}
+                                ${carta.descripcion ? `<div class="carta-descripcion">${carta.descripcion}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filtrarSerie(serie) {
+            // Actualizar botones activos
+            document.querySelectorAll('.series-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filtrar mazos
+            if (serie === 'todas') {
+                mostrarMazos(todosLosMazos);
+            } else {
+                const mazosFiltrados = todosLosMazos.filter(m => m.serie === serie);
+                mostrarMazos(mazosFiltrados);
+            }
+        }
+
+        // Cargar mazos al iniciar
+        document.addEventListener('DOMContentLoaded', cargarMazos);
+    </script>
+</body>
+</html>

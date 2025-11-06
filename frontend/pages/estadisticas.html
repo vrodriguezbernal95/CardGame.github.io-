@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li id="admin-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Estadísticas de Jugadores -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">👥 Estadísticas de Jugadores</h2>
+                <p class="card-subtitle">Winrate y récord de todos los jugadores</p>
+            </div>
+
+            <div id="estadisticas-jugadores">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando estadísticas...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Mazos -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h2 class="card-title">🎴 Estadísticas de Mazos</h2>
+                <p class="card-subtitle">Winrate y récord de todos los mazos</p>
+            </div>
+
+            <div id="estadisticas-mazos">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando estadísticas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        async function cargarEstadisticasJugadores() {
+            const container = document.getElementById('estadisticas-jugadores');
+
+            try {
+                const result = await API.getEstadisticasJugadores();
+
+                if (!result.success || result.estadisticas.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay estadísticas disponibles.
+                        </p>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Posición</th>
+                                <th>Jugador</th>
+                                <th style="text-align: center;">Total Partidas</th>
+                                <th style="text-align: center;">Victorias</th>
+                                <th style="text-align: center;">Derrotas</th>
+                                <th style="text-align: center;">Empates</th>
+                                <th style="text-align: center;">Winrate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                result.estadisticas.forEach((stat, index) => {
+                    const posicion = index + 1;
+                    let medal = '';
+
+                    if (posicion === 1) medal = '🥇';
+                    else if (posicion === 2) medal = '🥈';
+                    else if (posicion === 3) medal = '🥉';
+
+                    const winrate = stat.winrate || 0;
+                    let winrateColor = 'var(--text-secondary)';
+                    if (winrate >= 70) winrateColor = 'var(--success)';
+                    else if (winrate >= 50) winrateColor = 'var(--warning)';
+                    else if (winrate > 0) winrateColor = 'var(--error)';
+
+                    html += `
+                        <tr>
+                            <td style="font-size: 1.5rem;">${medal} ${posicion}</td>
+                            <td><strong>${stat.nombre}</strong></td>
+                            <td style="text-align: center;">${stat.total_partidas}</td>
+                            <td style="text-align: center;"><span class="badge badge-success">${stat.victorias}</span></td>
+                            <td style="text-align: center;"><span class="badge badge-error">${stat.derrotas}</span></td>
+                            <td style="text-align: center;"><span class="badge badge-warning">${stat.empates}</span></td>
+                            <td style="text-align: center;">
+                                <strong style="color: ${winrateColor}; font-size: 1.1rem;">
+                                    ${winrate}%
+                                </strong>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar estadísticas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function cargarEstadisticasMazos() {
+            const container = document.getElementById('estadisticas-mazos');
+
+            try {
+                const result = await API.getEstadisticasMazos();
+
+                if (!result.success || result.estadisticas.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay estadísticas disponibles.
+                        </p>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Posición</th>
+                                <th>Mazo</th>
+                                <th>Serie</th>
+                                <th style="text-align: center;">Total Partidas</th>
+                                <th style="text-align: center;">Victorias</th>
+                                <th style="text-align: center;">Derrotas</th>
+                                <th style="text-align: center;">Empates</th>
+                                <th style="text-align: center;">Winrate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                result.estadisticas.forEach((stat, index) => {
+                    const posicion = index + 1;
+                    let medal = '';
+
+                    if (posicion === 1) medal = '🥇';
+                    else if (posicion === 2) medal = '🥈';
+                    else if (posicion === 3) medal = '🥉';
+
+                    const winrate = stat.winrate || 0;
+                    let winrateColor = 'var(--text-secondary)';
+                    if (winrate >= 70) winrateColor = 'var(--success)';
+                    else if (winrate >= 50) winrateColor = 'var(--warning)';
+                    else if (winrate > 0) winrateColor = 'var(--error)';
+
+                    html += `
+                        <tr>
+                            <td style="font-size: 1.5rem;">${medal} ${posicion}</td>
+                            <td><strong>${stat.nombre}</strong></td>
+                            <td><span class="badge badge-info">${stat.serie}</span></td>
+                            <td style="text-align: center;">${stat.total_partidas}</td>
+                            <td style="text-align: center;"><span class="badge badge-success">${stat.victorias}</span></td>
+                            <td style="text-align: center;"><span class="badge badge-error">${stat.derrotas}</span></td>
+                            <td style="text-align: center;"><span class="badge badge-warning">${stat.empates}</span></td>
+                            <td style="text-align: center;">
+                                <strong style="color: ${winrateColor}; font-size: 1.1rem;">
+                                    ${winrate}%
+                                </strong>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar estadísticas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEstadisticasJugadores();
+            cargarEstadisticasMazos();
+        });
+    </script>
+</body>
+</html>

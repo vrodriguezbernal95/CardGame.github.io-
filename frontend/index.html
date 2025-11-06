@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Anime - Home</title>
+    <link rel="stylesheet" href="css/global.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="pages/historial.html">Historial</a></li>
+                <li><a href="pages/estadisticas.html">Estadísticas</a></li>
+                <li><a href="pages/mazos.html">Mazos</a></li>
+                <li><a href="pages/contador.html">Contador</a></li>
+                <li id="admin-link" style="display:none;"><a href="pages/admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="container">
+        <div class="card text-center">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem;">🎴 Bienvenido al Card Game Anime</h1>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto;">
+                La plataforma definitiva para gestionar tus partidas de cartas basadas en tus series de anime favoritas.
+            </p>
+        </div>
+
+        <!-- Historia del Juego -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📖 Historia del Juego</h2>
+            </div>
+            <div style="line-height: 1.8; color: var(--text-secondary);">
+                <p style="margin-bottom: 1rem;">
+                    <strong>Card Game Anime</strong> nació de la pasión por las series de anime y los juegos de cartas coleccionables.
+                    Lo que comenzó como una idea simple entre amigos se ha convertido en un juego completo y estratégico
+                    que combina personajes, habilidades y objetos de las series más icónicas del anime.
+                </p>
+                <p style="margin-bottom: 1rem;">
+                    Desde los poderosos piratas de <strong>One Piece</strong> hasta los legendarios guerreros de
+                    <strong>Dragon Ball</strong>, pasando por los ninjas de <strong>Naruto</strong> y los cazadores de
+                    <strong>Hunter x Hunter</strong>, cada mazo está cuidadosamente diseñado para reflejar la esencia
+                    y el poder de sus personajes favoritos.
+                </p>
+                <p style="margin-bottom: 1rem;">
+                    Cada partida es una batalla épica donde la estrategia, el conocimiento de tu mazo y un poco de suerte
+                    determinan al ganador. Ya sea que prefieras el estilo agresivo del Equipo Rocket, la defensa táctica
+                    de Akatsuki, o el poder abrumador de los Guerreros Z, hay un mazo perfecto esperándote.
+                </p>
+                <p>
+                    <em>Esta plataforma web te permite registrar tus partidas, seguir tus estadísticas, conocer el winrate
+                    de cada mazo y competir con tus amigos para convertirte en el mejor jugador.</em>
+                </p>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="grid grid-3 mt-4">
+            <div class="card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Estadísticas</h3>
+                <p style="color: var(--text-secondary);">
+                    Sigue tu progreso y el de tus amigos con estadísticas detalladas de victorias, derrotas y winrate.
+                </p>
+            </div>
+
+            <div class="card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎴</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Mazos</h3>
+                <p style="color: var(--text-secondary);">
+                    Explora todos los mazos disponibles con sus cartas, poderes y estrategias únicas.
+                </p>
+            </div>
+
+            <div class="card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚔️</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Partidas</h3>
+                <p style="color: var(--text-secondary);">
+                    Registra tus partidas y revisa el historial completo de batallas épicas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sección de Registro -->
+        <div class="card" id="register-section">
+            <div class="card-header">
+                <h2 class="card-title">🎮 Únete a la Batalla</h2>
+                <p class="card-subtitle">Crea tu cuenta para empezar a jugar y registrar tus partidas</p>
+            </div>
+
+            <form id="register-form" style="max-width: 500px; margin: 0 auto;">
+                <div class="form-group">
+                    <label class="form-label" for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" class="form-control" required minlength="3">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <input type="password" id="password" class="form-control" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password-confirm">Confirmar Contraseña</label>
+                    <input type="password" id="password-confirm" class="form-control" required minlength="6">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Crear Cuenta</button>
+
+                <p class="text-center mt-3" style="color: var(--text-secondary);">
+                    ¿Ya tienes cuenta? <a href="pages/login.html" style="color: var(--primary-color); font-weight: 600;">Inicia Sesión</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Mostrar/ocultar link de admin y sección de registro
+        document.addEventListener('DOMContentLoaded', () => {
+            if (API.isAdmin()) {
+                document.getElementById('admin-link').style.display = 'block';
+            }
+
+            // Ocultar registro si ya está logueado
+            if (API.isAuthenticated()) {
+                document.getElementById('register-section').style.display = 'none';
+            }
+
+            // Manejar registro
+            document.getElementById('register-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const nombre = document.getElementById('nombre').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const passwordConfirm = document.getElementById('password-confirm').value;
+
+                if (password !== passwordConfirm) {
+                    UI.showAlert('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+
+                try {
+                    const result = await API.register(nombre, email, password);
+
+                    if (result.success) {
+                        UI.showAlert('¡Cuenta creada exitosamente! Redirigiendo al login...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'pages/login.html';
+                        }, 2000);
+                    }
+                } catch (error) {
+                    UI.showAlert(error.message || 'Error al crear la cuenta', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

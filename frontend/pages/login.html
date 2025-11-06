@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">🎴</div>
+            <h1 class="login-title">Card Game Anime</h1>
+            <p class="login-subtitle">Inicia sesión para continuar</p>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Iniciar Sesión</button>
+
+                <p class="text-center mt-3" style="color: var(--text-secondary);">
+                    ¿No tienes cuenta? <a href="../index.html" style="color: var(--primary-color); font-weight: 600;">Regístrate</a>
+                </p>
+            </form>
+
+            <div id="message-container"></div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Redirigir si ya está logueado
+        if (API.isAuthenticated()) {
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const messageContainer = document.getElementById('message-container');
+
+            try {
+                const result = await API.login(email, password);
+
+                if (result.success) {
+                    messageContainer.innerHTML = '<div class="alert alert-success mt-3">¡Login exitoso! Redirigiendo...</div>';
+
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                messageContainer.innerHTML = `<div class="alert alert-error mt-3">${error.message || 'Error al iniciar sesión'}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

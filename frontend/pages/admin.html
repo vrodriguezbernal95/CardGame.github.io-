@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Formulario para crear partida -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🎮 Registrar Nueva Partida</h2>
+                <p class="card-subtitle">Solo administradores pueden registrar partidas</p>
+            </div>
+
+            <form id="partida-form" style="max-width: 800px; margin: 0 auto;">
+                <div class="grid grid-2">
+                    <!-- Jugador 1 -->
+                    <div class="form-group">
+                        <label class="form-label" for="jugador1">Jugador 1</label>
+                        <select id="jugador1" class="form-select" required>
+                            <option value="">Seleccionar jugador...</option>
+                        </select>
+                    </div>
+
+                    <!-- Jugador 2 -->
+                    <div class="form-group">
+                        <label class="form-label" for="jugador2">Jugador 2</label>
+                        <select id="jugador2" class="form-select" required>
+                            <option value="">Seleccionar jugador...</option>
+                        </select>
+                    </div>
+
+                    <!-- Mazo 1 -->
+                    <div class="form-group">
+                        <label class="form-label" for="mazo1">Mazo Jugador 1</label>
+                        <select id="mazo1" class="form-select" required>
+                            <option value="">Seleccionar mazo...</option>
+                        </select>
+                    </div>
+
+                    <!-- Mazo 2 -->
+                    <div class="form-group">
+                        <label class="form-label" for="mazo2">Mazo Jugador 2</label>
+                        <select id="mazo2" class="form-select" required>
+                            <option value="">Seleccionar mazo...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Resultado -->
+                <div class="form-group">
+                    <label class="form-label" for="resultado">Resultado</label>
+                    <select id="resultado" class="form-select" required>
+                        <option value="">Seleccionar resultado...</option>
+                        <option value="victoria_jugador1">Victoria Jugador 1</option>
+                        <option value="victoria_jugador2">Victoria Jugador 2</option>
+                        <option value="empate">Empate</option>
+                    </select>
+                </div>
+
+                <!-- Notas -->
+                <div class="form-group">
+                    <label class="form-label" for="notas">Notas (Opcional)</label>
+                    <textarea id="notas" class="form-control" rows="3" placeholder="Comentarios sobre la partida..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Registrar Partida
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de partidas recientes con opción de eliminar -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h2 class="card-title">📋 Gestionar Partidas</h2>
+                <p class="card-subtitle">Últimas 10 partidas registradas</p>
+            </div>
+
+            <div id="partidas-admin-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando partidas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Verificar que el usuario es admin
+        if (!checkAuth(true)) {
+            // La función checkAuth ya redirige si no es admin
+        }
+
+        let usuarios = [];
+        let mazos = [];
+
+        async function cargarDatos() {
+            try {
+                // Cargar usuarios
+                const resultUsuarios = await API.getUsuarios();
+                if (resultUsuarios.success) {
+                    usuarios = resultUsuarios.usuarios;
+                    const select1 = document.getElementById('jugador1');
+                    const select2 = document.getElementById('jugador2');
+
+                    usuarios.forEach(usuario => {
+                        const option1 = document.createElement('option');
+                        option1.value = usuario.id;
+                        option1.textContent = usuario.nombre;
+                        select1.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = usuario.id;
+                        option2.textContent = usuario.nombre;
+                        select2.appendChild(option2);
+                    });
+                }
+
+                // Cargar mazos
+                const resultMazos = await API.getMazos();
+                if (resultMazos.success) {
+                    mazos = resultMazos.mazos;
+                    const select1 = document.getElementById('mazo1');
+                    const select2 = document.getElementById('mazo2');
+
+                    mazos.forEach(mazo => {
+                        const option1 = document.createElement('option');
+                        option1.value = mazo.id;
+                        option1.textContent = `${mazo.nombre} (${mazo.serie})`;
+                        select1.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = mazo.id;
+                        option2.textContent = `${mazo.nombre} (${mazo.serie})`;
+                        select2.appendChild(option2);
+                    });
+                }
+
+                cargarPartidas();
+
+            } catch (error) {
+                UI.showAlert('Error al cargar datos: ' + error.message, 'error');
+            }
+        }
+
+        async function cargarPartidas() {
+            const container = document.getElementById('partidas-admin-container');
+
+            try {
+                const result = await API.getPartidas();
+
+                if (!result.success || result.partidas.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay partidas registradas.
+                        </p>
+                    `;
+                    return;
+                }
+
+                // Mostrar solo las últimas 10
+                const partidas = result.partidas.slice(0, 10);
+
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Jugadores</th>
+                                <th>Resultado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                partidas.forEach(partida => {
+                    const fecha = UI.formatDate(partida.fecha_partida);
+                    const badgeClass = UI.getBadgeClass(partida.resultado);
+
+                    html += `
+                        <tr>
+                            <td>#${partida.id}</td>
+                            <td>${fecha}</td>
+                            <td>
+                                <strong>${partida.jugador1_nombre}</strong> vs <strong>${partida.jugador2_nombre}</strong>
+                                <br><small style="color: var(--text-secondary);">
+                                    ${partida.mazo1_nombre} vs ${partida.mazo2_nombre}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge ${badgeClass}">${UI.formatResultado(partida.resultado)}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-danger" onclick="eliminarPartida(${partida.id})">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar partidas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function eliminarPartida(id) {
+            if (!confirm('¿Estás seguro de eliminar esta partida?')) {
+                return;
+            }
+
+            try {
+                const result = await API.deletePartida(id);
+
+                if (result.success) {
+                    UI.showAlert('Partida eliminada exitosamente', 'success');
+                    cargarPartidas();
+                }
+            } catch (error) {
+                UI.showAlert('Error al eliminar partida: ' + error.message, 'error');
+            }
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('partida-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const jugador1_id = parseInt(document.getElementById('jugador1').value);
+            const jugador2_id = parseInt(document.getElementById('jugador2').value);
+            const mazo1_id = parseInt(document.getElementById('mazo1').value);
+            const mazo2_id = parseInt(document.getElementById('mazo2').value);
+            const resultado = document.getElementById('resultado').value;
+            const notas = document.getElementById('notas').value.trim();
+
+            // Validar que los jugadores sean diferentes
+            if (jugador1_id === jugador2_id) {
+                UI.showAlert('Los jugadores deben ser diferentes', 'error');
+                return;
+            }
+
+            try {
+                const partidaData = {
+                    jugador1_id,
+                    jugador2_id,
+                    mazo1_id,
+                    mazo2_id,
+                    resultado,
+                    notas: notas || undefined
+                };
+
+                const result = await API.createPartida(partidaData);
+
+                if (result.success) {
+                    UI.showAlert('¡Partida registrada exitosamente!', 'success');
+                    document.getElementById('partida-form').reset();
+                    cargarPartidas();
+                }
+            } catch (error) {
+                UI.showAlert('Error al registrar partida: ' + error.message, 'error');
+            }
+        });
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', cargarDatos);
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Partidas - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li id="admin-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">⚔️ Historial de Partidas</h1>
+                <p class="card-subtitle">Todas las batallas épicas registradas</p>
+            </div>
+
+            <div id="partidas-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando partidas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        async function cargarPartidas() {
+            const container = document.getElementById('partidas-container');
+
+            try {
+                const result = await API.getPartidas();
+
+                if (!result.success || result.partidas.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay partidas registradas todavía.
+                        </p>
+                    `;
+                    return;
+                }
+
+                // Construir tabla
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Jugador 1</th>
+                                <th>Mazo 1</th>
+                                <th style="text-align: center;">VS</th>
+                                <th>Jugador 2</th>
+                                <th>Mazo 2</th>
+                                <th>Resultado</th>
+                                <th>Ganador</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                result.partidas.forEach(partida => {
+                    const fecha = UI.formatDate(partida.fecha_partida);
+                    const ganador = partida.ganador_nombre || 'Empate';
+                    const badgeClass = UI.getBadgeClass(partida.resultado);
+
+                    html += `
+                        <tr>
+                            <td>${fecha}</td>
+                            <td><strong>${partida.jugador1_nombre}</strong></td>
+                            <td>
+                                <span class="badge badge-info">${partida.mazo1_nombre}</span>
+                                <br><small style="color: var(--text-secondary);">${partida.mazo1_serie}</small>
+                            </td>
+                            <td style="text-align: center; font-size: 1.5rem;">⚔️</td>
+                            <td><strong>${partida.jugador2_nombre}</strong></td>
+                            <td>
+                                <span class="badge badge-info">${partida.mazo2_nombre}</span>
+                                <br><small style="color: var(--text-secondary);">${partida.mazo2_serie}</small>
+                            </td>
+                            <td>
+                                <span class="badge ${badgeClass}">${UI.formatResultado(partida.resultado)}</span>
+                            </td>
+                            <td><strong>${ganador}</strong></td>
+                        </tr>
+                    `;
+
+                    if (partida.notas) {
+                        html += `
+                            <tr>
+                                <td colspan="8" style="background: #f9fafb; font-style: italic; color: var(--text-secondary);">
+                                    📝 ${partida.notas}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar las partidas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar partidas al iniciar
+        document.addEventListener('DOMContentLoaded', cargarPartidas);
+    </script>
+</body>
+</html>

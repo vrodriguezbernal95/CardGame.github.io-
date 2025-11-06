@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Vidas - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        body {
+            overflow: hidden;
+        }
+
+        .contador-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .jugador {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .jugador-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .jugador-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .nombre-jugador {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .vidas-display {
+            color: white;
+            font-size: 10rem;
+            font-weight: 900;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
+            margin: 2rem 0;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        .vidas-display.critical {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .controles {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-vida {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-vida:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-vida:active {
+            transform: scale(0.95);
+        }
+
+        .btn-add {
+            background: #4ade80;
+            color: white;
+        }
+
+        .btn-remove {
+            background: #f87171;
+            color: white;
+        }
+
+        .controles-secundarios {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-vida-small {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-vida-small:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-reset {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: white;
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .label-control {
+            color: white;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .contador-container {
+                flex-direction: column;
+            }
+
+            .vidas-display {
+                font-size: 6rem;
+            }
+
+            .nombre-jugador {
+                font-size: 1.5rem;
+            }
+
+            .btn-vida {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .btn-vida-small {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="btn-reset" onclick="resetearContador()">🔄 Reiniciar</button>
+
+    <div class="contador-container">
+        <!-- Jugador 1 -->
+        <div class="jugador jugador-1">
+            <div class="nombre-jugador">Jugador 1</div>
+            <div class="vidas-display" id="vidas-j1">50</div>
+
+            <div class="controles">
+                <button class="btn-vida btn-remove" onclick="cambiarVidas(1, -1)">-1</button>
+                <button class="btn-vida btn-add" onclick="cambiarVidas(1, 1)">+1</button>
+            </div>
+            <div class="label-control">Individual</div>
+
+            <div class="controles-secundarios">
+                <button class="btn-vida-small" onclick="cambiarVidas(1, -5)">-5</button>
+                <button class="btn-vida-small" onclick="cambiarVidas(1, 5)">+5</button>
+            </div>
+            <div class="label-control">Bloques de 5</div>
+        </div>
+
+        <!-- Jugador 2 -->
+        <div class="jugador jugador-2">
+            <div class="nombre-jugador">Jugador 2</div>
+            <div class="vidas-display" id="vidas-j2">50</div>
+
+            <div class="controles">
+                <button class="btn-vida btn-remove" onclick="cambiarVidas(2, -1)">-1</button>
+                <button class="btn-vida btn-add" onclick="cambiarVidas(2, 1)">+1</button>
+            </div>
+            <div class="label-control">Individual</div>
+
+            <div class="controles-secundarios">
+                <button class="btn-vida-small" onclick="cambiarVidas(2, -5)">-5</button>
+                <button class="btn-vida-small" onclick="cambiarVidas(2, 5)">+5</button>
+            </div>
+            <div class="label-control">Bloques de 5</div>
+        </div>
+    </div>
+
+    <script>
+        let vidasJ1 = 50;
+        let vidasJ2 = 50;
+
+        function cambiarVidas(jugador, cantidad) {
+            if (jugador === 1) {
+                vidasJ1 += cantidad;
+                if (vidasJ1 < 0) vidasJ1 = 0;
+                actualizarDisplay(1, vidasJ1);
+            } else {
+                vidasJ2 += cantidad;
+                if (vidasJ2 < 0) vidasJ2 = 0;
+                actualizarDisplay(2, vidasJ2);
+            }
+
+            verificarGanador();
+        }
+
+        function actualizarDisplay(jugador, vidas) {
+            const display = document.getElementById(`vidas-j${jugador}`);
+            display.textContent = vidas;
+
+            // Añadir clase crítica si las vidas son bajas
+            if (vidas <= 10) {
+                display.classList.add('critical');
+            } else {
+                display.classList.remove('critical');
+            }
+
+            // Animación de cambio
+            display.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                display.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function resetearContador() {
+            if (confirm('¿Reiniciar el contador de vidas?')) {
+                vidasJ1 = 50;
+                vidasJ2 = 50;
+                actualizarDisplay(1, vidasJ1);
+                actualizarDisplay(2, vidasJ2);
+            }
+        }
+
+        function verificarGanador() {
+            if (vidasJ1 === 0 && vidasJ2 === 0) {
+                setTimeout(() => {
+                    alert('¡Empate! Ambos jugadores llegaron a 0 vidas.');
+                }, 300);
+            } else if (vidasJ1 === 0) {
+                setTimeout(() => {
+                    alert('¡Jugador 2 gana! Jugador 1 ha llegado a 0 vidas.');
+                }, 300);
+            } else if (vidasJ2 === 0) {
+                setTimeout(() => {
+                    alert('¡Jugador 1 gana! Jugador 2 ha llegado a 0 vidas.');
+                }, 300);
+            }
+        }
+
+        // Soporte para teclado
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'q': cambiarVidas(1, 1); break;
+                case 'a': cambiarVidas(1, -1); break;
+                case 'w': cambiarVidas(1, 5); break;
+                case 's': cambiarVidas(1, -5); break;
+                case 'p': cambiarVidas(2, 1); break;
+                case 'l': cambiarVidas(2, -1); break;
+                case 'o': cambiarVidas(2, 5); break;
+                case 'k': cambiarVidas(2, -5); break;
+                case 'r': resetearContador(); break;
+            }
+        });
+    </script>
+</body>
+</html>
