@@ -9,9 +9,17 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     charset: 'utf8mb4',
+    connectTimeout: 60000,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
+});
+
+// Configurar charset en cada conexión
+pool.on('connection', (connection) => {
+    connection.query('SET NAMES utf8mb4');
+    connection.query('SET CHARACTER SET utf8mb4');
+    connection.query('SET character_set_connection=utf8mb4');
 });
 
 // Promisify para usar async/await
