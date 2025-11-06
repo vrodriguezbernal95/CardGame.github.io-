@@ -5,7 +5,18 @@ require('dotenv').config({ path: './config/.env' });
 const app = express();
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+    origin: [
+        'http://localhost:5500',
+        'http://localhost:8080',
+        'http://127.0.0.1:5500',
+        'https://vrodriguezbernal95.github.io',
+        'https://cardgame-frontend.onrender.com',
+        /\.onrender\.com$/  // Permitir cualquier subdominio de Render
+    ],
+    credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
