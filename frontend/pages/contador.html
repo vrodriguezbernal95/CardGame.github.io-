@@ -172,12 +172,13 @@
 
             /* Cada jugador ocupa exactamente la mitad de la pantalla */
             .jugador {
-                height: 50vh;
-                min-height: 50vh;
-                max-height: 50vh;
-                padding: 0.5vh 2vw;
-                justify-content: space-evenly;
+                height: 50dvh;
+                height: 50vh; /* Fallback para navegadores antiguos */
+                min-height: 0;
+                padding: 1vmin;
+                justify-content: space-around;
                 overflow: hidden;
+                gap: 0.5vh;
             }
 
             /* Rotar jugador 2 (arriba) para que se vea desde el lado opuesto */
@@ -186,43 +187,50 @@
             }
 
             .vidas-display {
-                font-size: 12vh;
+                font-size: 10vmin;
                 margin: 0;
-                line-height: 1;
+                line-height: 0.9;
+                flex-shrink: 0;
             }
 
             .nombre-jugador {
-                font-size: 2.2vh;
-                margin-bottom: 0;
+                font-size: 2vmin;
+                margin: 0;
+                flex-shrink: 0;
             }
 
             .btn-vida {
-                width: 7.5vh;
-                height: 7.5vh;
-                font-size: 2.8vh;
+                width: 11vmin;
+                height: 11vmin;
+                font-size: 3.5vmin;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                flex-shrink: 0;
             }
 
             .btn-vida-small {
-                width: 5.5vh;
-                height: 5.5vh;
-                font-size: 1.8vh;
+                width: 8vmin;
+                height: 8vmin;
+                font-size: 2.5vmin;
                 box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+                flex-shrink: 0;
             }
 
             .controles {
-                gap: 1.8vh;
-                margin-bottom: 0;
+                gap: 2vmin;
+                margin: 0;
+                flex-shrink: 0;
             }
 
             .controles-secundarios {
-                gap: 1.2vh;
-                margin-top: 0;
+                gap: 1.5vmin;
+                margin: 0;
+                flex-shrink: 0;
             }
 
             .label-control {
-                font-size: 1.2vh;
-                margin-top: 0.1vh;
+                font-size: 1.6vmin;
+                margin: 0;
+                flex-shrink: 0;
             }
 
             /* Botón de reset ajustado para móvil */
@@ -230,8 +238,8 @@
                 top: 50%;
                 left: 1vw;
                 transform: translateY(-50%);
-                padding: 1vh 1.5vw;
-                font-size: 2vh;
+                padding: 1.5vmin 2vmin;
+                font-size: 2.5vmin;
                 writing-mode: vertical-rl;
                 text-orientation: mixed;
                 z-index: 1000;
