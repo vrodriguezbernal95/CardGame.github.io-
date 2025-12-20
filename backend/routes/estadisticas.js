@@ -123,7 +123,7 @@ router.get('/mazos/:id', async (req, res) => {
 router.get('/usuarios/list', async (req, res) => {
     try {
         const [usuarios] = await db.query(`
-            SELECT id, nombre, email FROM usuarios ORDER BY nombre
+            SELECT id, nombre, email, es_admin, fecha_creacion FROM usuarios ORDER BY nombre
         `);
 
         res.json({
