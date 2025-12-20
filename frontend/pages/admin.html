@@ -179,6 +179,7 @@
                 </button>
                 <button class="tab" onclick="cambiarTab('agregar')">⚔️ Añadir Partida</button>
                 <button class="tab" onclick="cambiarTab('usuarios')">👥 Usuarios</button>
+                <button class="tab" onclick="cambiarTab('mazos')">🎴 Mazos</button>
             </div>
 
             <!-- Tab: Partidas Pendientes -->
@@ -245,6 +246,60 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tab: Mazos -->
+            <div id="tab-mazos" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nuevo Mazo</h3>
+                <form id="form-mazo" style="max-width: 600px; margin-bottom: 3rem;">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Mazo</label>
+                        <input type="text" id="mazo-nombre" class="form-control" required placeholder="Ej: Piratas del Sombrero de Paja">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Serie</label>
+                        <input type="text" id="mazo-serie" class="form-control" required placeholder="Ej: One Piece">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="mazo-descripcion" class="form-control" rows="3" required placeholder="Describe la estrategia del mazo..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Mazo</button>
+                </form>
+
+                <h3 style="margin-bottom: 1.5rem;">📋 Mazos Existentes</h3>
+                <div id="mazos-lista-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando mazos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar mazo -->
+    <div id="modal-editar-mazo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:12px; max-width:500px; width:90%;">
+            <h3 style="margin-bottom:1.5rem;">✏️ Editar Mazo</h3>
+            <form id="form-editar-mazo">
+                <input type="hidden" id="edit-mazo-id">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" id="edit-mazo-nombre" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Serie</label>
+                    <input type="text" id="edit-mazo-serie" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea id="edit-mazo-descripcion" class="form-control" rows="3" required></textarea>
+                </div>
+                <div style="display:flex; gap:1rem; justify-content:flex-end;">
+                    <button type="button" onclick="cerrarModalEditar()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -265,6 +320,7 @@
 
             if (tab === 'pendientes') cargarPartidasPendientes();
             if (tab === 'usuarios') cargarUsuarios();
+            if (tab === 'mazos') cargarMazos();
         }
 
         // Cargar resumen del dashboard
@@ -513,6 +569,128 @@
 
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // ========== GESTIÓN DE MAZOS ==========
+
+        // Cargar mazos
+        async function cargarMazos() {
+            const container = document.getElementById('mazos-lista-container');
+
+            try {
+                const result = await API.getMazos();
+
+                if (!result.success || result.mazos.length === 0) {
+                    container.innerHTML = '<p class="text-center">No hay mazos creados</p>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; gap: 1rem;">';
+
+                result.mazos.forEach(m => {
+                    html += `
+                        <div style="background: white; border: 2px solid var(--primary-color); border-radius: 8px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <div style="flex: 1;">
+                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">${m.nombre}</h4>
+                                    <span class="badge badge-info">${m.serie}</span>
+                                    <p style="color: var(--text-secondary); margin-top: 0.75rem;">${m.descripcion}</p>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                                    <button onclick="abrirModalEditar(${m.id}, '${m.nombre.replace(/'/g, "\\'")}', '${m.serie.replace(/'/g, "\\'")}', '${m.descripcion.replace(/'/g, "\\'")}' )" class="btn btn-primary btn-sm">
+                                        ✏️ Editar
+                                    </button>
+                                    <button onclick="eliminarMazo(${m.id}, '${m.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">
+                                        🗑️ Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Form crear mazo
+        document.getElementById('form-mazo').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const mazoData = {
+                nombre: document.getElementById('mazo-nombre').value.trim(),
+                serie: document.getElementById('mazo-serie').value.trim(),
+                descripcion: document.getElementById('mazo-descripcion').value.trim()
+            };
+
+            try {
+                const result = await API.createMazo(mazoData);
+                if (result.success) {
+                    UI.showAlert('Mazo creado exitosamente', 'success');
+                    e.target.reset();
+                    cargarMazos();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al crear mazo: ' + error.message, 'error');
+            }
+        });
+
+        // Abrir modal editar
+        function abrirModalEditar(id, nombre, serie, descripcion) {
+            document.getElementById('edit-mazo-id').value = id;
+            document.getElementById('edit-mazo-nombre').value = nombre;
+            document.getElementById('edit-mazo-serie').value = serie;
+            document.getElementById('edit-mazo-descripcion').value = descripcion;
+            document.getElementById('modal-editar-mazo').style.display = 'flex';
+        }
+
+        // Cerrar modal editar
+        function cerrarModalEditar() {
+            document.getElementById('modal-editar-mazo').style.display = 'none';
+        }
+
+        // Form editar mazo
+        document.getElementById('form-editar-mazo').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-mazo-id').value;
+            const mazoData = {
+                nombre: document.getElementById('edit-mazo-nombre').value.trim(),
+                serie: document.getElementById('edit-mazo-serie').value.trim(),
+                descripcion: document.getElementById('edit-mazo-descripcion').value.trim()
+            };
+
+            try {
+                const result = await API.updateMazo(id, mazoData);
+                if (result.success) {
+                    UI.showAlert('Mazo actualizado exitosamente', 'success');
+                    cerrarModalEditar();
+                    cargarMazos();
+                }
+            } catch (error) {
+                UI.showAlert('Error al actualizar mazo: ' + error.message, 'error');
+            }
+        });
+
+        // Eliminar mazo
+        async function eliminarMazo(id, nombre) {
+            if (!confirm(`¿Eliminar el mazo "${nombre}"? Esta acción no se puede deshacer.\n\nNOTA: No se puede eliminar si tiene partidas asociadas.`)) return;
+
+            try {
+                const result = await API.deleteMazo(id);
+                if (result.success) {
+                    UI.showAlert('Mazo eliminado exitosamente', 'success');
+                    cargarMazos();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error: ' + error.message, 'error');
             }
         }
 

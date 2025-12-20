@@ -126,6 +126,26 @@ class API {
         return await this.request('/mazos/series/all');
     }
 
+    static async createMazo(mazoData) {
+        return await this.request('/mazos', {
+            method: 'POST',
+            body: JSON.stringify(mazoData)
+        });
+    }
+
+    static async updateMazo(id, mazoData) {
+        return await this.request(`/mazos/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(mazoData)
+        });
+    }
+
+    static async deleteMazo(id) {
+        return await this.request(`/mazos/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
     // Estadísticas
     static async getEstadisticasJugadores() {
         return await this.request('/estadisticas/jugadores');
