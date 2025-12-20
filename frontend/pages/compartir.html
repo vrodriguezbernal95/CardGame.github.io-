@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Únete al Juego de Cartas</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card-container {
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+            border-radius: 20px;
+            border: 8px solid #1e293b;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-style: italic;
+        }
+
+        .card-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-image-container {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .card-qr {
+            max-width: 240px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .card-type {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-description {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card-effect {
+            color: white;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .card-effect strong {
+            font-weight: 700;
+        }
+
+        .card-stats {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .stat-icon {
+            font-size: 1.8rem;
+        }
+
+        .share-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-share {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 12px;
+            }
+
+            .card-title {
+                font-size: 1.4rem;
+            }
+
+            .card-number {
+                font-size: 1.5rem;
+                width: 40px;
+                height: 40px;
+            }
+
+            .card-image-container {
+                min-height: 220px;
+                padding: 15px;
+            }
+
+            .card-qr {
+                max-width: 200px;
+            }
+
+            .card-type {
+                font-size: 1.2rem;
+                padding: 10px;
+            }
+
+            .card-effect {
+                font-size: 0.85rem;
+            }
+
+            .stat {
+                font-size: 1.2rem;
+            }
+
+            .share-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Card Game Anime</div>
+                <div class="card-number">1</div>
+            </div>
+
+            <div class="card-image-container">
+                <img
+                    class="card-qr"
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://vrodriguezbernal95.github.io/CardGame.github.io-/frontend/pages/login.html"
+                    alt="QR Code - Únete al juego"
+                >
+            </div>
+
+            <div class="card-type">OBJETO</div>
+
+            <div class="card-description">
+                <div class="card-effect">
+                    <strong>Al revelarse:</strong> Tienes que registrarte en el mejor juego de cartas.
+                </div>
+                <div class="card-effect">
+                    <strong>Efecto continuo:</strong> Tienes la diversión asegurada, ¿a qué esperas? ¡Regístrate ya!
+                </div>
+            </div>
+
+            <div class="card-stats">
+                <div class="stat">
+                    <span class="stat-icon">⚔️</span>
+                    <span>∞</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">⚡</span>
+                    <span>∞</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🛡️</span>
+                    <span>∞</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="share-buttons">
+            <button class="btn-share btn-download" onclick="descargarCarta()">
+                📥 Descargar
+            </button>
+            <button class="btn-share btn-whatsapp" onclick="compartirWhatsApp()">
+                💬 WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function compartirWhatsApp() {
+            const mensaje = encodeURIComponent('¡Únete al mejor juego de cartas! 🎴\n\nhttps://vrodriguezbernal95.github.io/CardGame.github.io-/frontend/pages/login.html');
+            window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+        }
+
+        function descargarCarta() {
+            // Crear un enlace temporal para descargar la página como referencia
+            const url = 'https://vrodriguezbernal95.github.io/CardGame.github.io-/frontend/pages/compartir.html';
+            const mensaje = `Para compartir esta carta, copia este link:\n\n${url}\n\nO escanea el QR code para registrarte directamente.`;
+            alert(mensaje);
+        }
+
+        // Si se comparte la URL, mostrar un mensaje de bienvenida
+        if (window.location.search.includes('compartido')) {
+            setTimeout(() => {
+                alert('¡Bienvenido! Escanea el QR code para registrarte en el mejor juego de cartas 🎴');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
