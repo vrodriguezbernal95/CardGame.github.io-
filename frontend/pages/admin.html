@@ -239,6 +239,30 @@
 
             <!-- Tab: Usuarios -->
             <div id="tab-usuarios" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nuevo Usuario</h3>
+                <form id="form-usuario" style="max-width: 600px; margin-bottom: 3rem;">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="usuario-nombre" class="form-control" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="usuario-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" id="usuario-password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="usuario-admin">
+                            <span>Es Administrador</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                </form>
+
+                <h3 style="margin-bottom: 1.5rem;">👥 Lista de Usuarios</h3>
                 <div id="usuarios-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -546,6 +570,8 @@
                     return;
                 }
 
+                const currentUserId = API.getUser().id;
+
                 let html = `
                     <table class="table">
                         <thead>
@@ -555,19 +581,27 @@
                                 <th>Email</th>
                                 <th>Admin</th>
                                 <th>Fecha Registro</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
                 result.usuarios.forEach(u => {
+                    const isCurrentUser = u.id === currentUserId;
                     html += `
                         <tr>
                             <td>${u.id}</td>
-                            <td><strong>${u.nombre}</strong></td>
+                            <td><strong>${u.nombre}</strong>${isCurrentUser ? ' <span class="badge badge-info">TÚ</span>' : ''}</td>
                             <td>${u.email}</td>
                             <td>${u.es_admin ? '<span class="badge badge-success">SÍ</span>' : '<span class="badge badge-secondary">NO</span>'}</td>
                             <td>${u.fecha_creacion ? new Date(u.fecha_creacion).toLocaleDateString() : '-'}</td>
+                            <td>
+                                ${isCurrentUser
+                                    ? '<span style="color: #999; font-size: 0.9rem;">-</span>'
+                                    : `<button onclick="eliminarUsuario(${u.id}, '${u.nombre}')" class="btn btn-error btn-sm">🗑️ Eliminar</button>`
+                                }
+                            </td>
                         </tr>
                     `;
                 });
@@ -577,6 +611,56 @@
 
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Form crear usuario
+        document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userData = {
+                nombre: document.getElementById('usuario-nombre').value.trim(),
+                email: document.getElementById('usuario-email').value.trim(),
+                password: document.getElementById('usuario-password').value,
+                es_admin: document.getElementById('usuario-admin').checked
+            };
+
+            try {
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = 'Creando...';
+
+                const result = await API.createUser(userData);
+                if (result.success) {
+                    UI.showAlert('Usuario creado exitosamente', 'success');
+                    e.target.reset();
+                    cargarUsuarios();
+                    cargarResumen();
+                }
+
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario';
+            } catch (error) {
+                UI.showAlert('Error al crear usuario: ' + error.message, 'error');
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario';
+            }
+        });
+
+        // Eliminar usuario
+        async function eliminarUsuario(id, nombre) {
+            if (!confirm(`¿Eliminar al usuario "${nombre}"?\n\nNOTA: No se puede eliminar si tiene partidas asociadas.`)) return;
+
+            try {
+                const result = await API.deleteUser(id);
+                if (result.success) {
+                    UI.showAlert('Usuario eliminado exitosamente', 'success');
+                    cargarUsuarios();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al eliminar usuario: ' + error.message, 'error');
             }
         }
 

@@ -134,4 +134,112 @@ router.post('/login', [
     }
 });
 
+// ========== GESTIÓN DE USUARIOS (SOLO ADMIN) ==========
+
+const { verifyToken, verifyAdmin } = require('../middleware/auth');
+
+// Crear usuario (solo admin)
+router.post('/create-user', verifyToken, verifyAdmin, [
+    body('nombre').trim().isLength({ min: 3 }).withMessage('El nombre debe tener al menos 3 caracteres'),
+    body('email').isEmail().withMessage('Email inválido'),
+    body('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('es_admin').optional().isBoolean()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
+
+    const { nombre, email, password, es_admin } = req.body;
+
+    try {
+        // Verificar si el email ya existe
+        const [existingUser] = await db.query(
+            'SELECT id FROM usuarios WHERE email = ?',
+            [email]
+        );
+
+        if (existingUser.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'El email ya está registrado'
+            });
+        }
+
+        // Hash de la contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insertar usuario
+        const [result] = await db.query(
+            'INSERT INTO usuarios (nombre, email, password, es_admin) VALUES (?, ?, ?, ?)',
+            [nombre, email, hashedPassword, es_admin || false]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuario creado exitosamente',
+            userId: result.insertId
+        });
+
+    } catch (error) {
+        console.error('Error creando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear usuario'
+        });
+    }
+});
+
+// Eliminar usuario (solo admin)
+router.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // No permitir eliminar el propio usuario
+        if (req.user.id == userId) {
+            return res.status(400).json({
+                success: false,
+                message: 'No puedes eliminar tu propio usuario'
+            });
+        }
+
+        // Verificar si el usuario tiene partidas asociadas
+        const [partidas] = await db.query(
+            'SELECT COUNT(*) as total FROM partidas WHERE jugador1_id = ? OR jugador2_id = ? OR usuario_registro_id = ?',
+            [userId, userId, userId]
+        );
+
+        if (partidas[0].total > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `No se puede eliminar. El usuario tiene ${partidas[0].total} partida(s) asociada(s).`
+            });
+        }
+
+        const [result] = await db.query('DELETE FROM usuarios WHERE id = ?', [userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Usuario eliminado exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error eliminando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar usuario'
+        });
+    }
+});
+
 module.exports = router;

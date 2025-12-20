@@ -222,6 +222,20 @@ class API {
         }
         return await this.request(`/mazos/buscar/${encodeURIComponent(query)}`);
     }
+
+    // Admin: Gestión de usuarios
+    static async createUser(userData) {
+        return await this.request('/auth/create-user', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+    }
+
+    static async deleteUser(id) {
+        return await this.request(`/auth/users/${id}`, {
+            method: 'DELETE'
+        });
+    }
 }
 
 // Utilidades UI
