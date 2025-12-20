@@ -168,16 +168,22 @@
         @media (max-width: 768px) {
             .contador-container {
                 flex-direction: column;
+                height: 100svh;
+                height: 100vh; /* Fallback */
             }
 
             /* Cada jugador ocupa exactamente la mitad de la pantalla */
             .jugador {
-                height: 50vh;
-                min-height: 50vh;
-                max-height: 50vh;
-                padding: 1vh 2vw;
-                justify-content: space-evenly;
+                height: 50svh;
+                height: 50vh; /* Fallback */
+                min-height: 0;
+                padding: 0.5svh 2vw;
+                justify-content: center;
+                align-items: center;
                 overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                gap: 1svh;
             }
 
             /* Rotar jugador 2 (arriba) para que se vea desde el lado opuesto */
@@ -185,36 +191,42 @@
                 transform: rotate(180deg);
             }
 
-            /* Display de vidas - 13vh */
+            /* Display de vidas - 14svh */
             .vidas-display {
-                font-size: 13vh;
+                font-size: 14svh;
+                font-size: 14vh; /* Fallback */
                 margin: 0;
                 line-height: 1;
                 flex-shrink: 0;
             }
 
-            /* Nombre jugador - 2vh */
+            /* Nombre jugador - 2.2svh */
             .nombre-jugador {
-                font-size: 2vh;
+                font-size: 2.2svh;
+                font-size: 2.2vh; /* Fallback */
                 margin: 0;
                 flex-shrink: 0;
             }
 
-            /* Botones principales -1/+1 - 6.5vh */
+            /* Botones principales -1/+1 - 7svh */
             .btn-vida {
                 width: 18vw;
-                height: 6.5vh;
-                font-size: 2.8vh;
+                height: 7svh;
+                height: 7vh; /* Fallback */
+                font-size: 3svh;
+                font-size: 3vh; /* Fallback */
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                 flex-shrink: 0;
                 border-radius: 12px;
             }
 
-            /* Botones secundarios -5/+5 - 5.5vh */
+            /* Botones secundarios -5/+5 - 6svh */
             .btn-vida-small {
                 width: 18vw;
-                height: 5.5vh;
-                font-size: 2.2vh;
+                height: 6svh;
+                height: 6vh; /* Fallback */
+                font-size: 2.4svh;
+                font-size: 2.4vh; /* Fallback */
                 box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
                 flex-shrink: 0;
                 border-radius: 12px;
@@ -232,9 +244,10 @@
                 flex-shrink: 0;
             }
 
-            /* Labels - 1.4vh cada uno */
+            /* Labels - 1.5svh cada uno */
             .label-control {
-                font-size: 1.4vh;
+                font-size: 1.5svh;
+                font-size: 1.5vh; /* Fallback */
                 margin: 0;
                 flex-shrink: 0;
                 font-weight: 600;
@@ -245,8 +258,10 @@
                 top: 50%;
                 left: 1vw;
                 transform: translateY(-50%);
-                padding: 1.5vh 2vw;
-                font-size: 2.2vh;
+                padding: 1.5svh 2vw;
+                padding: 1.5vh 2vw; /* Fallback */
+                font-size: 2.2svh;
+                font-size: 2.2vh; /* Fallback */
                 writing-mode: vertical-rl;
                 text-orientation: mixed;
                 z-index: 1000;
