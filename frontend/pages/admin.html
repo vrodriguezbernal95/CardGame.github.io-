@@ -162,12 +162,12 @@
             </div>
 
             <!-- Alerta de migración (si es necesario) -->
-            <div id="migracion-alert" style="display: none;">
+            <div id="migracion-alert">
                 <div class="alert alert-warning">
-                    <strong>⚠️ Migración Requerida</strong>
-                    <p>El sistema de aprobación necesita ejecutar una migración en la base de datos.</p>
+                    <strong>⚠️ Migración del Sistema de Aprobación</strong>
+                    <p>Si registrar combates da error 500, ejecuta esta migración una vez (crea tablas necesarias en la base de datos).</p>
                     <button onclick="ejecutarMigracion()" class="migrar-btn">
-                        Ejecutar Migración Ahora
+                        ⚙️ Ejecutar Migración Ahora
                     </button>
                 </div>
             </div>
