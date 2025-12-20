@@ -88,7 +88,9 @@ class API {
 
     static logout() {
         this.clearAuth();
-        window.location.href = 'index.html';
+        // Detectar si estamos en /pages/ o en la raíz
+        const isInPagesFolder = window.location.pathname.includes('/pages/');
+        window.location.href = isInPagesFolder ? 'login.html' : 'pages/login.html';
     }
 
     // Partidas
