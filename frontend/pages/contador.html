@@ -160,24 +160,63 @@
                 flex-direction: column;
             }
 
+            /* Cada jugador ocupa exactamente la mitad de la pantalla */
+            .jugador {
+                height: 50vh;
+                padding: 1rem;
+            }
+
+            /* Rotar jugador 2 para que se vea desde el lado opuesto */
+            .jugador-2 {
+                transform: rotate(180deg);
+            }
+
             .vidas-display {
-                font-size: 6rem;
+                font-size: 5rem;
+                margin: 1rem 0;
             }
 
             .nombre-jugador {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
             }
 
             .btn-vida {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
+                width: 55px;
+                height: 55px;
+                font-size: 1.3rem;
             }
 
             .btn-vida-small {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            .controles {
+                gap: 0.75rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .controles-secundarios {
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .label-control {
+                font-size: 0.75rem;
+                margin-top: 0.25rem;
+            }
+
+            /* Botón de reset ajustado para móvil */
+            .btn-reset {
+                top: 50%;
+                left: 10px;
+                transform: translateY(-50%);
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
             }
         }
     </style>
