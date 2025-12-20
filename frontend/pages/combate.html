@@ -115,9 +115,8 @@
                         <h3>🎮 Yo</h3>
                         <div class="form-group">
                             <label class="form-label">Mi Mazo</label>
-                            <select id="mi-mazo" class="form-control" required>
-                                <option value="">Selecciona tu mazo</option>
-                            </select>
+                            <input type="text" id="mi-mazo" class="form-control" required>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
                         </div>
                     </div>
 
@@ -128,15 +127,13 @@
                         <h3>👤 Oponente</h3>
                         <div class="form-group">
                             <label class="form-label">Jugador</label>
-                            <select id="oponente" class="form-control" required>
-                                <option value="">Selecciona oponente</option>
-                            </select>
+                            <input type="text" id="oponente" class="form-control" required>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Mazo del Oponente</label>
-                            <select id="mazo-oponente" class="form-control" required>
-                                <option value="">Selecciona mazo</option>
-                            </select>
+                            <input type="text" id="mazo-oponente" class="form-control" required>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
                         </div>
                     </div>
                 </div>
@@ -170,6 +167,7 @@
     </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/autocomplete.js"></script>
     <script>
         // Verificar autenticación
         if (!API.isAuthenticated()) {
@@ -184,49 +182,42 @@
         let ganadorSeleccionado = null;
         let partidasHoy = 0;
 
-        // Cargar datos iniciales
-        async function cargarDatos() {
-            try {
-                // Cargar mazos
-                const resultMazos = await API.getMazos();
-                if (resultMazos.success) {
-                    const selectMiMazo = document.getElementById('mi-mazo');
-                    const selectMazoOponente = document.getElementById('mazo-oponente');
+        // Autocompletados
+        let autocompleteMiMazo, autocompleteOponente, autocompleteMazoOponente;
 
-                    resultMazos.mazos.forEach(mazo => {
-                        const option1 = document.createElement('option');
-                        option1.value = mazo.id;
-                        option1.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        selectMiMazo.appendChild(option1);
+        // Inicializar autocompletados
+        function inicializarAutocompletados() {
+            // Autocompletado para "Mi Mazo"
+            autocompleteMiMazo = new Autocomplete(document.getElementById('mi-mazo'), {
+                searchFunction: API.buscarMazos,
+                displayField: 'nombre',
+                placeholder: 'Escribe el nombre del mazo...',
+                minChars: 4
+            });
 
-                        const option2 = document.createElement('option');
-                        option2.value = mazo.id;
-                        option2.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        selectMazoOponente.appendChild(option2);
-                    });
-                }
+            // Autocompletado para "Oponente"
+            const miId = API.getUser().id;
+            autocompleteOponente = new Autocomplete(document.getElementById('oponente'), {
+                searchFunction: async (query) => {
+                    const result = await API.buscarUsuarios(query);
+                    // Filtrar para excluir al usuario actual
+                    if (result.success) {
+                        result.usuarios = result.usuarios.filter(u => u.id !== miId);
+                    }
+                    return result;
+                },
+                displayField: 'nombre',
+                placeholder: 'Escribe el nombre del oponente...',
+                minChars: 4
+            });
 
-                // Cargar jugadores (oponentes)
-                const resultUsuarios = await API.getUsuarios();
-                if (resultUsuarios.success) {
-                    const selectOponente = document.getElementById('oponente');
-                    const miId = API.getUser().id;
-
-                    resultUsuarios.usuarios.forEach(usuario => {
-                        // No incluirse a sí mismo
-                        if (usuario.id !== miId) {
-                            const option = document.createElement('option');
-                            option.value = usuario.id;
-                            option.textContent = usuario.nombre;
-                            selectOponente.appendChild(option);
-                        }
-                    });
-                }
-
-            } catch (error) {
-                console.error('Error cargando datos:', error);
-                UI.showAlert('Error al cargar datos del formulario', 'error');
-            }
+            // Autocompletado para "Mazo del Oponente"
+            autocompleteMazoOponente = new Autocomplete(document.getElementById('mazo-oponente'), {
+                searchFunction: API.buscarMazos,
+                displayField: 'nombre',
+                placeholder: 'Escribe el nombre del mazo...',
+                minChars: 4
+            });
         }
 
         // Manejo de botones de ganador
@@ -253,10 +244,20 @@
                 return;
             }
 
+            // Obtener valores de los autocompletados
+            const oponenteId = autocompleteOponente.getValue();
+            const miMazoId = autocompleteMiMazo.getValue();
+            const mazoOponenteId = autocompleteMazoOponente.getValue();
+
+            if (!oponenteId || !miMazoId || !mazoOponenteId) {
+                UI.showAlert('Por favor completa todos los campos correctamente', 'error');
+                return;
+            }
+
             const partidaData = {
-                oponente_id: parseInt(document.getElementById('oponente').value),
-                mi_mazo_id: parseInt(document.getElementById('mi-mazo').value),
-                mazo_oponente_id: parseInt(document.getElementById('mazo-oponente').value),
+                oponente_id: parseInt(oponenteId),
+                mi_mazo_id: parseInt(miMazoId),
+                mazo_oponente_id: parseInt(mazoOponenteId),
                 ganador: ganadorSeleccionado,
                 notas: document.getElementById('notas').value.trim() || null
             };
@@ -280,6 +281,11 @@
                     document.querySelectorAll('.ganador-btn').forEach(b => b.classList.remove('selected'));
                     ganadorSeleccionado = null;
 
+                    // Limpiar autocompletados
+                    autocompleteMiMazo.clear();
+                    autocompleteOponente.clear();
+                    autocompleteMazoOponente.clear();
+
                     if (partidasHoy >= 10) {
                         UI.showAlert('Has alcanzado el límite de 10 partidas por día', 'warning');
                         btn.disabled = true;
@@ -302,7 +308,7 @@
         });
 
         // Inicializar
-        document.addEventListener('DOMContentLoaded', cargarDatos);
+        document.addEventListener('DOMContentLoaded', inicializarAutocompletados);
     </script>
 </body>
 </html>

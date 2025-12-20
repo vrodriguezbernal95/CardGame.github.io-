@@ -331,4 +331,38 @@ router.get('/comparar/jugadores/:jugador1_id/:jugador2_id', async (req, res) => 
     }
 });
 
+// Buscar usuarios por nombre (para autocompletado)
+router.get('/usuarios/buscar/:query', async (req, res) => {
+    try {
+        const query = req.params.query;
+
+        // Mínimo 4 caracteres para buscar
+        if (query.length < 4) {
+            return res.json({
+                success: true,
+                usuarios: []
+            });
+        }
+
+        const [usuarios] = await db.query(`
+            SELECT id, nombre, email
+            FROM usuarios
+            WHERE nombre LIKE ? OR email LIKE ?
+            ORDER BY nombre
+            LIMIT 20
+        `, [`%${query}%`, `%${query}%`]);
+
+        res.json({
+            success: true,
+            usuarios
+        });
+    } catch (error) {
+        console.error('Error buscando usuarios:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al buscar usuarios'
+        });
+    }
+});
+
 module.exports = router;

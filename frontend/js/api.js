@@ -207,6 +207,21 @@ class API {
             method: 'POST'
         });
     }
+
+    // Búsqueda (autocompletado)
+    static async buscarUsuarios(query) {
+        if (query.length < 4) {
+            return { success: true, usuarios: [] };
+        }
+        return await this.request(`/estadisticas/usuarios/buscar/${encodeURIComponent(query)}`);
+    }
+
+    static async buscarMazos(query) {
+        if (query.length < 4) {
+            return { success: true, mazos: [] };
+        }
+        return await this.request(`/mazos/buscar/${encodeURIComponent(query)}`);
+    }
 }
 
 // Utilidades UI

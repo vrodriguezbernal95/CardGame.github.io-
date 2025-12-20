@@ -233,4 +233,38 @@ router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
+// Buscar mazos por nombre (para autocompletado)
+router.get('/buscar/:query', async (req, res) => {
+    try {
+        const query = req.params.query;
+
+        // Mínimo 4 caracteres para buscar
+        if (query.length < 4) {
+            return res.json({
+                success: true,
+                mazos: []
+            });
+        }
+
+        const [mazos] = await db.query(`
+            SELECT id, nombre, serie
+            FROM mazos
+            WHERE nombre LIKE ? OR serie LIKE ?
+            ORDER BY nombre
+            LIMIT 20
+        `, [`%${query}%`, `%${query}%`]);
+
+        res.json({
+            success: true,
+            mazos
+        });
+    } catch (error) {
+        console.error('Error buscando mazos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al buscar mazos'
+        });
+    }
+});
+
 module.exports = router;
