@@ -230,11 +230,15 @@
     </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/searchable-select.js"></script>
     <script>
         // Mostrar link de admin si es admin
         if (API.isAdmin()) {
             document.getElementById('admin-link').style.display = 'block';
         }
+
+        // SearchableSelects para comparaciones
+        let selectMazo1, selectMazo2, selectJugador1, selectJugador2;
 
         // Cambiar entre tabs
         function cambiarTab(tab) {
@@ -411,41 +415,48 @@
             try {
                 // Cargar mazos para selectores
                 const resultMazos = await API.getMazos();
-                if (resultMazos.success) {
-                    const selectMazo1 = document.getElementById('select-mazo1');
-                    const selectMazo2 = document.getElementById('select-mazo2');
-
-                    resultMazos.mazos.forEach(mazo => {
-                        const option1 = document.createElement('option');
-                        option1.value = mazo.id;
-                        option1.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        selectMazo1.appendChild(option1);
-
-                        const option2 = document.createElement('option');
-                        option2.value = mazo.id;
-                        option2.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        selectMazo2.appendChild(option2);
-                    });
-                }
+                const mazosOptions = resultMazos.success ? resultMazos.mazos.map(m => ({
+                    id: m.id,
+                    text: `${m.nombre} (${m.serie})`
+                })).sort((a, b) => a.text.localeCompare(b.text)) : [];
 
                 // Cargar jugadores para selectores
                 const resultJugadores = await API.getUsuarios();
-                if (resultJugadores.success) {
-                    const selectJugador1 = document.getElementById('select-jugador1');
-                    const selectJugador2 = document.getElementById('select-jugador2');
+                const jugadoresOptions = resultJugadores.success ? resultJugadores.usuarios.map(u => ({
+                    id: u.id,
+                    text: u.nombre
+                })).sort((a, b) => a.text.localeCompare(b.text)) : [];
 
-                    resultJugadores.usuarios.forEach(usuario => {
-                        const option1 = document.createElement('option');
-                        option1.value = usuario.id;
-                        option1.textContent = usuario.nombre;
-                        selectJugador1.appendChild(option1);
+                // Inicializar SearchableSelects para mazos
+                selectMazo1 = new SearchableSelect(document.getElementById('select-mazo1'), {
+                    options: mazosOptions,
+                    placeholder: 'Selecciona Mazo 1',
+                    searchPlaceholder: 'Buscar mazo...',
+                    onChange: () => compararMazos()
+                });
 
-                        const option2 = document.createElement('option');
-                        option2.value = usuario.id;
-                        option2.textContent = usuario.nombre;
-                        selectJugador2.appendChild(option2);
-                    });
-                }
+                selectMazo2 = new SearchableSelect(document.getElementById('select-mazo2'), {
+                    options: mazosOptions,
+                    placeholder: 'Selecciona Mazo 2',
+                    searchPlaceholder: 'Buscar mazo...',
+                    onChange: () => compararMazos()
+                });
+
+                // Inicializar SearchableSelects para jugadores
+                selectJugador1 = new SearchableSelect(document.getElementById('select-jugador1'), {
+                    options: jugadoresOptions,
+                    placeholder: 'Selecciona Jugador 1',
+                    searchPlaceholder: 'Buscar jugador...',
+                    onChange: () => compararJugadores()
+                });
+
+                selectJugador2 = new SearchableSelect(document.getElementById('select-jugador2'), {
+                    options: jugadoresOptions,
+                    placeholder: 'Selecciona Jugador 2',
+                    searchPlaceholder: 'Buscar jugador...',
+                    onChange: () => compararJugadores()
+                });
+
             } catch (error) {
                 console.error('Error cargando selectores:', error);
             }
@@ -453,8 +464,8 @@
 
         // Comparar Mazos
         async function compararMazos() {
-            const mazo1_id = document.getElementById('select-mazo1').value;
-            const mazo2_id = document.getElementById('select-mazo2').value;
+            const mazo1_id = selectMazo1?.getValue();
+            const mazo2_id = selectMazo2?.getValue();
             const container = document.getElementById('resultado-mazos');
 
             if (!mazo1_id || !mazo2_id) {
@@ -602,8 +613,8 @@
 
         // Comparar Jugadores
         async function compararJugadores() {
-            const jugador1_id = document.getElementById('select-jugador1').value;
-            const jugador2_id = document.getElementById('select-jugador2').value;
+            const jugador1_id = selectJugador1?.getValue();
+            const jugador2_id = selectJugador2?.getValue();
             const container = document.getElementById('resultado-jugadores');
 
             if (!jugador1_id || !jugador2_id) {
