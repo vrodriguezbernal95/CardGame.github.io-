@@ -175,12 +175,25 @@
             .jugador {
                 height: 50%;
                 flex: 1;
-                padding: 1% 2vw;
+                padding: 1% 2vw 10% 2vw;
                 justify-content: space-evenly;
                 align-items: center;
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                position: relative;
+            }
+
+            /* Margen negro en la parte baja de cada contador */
+            .jugador::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 10%;
+                background: black;
+                z-index: -1;
             }
 
             /* Rotar jugador 2 (arriba) para que se vea desde el lado opuesto */
