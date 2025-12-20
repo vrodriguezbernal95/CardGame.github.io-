@@ -352,14 +352,22 @@
             try {
                 const result = await API.getPartidasPendientes();
 
+                // Si carga bien, ocultar el botón de migración
+                document.getElementById('migracion-alert').style.display = 'none';
+
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
                             ✅ No hay partidas pendientes de aprobación
                         </p>
                     `;
+                    // Actualizar badge
+                    document.getElementById('badge-pendientes').textContent = '0';
                     return;
                 }
+
+                // Actualizar badge con el número de pendientes
+                document.getElementById('badge-pendientes').textContent = result.partidas.length;
 
                 let html = '';
                 result.partidas.forEach(p => {
