@@ -115,8 +115,7 @@
                         <h3>🎮 Yo</h3>
                         <div class="form-group">
                             <label class="form-label">Mi Mazo</label>
-                            <input type="text" id="mi-mazo" class="form-control" required>
-                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
+                            <select id="mi-mazo" required></select>
                         </div>
                     </div>
 
@@ -127,13 +126,11 @@
                         <h3>👤 Oponente</h3>
                         <div class="form-group">
                             <label class="form-label">Jugador</label>
-                            <input type="text" id="oponente" class="form-control" required>
-                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
+                            <select id="oponente" required></select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Mazo del Oponente</label>
-                            <input type="text" id="mazo-oponente" class="form-control" required>
-                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Escribe al menos 4 caracteres para buscar</small>
+                            <select id="mazo-oponente" required></select>
                         </div>
                     </div>
                 </div>
@@ -167,7 +164,7 @@
     </div>
 
     <script src="../js/api.js"></script>
-    <script src="../js/autocomplete.js"></script>
+    <script src="../js/searchable-select.js"></script>
     <script>
         // Verificar autenticación
         if (!API.isAuthenticated()) {
@@ -182,42 +179,52 @@
         let ganadorSeleccionado = null;
         let partidasHoy = 0;
 
-        // Autocompletados
-        let autocompleteMiMazo, autocompleteOponente, autocompleteMazoOponente;
+        // SearchableSelects
+        let selectMiMazo, selectOponente, selectMazoOponente;
 
-        // Inicializar autocompletados
-        function inicializarAutocompletados() {
-            // Autocompletado para "Mi Mazo"
-            autocompleteMiMazo = new Autocomplete(document.getElementById('mi-mazo'), {
-                searchFunction: API.buscarMazos,
-                displayField: 'nombre',
-                placeholder: 'Escribe el nombre del mazo...',
-                minChars: 4
-            });
+        // Cargar datos e inicializar selects
+        async function cargarDatos() {
+            try {
+                // Cargar mazos
+                const resultMazos = await API.getMazos();
+                const mazosOptions = resultMazos.success ? resultMazos.mazos.map(m => ({
+                    id: m.id,
+                    text: `${m.nombre} (${m.serie})`
+                })).sort((a, b) => a.text.localeCompare(b.text)) : [];
 
-            // Autocompletado para "Oponente"
-            const miId = API.getUser().id;
-            autocompleteOponente = new Autocomplete(document.getElementById('oponente'), {
-                searchFunction: async (query) => {
-                    const result = await API.buscarUsuarios(query);
-                    // Filtrar para excluir al usuario actual
-                    if (result.success) {
-                        result.usuarios = result.usuarios.filter(u => u.id !== miId);
-                    }
-                    return result;
-                },
-                displayField: 'nombre',
-                placeholder: 'Escribe el nombre del oponente...',
-                minChars: 4
-            });
+                // Cargar usuarios
+                const resultUsuarios = await API.getUsuarios();
+                const miId = API.getUser().id;
+                const usuariosOptions = resultUsuarios.success ? resultUsuarios.usuarios
+                    .filter(u => u.id !== miId) // Excluir usuario actual
+                    .map(u => ({
+                        id: u.id,
+                        text: u.nombre
+                    })).sort((a, b) => a.text.localeCompare(b.text)) : [];
 
-            // Autocompletado para "Mazo del Oponente"
-            autocompleteMazoOponente = new Autocomplete(document.getElementById('mazo-oponente'), {
-                searchFunction: API.buscarMazos,
-                displayField: 'nombre',
-                placeholder: 'Escribe el nombre del mazo...',
-                minChars: 4
-            });
+                // Inicializar SearchableSelects
+                selectMiMazo = new SearchableSelect(document.getElementById('mi-mazo'), {
+                    options: mazosOptions,
+                    placeholder: 'Selecciona tu mazo',
+                    searchPlaceholder: 'Buscar mazo...'
+                });
+
+                selectOponente = new SearchableSelect(document.getElementById('oponente'), {
+                    options: usuariosOptions,
+                    placeholder: 'Selecciona oponente',
+                    searchPlaceholder: 'Buscar jugador...'
+                });
+
+                selectMazoOponente = new SearchableSelect(document.getElementById('mazo-oponente'), {
+                    options: mazosOptions,
+                    placeholder: 'Selecciona mazo del oponente',
+                    searchPlaceholder: 'Buscar mazo...'
+                });
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                UI.showAlert('Error al cargar datos del formulario', 'error');
+            }
         }
 
         // Manejo de botones de ganador
@@ -244,10 +251,10 @@
                 return;
             }
 
-            // Obtener valores de los autocompletados
-            const oponenteId = autocompleteOponente.getValue();
-            const miMazoId = autocompleteMiMazo.getValue();
-            const mazoOponenteId = autocompleteMazoOponente.getValue();
+            // Obtener valores de los selects
+            const oponenteId = selectOponente.getValue();
+            const miMazoId = selectMiMazo.getValue();
+            const mazoOponenteId = selectMazoOponente.getValue();
 
             if (!oponenteId || !miMazoId || !mazoOponenteId) {
                 UI.showAlert('Por favor completa todos los campos correctamente', 'error');
@@ -281,10 +288,10 @@
                     document.querySelectorAll('.ganador-btn').forEach(b => b.classList.remove('selected'));
                     ganadorSeleccionado = null;
 
-                    // Limpiar autocompletados
-                    autocompleteMiMazo.clear();
-                    autocompleteOponente.clear();
-                    autocompleteMazoOponente.clear();
+                    // Limpiar selects
+                    selectMiMazo.clear();
+                    selectOponente.clear();
+                    selectMazoOponente.clear();
 
                     if (partidasHoy >= 10) {
                         UI.showAlert('Has alcanzado el límite de 10 partidas por día', 'warning');
@@ -308,7 +315,7 @@
         });
 
         // Inicializar
-        document.addEventListener('DOMContentLoaded', inicializarAutocompletados);
+        document.addEventListener('DOMContentLoaded', cargarDatos);
     </script>
 </body>
 </html>
