@@ -172,13 +172,12 @@
 
             /* Cada jugador ocupa exactamente la mitad de la pantalla */
             .jugador {
-                height: 50dvh;
-                height: 50vh; /* Fallback para navegadores antiguos */
-                min-height: 0;
-                padding: 1vmin;
-                justify-content: space-around;
+                height: 50vh;
+                min-height: 50vh;
+                max-height: 50vh;
+                padding: 1vh 2vw;
+                justify-content: space-evenly;
                 overflow: hidden;
-                gap: 0.5vh;
             }
 
             /* Rotar jugador 2 (arriba) para que se vea desde el lado opuesto */
@@ -186,60 +185,68 @@
                 transform: rotate(180deg);
             }
 
+            /* Display de vidas: GRANDE y visible - 16vh */
             .vidas-display {
-                font-size: 10vmin;
+                font-size: 16vh;
                 margin: 0;
-                line-height: 0.9;
+                line-height: 1;
                 flex-shrink: 0;
             }
 
+            /* Nombre jugador - 2.5vh */
             .nombre-jugador {
-                font-size: 2vmin;
+                font-size: 2.5vh;
                 margin: 0;
                 flex-shrink: 0;
             }
 
+            /* Botones principales -1/+1 - 8vh */
             .btn-vida {
-                width: 11vmin;
-                height: 11vmin;
-                font-size: 3.5vmin;
+                width: 15vw;
+                height: 8vh;
+                font-size: 3vh;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                 flex-shrink: 0;
+                border-radius: 12px;
             }
 
+            /* Botones secundarios -5/+5 - 6vh */
             .btn-vida-small {
-                width: 8vmin;
-                height: 8vmin;
-                font-size: 2.5vmin;
+                width: 15vw;
+                height: 6vh;
+                font-size: 2.3vh;
                 box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
                 flex-shrink: 0;
+                border-radius: 12px;
             }
 
             .controles {
-                gap: 2vmin;
+                gap: 3vw;
                 margin: 0;
                 flex-shrink: 0;
             }
 
             .controles-secundarios {
-                gap: 1.5vmin;
+                gap: 3vw;
                 margin: 0;
                 flex-shrink: 0;
             }
 
+            /* Labels - 1.8vh cada uno */
             .label-control {
-                font-size: 1.6vmin;
+                font-size: 1.8vh;
                 margin: 0;
                 flex-shrink: 0;
+                font-weight: 600;
             }
 
-            /* Botón de reset ajustado para móvil */
+            /* Botón de reset */
             .btn-reset {
                 top: 50%;
                 left: 1vw;
                 transform: translateY(-50%);
-                padding: 1.5vmin 2vmin;
-                font-size: 2.5vmin;
+                padding: 1.5vh 2vw;
+                font-size: 2.2vh;
                 writing-mode: vertical-rl;
                 text-orientation: mixed;
                 z-index: 1000;
