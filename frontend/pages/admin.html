@@ -263,6 +263,17 @@
                 </form>
 
                 <h3 style="margin-bottom: 1.5rem;">👥 Lista de Usuarios</h3>
+
+                <div class="form-group" style="max-width: 400px; margin-bottom: 1.5rem;">
+                    <input
+                        type="text"
+                        id="buscar-usuario"
+                        class="form-control"
+                        placeholder="🔍 Buscar por nombre o email..."
+                        style="padding-left: 1rem;"
+                    >
+                </div>
+
                 <div id="usuarios-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -558,6 +569,9 @@
             }
         });
 
+        // Variables globales para usuarios
+        let todosLosUsuarios = [];
+
         // Cargar usuarios
         async function cargarUsuarios() {
             const container = document.getElementById('usuarios-container');
@@ -567,52 +581,83 @@
 
                 if (!result.success || result.usuarios.length === 0) {
                     container.innerHTML = '<p class="text-center">No hay usuarios</p>';
+                    todosLosUsuarios = [];
                     return;
                 }
 
-                const currentUserId = API.getUser().id;
-
-                let html = `
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Admin</th>
-                                <th>Fecha Registro</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                result.usuarios.forEach(u => {
-                    const isCurrentUser = u.id === currentUserId;
-                    html += `
-                        <tr>
-                            <td>${u.id}</td>
-                            <td><strong>${u.nombre}</strong>${isCurrentUser ? ' <span class="badge badge-info">TÚ</span>' : ''}</td>
-                            <td>${u.email}</td>
-                            <td>${u.es_admin ? '<span class="badge badge-success">SÍ</span>' : '<span class="badge badge-secondary">NO</span>'}</td>
-                            <td>${u.fecha_creacion ? new Date(u.fecha_creacion).toLocaleDateString() : '-'}</td>
-                            <td>
-                                ${isCurrentUser
-                                    ? '<span style="color: #999; font-size: 0.9rem;">-</span>'
-                                    : `<button onclick="eliminarUsuario(${u.id}, '${u.nombre}')" class="btn btn-error btn-sm">🗑️ Eliminar</button>`
-                                }
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                html += '</tbody></table>';
-                container.innerHTML = html;
+                todosLosUsuarios = result.usuarios;
+                renderizarUsuarios(todosLosUsuarios);
 
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
             }
         }
+
+        // Renderizar tabla de usuarios
+        function renderizarUsuarios(usuarios) {
+            const container = document.getElementById('usuarios-container');
+
+            if (usuarios.length === 0) {
+                container.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">No se encontraron usuarios</p>';
+                return;
+            }
+
+            const currentUserId = API.getUser().id;
+
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Admin</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            usuarios.forEach(u => {
+                const isCurrentUser = u.id === currentUserId;
+                html += `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td><strong>${u.nombre}</strong>${isCurrentUser ? ' <span class="badge badge-info">TÚ</span>' : ''}</td>
+                        <td>${u.email}</td>
+                        <td>${u.es_admin ? '<span class="badge badge-success">SÍ</span>' : '<span class="badge badge-secondary">NO</span>'}</td>
+                        <td>${u.fecha_creacion ? new Date(u.fecha_creacion).toLocaleDateString() : '-'}</td>
+                        <td>
+                            ${isCurrentUser
+                                ? '<span style="color: #999; font-size: 0.9rem;">-</span>'
+                                : `<button onclick="eliminarUsuario(${u.id}, '${u.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">🗑️ Eliminar</button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Filtrar usuarios
+        document.getElementById('buscar-usuario').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+
+            if (query === '') {
+                renderizarUsuarios(todosLosUsuarios);
+                return;
+            }
+
+            const usuariosFiltrados = todosLosUsuarios.filter(u =>
+                u.nombre.toLowerCase().includes(query) ||
+                u.email.toLowerCase().includes(query)
+            );
+
+            renderizarUsuarios(usuariosFiltrados);
+        });
 
         // Form crear usuario
         document.getElementById('form-usuario').addEventListener('submit', async (e) => {
