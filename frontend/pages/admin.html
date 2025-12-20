@@ -5,6 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - Card Game Anime</title>
     <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-box p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .tab:hover {
+            background: #f3f4f6;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .partida-pendiente {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .partida-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .partida-info {
+            flex: 1;
+        }
+
+        .partida-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge-pendiente {
+            background: #ffc107;
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .migrar-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .migrar-btn:hover {
+            background: #ee5a5a;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -15,6 +126,7 @@
                 <li><a href="historial.html">Historial</a></li>
                 <li><a href="estadisticas.html">Estadísticas</a></li>
                 <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="combate.html">Registrar Combate</a></li>
                 <li><a href="contador.html">Contador</a></li>
                 <li><a href="admin.html">Admin</a></li>
             </ul>
@@ -23,82 +135,114 @@
     </nav>
 
     <div class="container">
-        <!-- Formulario para crear partida -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">🎮 Registrar Nueva Partida</h2>
-                <p class="card-subtitle">Solo administradores pueden registrar partidas</p>
+                <h1 class="card-title">⚙️ Panel de Administración</h1>
+                <p class="card-subtitle">Gestiona partidas, usuarios y aprobaciones</p>
             </div>
 
-            <form id="partida-form" style="max-width: 800px; margin: 0 auto;">
-                <div class="grid grid-2">
-                    <!-- Jugador 1 -->
-                    <div class="form-group">
-                        <label class="form-label" for="jugador1">Jugador 1</label>
-                        <select id="jugador1" class="form-select" required>
-                            <option value="">Seleccionar jugador...</option>
-                        </select>
-                    </div>
-
-                    <!-- Jugador 2 -->
-                    <div class="form-group">
-                        <label class="form-label" for="jugador2">Jugador 2</label>
-                        <select id="jugador2" class="form-select" required>
-                            <option value="">Seleccionar jugador...</option>
-                        </select>
-                    </div>
-
-                    <!-- Mazo 1 -->
-                    <div class="form-group">
-                        <label class="form-label" for="mazo1">Mazo Jugador 1</label>
-                        <select id="mazo1" class="form-select" required>
-                            <option value="">Seleccionar mazo...</option>
-                        </select>
-                    </div>
-
-                    <!-- Mazo 2 -->
-                    <div class="form-group">
-                        <label class="form-label" for="mazo2">Mazo Jugador 2</label>
-                        <select id="mazo2" class="form-select" required>
-                            <option value="">Seleccionar mazo...</option>
-                        </select>
-                    </div>
+            <!-- Dashboard Resumen -->
+            <div id="dashboard-resumen" class="dashboard-grid">
+                <div class="stat-box">
+                    <h3 id="total-pendientes">-</h3>
+                    <p>Partidas Pendientes</p>
                 </div>
-
-                <!-- Resultado -->
-                <div class="form-group">
-                    <label class="form-label" for="resultado">Resultado</label>
-                    <select id="resultado" class="form-select" required>
-                        <option value="">Seleccionar resultado...</option>
-                        <option value="victoria_jugador1">Victoria Jugador 1</option>
-                        <option value="victoria_jugador2">Victoria Jugador 2</option>
-                        <option value="empate">Empate</option>
-                    </select>
+                <div class="stat-box">
+                    <h3 id="total-aprobadas">-</h3>
+                    <p>Partidas Aprobadas</p>
                 </div>
-
-                <!-- Notas -->
-                <div class="form-group">
-                    <label class="form-label" for="notas">Notas (Opcional)</label>
-                    <textarea id="notas" class="form-control" rows="3" placeholder="Comentarios sobre la partida..."></textarea>
+                <div class="stat-box">
+                    <h3 id="total-usuarios">-</h3>
+                    <p>Usuarios Registrados</p>
                 </div>
+                <div class="stat-box">
+                    <h3 id="total-mazos">-</h3>
+                    <p>Mazos Disponibles</p>
+                </div>
+            </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Registrar Partida
+            <!-- Alerta de migración (si es necesario) -->
+            <div id="migracion-alert" style="display: none;">
+                <div class="alert alert-warning">
+                    <strong>⚠️ Migración Requerida</strong>
+                    <p>El sistema de aprobación necesita ejecutar una migración en la base de datos.</p>
+                    <button onclick="ejecutarMigracion()" class="migrar-btn">
+                        Ejecutar Migración Ahora
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="cambiarTab('pendientes')">
+                    📝 Partidas Pendientes <span id="badge-pendientes" class="badge badge-warning" style="margin-left: 0.5rem;">0</span>
                 </button>
-            </form>
-        </div>
-
-        <!-- Lista de partidas recientes con opción de eliminar -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h2 class="card-title">📋 Gestionar Partidas</h2>
-                <p class="card-subtitle">Últimas 10 partidas registradas</p>
+                <button class="tab" onclick="cambiarTab('agregar')">⚔️ Añadir Partida</button>
+                <button class="tab" onclick="cambiarTab('usuarios')">👥 Usuarios</button>
             </div>
 
-            <div id="partidas-admin-container">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p class="mt-2">Cargando partidas...</p>
+            <!-- Tab: Partidas Pendientes -->
+            <div id="tab-pendientes" class="tab-content active">
+                <div id="partidas-pendientes-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando partidas pendientes...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Añadir Partida -->
+            <div id="tab-agregar" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem;">➕ Registrar Partida Manualmente</h3>
+                <form id="form-partida" style="max-width: 600px;">
+                    <div class="form-group">
+                        <label class="form-label">Jugador 1</label>
+                        <select id="jugador1" class="form-control" required>
+                            <option value="">Selecciona jugador 1</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mazo Jugador 1</label>
+                        <select id="mazo1" class="form-control" required>
+                            <option value="">Selecciona mazo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jugador 2</label>
+                        <select id="jugador2" class="form-control" required>
+                            <option value="">Selecciona jugador 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mazo Jugador 2</label>
+                        <select id="mazo2" class="form-control" required>
+                            <option value="">Selecciona mazo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Resultado</label>
+                        <select id="resultado" class="form-control" required>
+                            <option value="">Selecciona resultado</option>
+                            <option value="victoria_jugador1">Victoria Jugador 1</option>
+                            <option value="victoria_jugador2">Victoria Jugador 2</option>
+                            <option value="empate">Empate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notas (opcional)</label>
+                        <textarea id="notas-partida" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Añadir Partida</button>
+                </form>
+            </div>
+
+            <!-- Tab: Usuarios -->
+            <div id="tab-usuarios" class="tab-content">
+                <div id="usuarios-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando usuarios...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -106,195 +250,278 @@
 
     <script src="../js/api.js"></script>
     <script>
-        // Verificar que el usuario es admin
+        // Verificar que es admin
         if (!checkAuth(true)) {
-            // La función checkAuth ya redirige si no es admin
+            // Redirige automáticamente si no es admin
         }
 
-        let usuarios = [];
-        let mazos = [];
+        // Cambiar tabs
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
 
-        async function cargarDatos() {
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'pendientes') cargarPartidasPendientes();
+            if (tab === 'usuarios') cargarUsuarios();
+        }
+
+        // Cargar resumen del dashboard
+        async function cargarResumen() {
             try {
-                // Cargar usuarios
-                const resultUsuarios = await API.getUsuarios();
-                if (resultUsuarios.success) {
-                    usuarios = resultUsuarios.usuarios;
-                    const select1 = document.getElementById('jugador1');
-                    const select2 = document.getElementById('jugador2');
+                const [pendientes, partidas, usuarios, mazos] = await Promise.all([
+                    API.getPartidasPendientes(),
+                    API.getPartidas(),
+                    API.getUsuarios(),
+                    API.getMazos()
+                ]);
 
-                    usuarios.forEach(usuario => {
-                        const option1 = document.createElement('option');
-                        option1.value = usuario.id;
-                        option1.textContent = usuario.nombre;
-                        select1.appendChild(option1);
+                document.getElementById('total-pendientes').textContent = pendientes.total || 0;
+                document.getElementById('total-aprobadas').textContent = partidas.partidas?.length || 0;
+                document.getElementById('total-usuarios').textContent = usuarios.usuarios?.length || 0;
+                document.getElementById('total-mazos').textContent = mazos.mazos?.length || 0;
 
-                        const option2 = document.createElement('option');
-                        option2.value = usuario.id;
-                        option2.textContent = usuario.nombre;
-                        select2.appendChild(option2);
-                    });
-                }
-
-                // Cargar mazos
-                const resultMazos = await API.getMazos();
-                if (resultMazos.success) {
-                    mazos = resultMazos.mazos;
-                    const select1 = document.getElementById('mazo1');
-                    const select2 = document.getElementById('mazo2');
-
-                    mazos.forEach(mazo => {
-                        const option1 = document.createElement('option');
-                        option1.value = mazo.id;
-                        option1.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        select1.appendChild(option1);
-
-                        const option2 = document.createElement('option');
-                        option2.value = mazo.id;
-                        option2.textContent = `${mazo.nombre} (${mazo.serie})`;
-                        select2.appendChild(option2);
-                    });
-                }
-
-                cargarPartidas();
+                document.getElementById('badge-pendientes').textContent = pendientes.total || 0;
 
             } catch (error) {
-                UI.showAlert('Error al cargar datos: ' + error.message, 'error');
+                console.error('Error cargando resumen:', error);
             }
         }
 
-        async function cargarPartidas() {
-            const container = document.getElementById('partidas-admin-container');
+        // Cargar partidas pendientes
+        async function cargarPartidasPendientes() {
+            const container = document.getElementById('partidas-pendientes-container');
 
             try {
-                const result = await API.getPartidas();
+                const result = await API.getPartidasPendientes();
 
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                            No hay partidas registradas.
+                            ✅ No hay partidas pendientes de aprobación
                         </p>
                     `;
                     return;
                 }
 
-                // Mostrar solo las últimas 10
-                const partidas = result.partidas.slice(0, 10);
+                let html = '';
+                result.partidas.forEach(p => {
+                    const fecha = UI.formatDate(p.fecha_partida);
+                    html += `
+                        <div class="partida-pendiente">
+                            <div class="partida-header">
+                                <div class="partida-info">
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <span class="badge-pendiente">PENDIENTE</span>
+                                        <small style="margin-left: 0.5rem; color: var(--text-secondary);">${fecha}</small>
+                                    </div>
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">
+                                        ${p.jugador1_nombre} (${p.mazo1_nombre}) vs ${p.jugador2_nombre} (${p.mazo2_nombre})
+                                    </div>
+                                    <div>
+                                        <span class="badge ${UI.getBadgeClass(p.resultado)}">${UI.formatResultado(p.resultado)}</span>
+                                        ${p.ganador_nombre ? `<span style="margin-left: 0.5rem;">Ganador: <strong>${p.ganador_nombre}</strong></span>` : ''}
+                                    </div>
+                                    ${p.registrado_por ? `<small style="color: var(--text-secondary);">Registrado por: ${p.registrado_por}</small>` : ''}
+                                    ${p.notas ? `<p style="margin-top: 0.5rem; font-style: italic;">📝 ${p.notas}</p>` : ''}
+                                </div>
+                                <div class="partida-actions">
+                                    <button onclick="aprobarPartida(${p.id})" class="btn btn-success btn-sm">
+                                        ✅ Aprobar
+                                    </button>
+                                    <button onclick="rechazarPartida(${p.id})" class="btn btn-error btn-sm">
+                                        ❌ Rechazar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                // Si error 500, probablemente necesita migración
+                if (error.message.includes('estado')) {
+                    document.getElementById('migracion-alert').style.display = 'block';
+                }
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar partidas pendientes: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Aprobar partida
+        async function aprobarPartida(id) {
+            if (!confirm('¿Aprobar esta partida?')) return;
+
+            try {
+                const result = await API.aprobarPartida(id);
+                if (result.success) {
+                    UI.showAlert('Partida aprobada exitosamente', 'success');
+                    cargarPartidasPendientes();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al aprobar partida: ' + error.message, 'error');
+            }
+        }
+
+        // Rechazar partida
+        async function rechazarPartida(id) {
+            if (!confirm('¿Rechazar esta partida? Esta acción no se puede deshacer.')) return;
+
+            try {
+                const result = await API.rechazarPartida(id);
+                if (result.success) {
+                    UI.showAlert('Partida rechazada', 'success');
+                    cargarPartidasPendientes();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al rechazar partida: ' + error.message, 'error');
+            }
+        }
+
+        // Ejecutar migración
+        async function ejecutarMigracion() {
+            if (!confirm('¿Ejecutar migración del sistema de aprobación? Esto modificará la base de datos.')) return;
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Ejecutando migración...';
+
+            try {
+                const result = await API.ejecutarMigracion();
+                if (result.success) {
+                    UI.showAlert('Migración ejecutada exitosamente', 'success');
+                    document.getElementById('migracion-alert').style.display = 'none';
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (error) {
+                UI.showAlert('Error en migración: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Ejecutar Migración Ahora';
+            }
+        }
+
+        // Cargar selectores
+        async function cargarSelectores() {
+            try {
+                const [usuarios, mazos] = await Promise.all([
+                    API.getUsuarios(),
+                    API.getMazos()
+                ]);
+
+                // Llenar selectores de jugadores
+                const selectsJugadores = ['jugador1', 'jugador2'];
+                selectsJugadores.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    usuarios.usuarios.forEach(u => {
+                        const option = document.createElement('option');
+                        option.value = u.id;
+                        option.textContent = u.nombre;
+                        select.appendChild(option);
+                    });
+                });
+
+                // Llenar selectores de mazos
+                const selectsMazos = ['mazo1', 'mazo2'];
+                selectsMazos.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    mazos.mazos.forEach(m => {
+                        const option = document.createElement('option');
+                        option.value = m.id;
+                        option.textContent = `${m.nombre} (${m.serie})`;
+                        select.appendChild(option);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error cargando selectores:', error);
+            }
+        }
+
+        // Form añadir partida
+        document.getElementById('form-partida').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const partidaData = {
+                jugador1_id: parseInt(document.getElementById('jugador1').value),
+                jugador2_id: parseInt(document.getElementById('jugador2').value),
+                mazo1_id: parseInt(document.getElementById('mazo1').value),
+                mazo2_id: parseInt(document.getElementById('mazo2').value),
+                resultado: document.getElementById('resultado').value,
+                notas: document.getElementById('notas-partida').value.trim() || null
+            };
+
+            try {
+                const result = await API.createPartida(partidaData);
+                if (result.success) {
+                    UI.showAlert('Partida añadida exitosamente', 'success');
+                    e.target.reset();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al añadir partida: ' + error.message, 'error');
+            }
+        });
+
+        // Cargar usuarios
+        async function cargarUsuarios() {
+            const container = document.getElementById('usuarios-container');
+
+            try {
+                const result = await API.getUsuarios();
+
+                if (!result.success || result.usuarios.length === 0) {
+                    container.innerHTML = '<p class="text-center">No hay usuarios</p>';
+                    return;
+                }
 
                 let html = `
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Fecha</th>
-                                <th>Jugadores</th>
-                                <th>Resultado</th>
-                                <th>Acción</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Admin</th>
+                                <th>Fecha Registro</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
-                partidas.forEach(partida => {
-                    const fecha = UI.formatDate(partida.fecha_partida);
-                    const badgeClass = UI.getBadgeClass(partida.resultado);
-
+                result.usuarios.forEach(u => {
                     html += `
                         <tr>
-                            <td>#${partida.id}</td>
-                            <td>${fecha}</td>
-                            <td>
-                                <strong>${partida.jugador1_nombre}</strong> vs <strong>${partida.jugador2_nombre}</strong>
-                                <br><small style="color: var(--text-secondary);">
-                                    ${partida.mazo1_nombre} vs ${partida.mazo2_nombre}
-                                </small>
-                            </td>
-                            <td>
-                                <span class="badge ${badgeClass}">${UI.formatResultado(partida.resultado)}</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-danger" onclick="eliminarPartida(${partida.id})">
-                                    Eliminar
-                                </button>
-                            </td>
+                            <td>${u.id}</td>
+                            <td><strong>${u.nombre}</strong></td>
+                            <td>${u.email}</td>
+                            <td>${u.es_admin ? '<span class="badge badge-success">SÍ</span>' : '<span class="badge badge-secondary">NO</span>'}</td>
+                            <td>${u.fecha_creacion ? new Date(u.fecha_creacion).toLocaleDateString() : '-'}</td>
                         </tr>
                     `;
                 });
 
-                html += `
-                        </tbody>
-                    </table>
-                `;
-
+                html += '</tbody></table>';
                 container.innerHTML = html;
 
             } catch (error) {
-                container.innerHTML = `
-                    <div class="alert alert-error">
-                        Error al cargar partidas: ${error.message}
-                    </div>
-                `;
+                container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
             }
         }
 
-        async function eliminarPartida(id) {
-            if (!confirm('¿Estás seguro de eliminar esta partida?')) {
-                return;
-            }
-
-            try {
-                const result = await API.deletePartida(id);
-
-                if (result.success) {
-                    UI.showAlert('Partida eliminada exitosamente', 'success');
-                    cargarPartidas();
-                }
-            } catch (error) {
-                UI.showAlert('Error al eliminar partida: ' + error.message, 'error');
-            }
-        }
-
-        // Manejar envío del formulario
-        document.getElementById('partida-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const jugador1_id = parseInt(document.getElementById('jugador1').value);
-            const jugador2_id = parseInt(document.getElementById('jugador2').value);
-            const mazo1_id = parseInt(document.getElementById('mazo1').value);
-            const mazo2_id = parseInt(document.getElementById('mazo2').value);
-            const resultado = document.getElementById('resultado').value;
-            const notas = document.getElementById('notas').value.trim();
-
-            // Validar que los jugadores sean diferentes
-            if (jugador1_id === jugador2_id) {
-                UI.showAlert('Los jugadores deben ser diferentes', 'error');
-                return;
-            }
-
-            try {
-                const partidaData = {
-                    jugador1_id,
-                    jugador2_id,
-                    mazo1_id,
-                    mazo2_id,
-                    resultado,
-                    notas: notas || undefined
-                };
-
-                const result = await API.createPartida(partidaData);
-
-                if (result.success) {
-                    UI.showAlert('¡Partida registrada exitosamente!', 'success');
-                    document.getElementById('partida-form').reset();
-                    cargarPartidas();
-                }
-            } catch (error) {
-                UI.showAlert('Error al registrar partida: ' + error.message, 'error');
-            }
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarResumen();
+            cargarPartidasPendientes();
+            cargarSelectores();
         });
-
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', cargarDatos);
     </script>
 </body>
 </html>

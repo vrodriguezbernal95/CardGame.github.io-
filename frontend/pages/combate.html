@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Combate - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .combate-form {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .vs-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .jugador-section {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .jugador-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .vs-divider {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .ganador-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .ganador-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--primary-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .ganador-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .ganador-btn.selected {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .limite-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .limite-info strong {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <ul class="nav-links">
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="combate.html">Registrar Combate</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li id="admin-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div id="user-nav"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card combate-form">
+            <div class="card-header">
+                <h1 class="card-title">⚔️ Registrar Combate</h1>
+                <p class="card-subtitle">Registra tu partida (pendiente de aprobación del admin)</p>
+            </div>
+
+            <div id="limite-container" class="limite-info">
+                <p>Partidas registradas hoy: <strong id="partidas-hoy">-</strong> / 10</p>
+            </div>
+
+            <form id="combate-form">
+                <div class="vs-section">
+                    <!-- Mi lado -->
+                    <div class="jugador-section">
+                        <h3>🎮 Yo</h3>
+                        <div class="form-group">
+                            <label class="form-label">Mi Mazo</label>
+                            <select id="mi-mazo" class="form-control" required>
+                                <option value="">Selecciona tu mazo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider">VS</div>
+
+                    <!-- Lado del oponente -->
+                    <div class="jugador-section">
+                        <h3>👤 Oponente</h3>
+                        <div class="form-group">
+                            <label class="form-label">Jugador</label>
+                            <select id="oponente" class="form-control" required>
+                                <option value="">Selecciona oponente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mazo del Oponente</label>
+                            <select id="mazo-oponente" class="form-control" required>
+                                <option value="">Selecciona mazo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">¿Quién ganó?</label>
+                    <div class="ganador-options">
+                        <button type="button" class="ganador-btn" data-ganador="yo">
+                            ✅ Yo gané
+                        </button>
+                        <button type="button" class="ganador-btn" data-ganador="empate">
+                            🤝 Empate
+                        </button>
+                        <button type="button" class="ganador-btn" data-ganador="oponente">
+                            ❌ Perdí
+                        </button>
+                    </div>
+                    <input type="hidden" id="ganador" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notas (opcional)</label>
+                    <textarea id="notas" class="form-control" rows="3" placeholder="Ej: Partida épica, Luffy Gear 5 fue decisivo..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Registrar Combate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Verificar autenticación
+        if (!API.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        let ganadorSeleccionado = null;
+        let partidasHoy = 0;
+
+        // Cargar datos iniciales
+        async function cargarDatos() {
+            try {
+                // Cargar mazos
+                const resultMazos = await API.getMazos();
+                if (resultMazos.success) {
+                    const selectMiMazo = document.getElementById('mi-mazo');
+                    const selectMazoOponente = document.getElementById('mazo-oponente');
+
+                    resultMazos.mazos.forEach(mazo => {
+                        const option1 = document.createElement('option');
+                        option1.value = mazo.id;
+                        option1.textContent = `${mazo.nombre} (${mazo.serie})`;
+                        selectMiMazo.appendChild(option1);
+
+                        const option2 = document.createElement('option');
+                        option2.value = mazo.id;
+                        option2.textContent = `${mazo.nombre} (${mazo.serie})`;
+                        selectMazoOponente.appendChild(option2);
+                    });
+                }
+
+                // Cargar jugadores (oponentes)
+                const resultUsuarios = await API.getUsuarios();
+                if (resultUsuarios.success) {
+                    const selectOponente = document.getElementById('oponente');
+                    const miId = API.getUser().id;
+
+                    resultUsuarios.usuarios.forEach(usuario => {
+                        // No incluirse a sí mismo
+                        if (usuario.id !== miId) {
+                            const option = document.createElement('option');
+                            option.value = usuario.id;
+                            option.textContent = usuario.nombre;
+                            selectOponente.appendChild(option);
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                UI.showAlert('Error al cargar datos del formulario', 'error');
+            }
+        }
+
+        // Manejo de botones de ganador
+        document.querySelectorAll('.ganador-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ganador-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                ganadorSeleccionado = btn.dataset.ganador;
+                document.getElementById('ganador').value = ganadorSeleccionado;
+            });
+        });
+
+        // Enviar formulario
+        document.getElementById('combate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!ganadorSeleccionado) {
+                UI.showAlert('Por favor selecciona quién ganó', 'error');
+                return;
+            }
+
+            if (partidasHoy >= 10) {
+                UI.showAlert('Has alcanzado el límite de 10 partidas por día', 'error');
+                return;
+            }
+
+            const partidaData = {
+                oponente_id: parseInt(document.getElementById('oponente').value),
+                mi_mazo_id: parseInt(document.getElementById('mi-mazo').value),
+                mazo_oponente_id: parseInt(document.getElementById('mazo-oponente').value),
+                ganador: ganadorSeleccionado,
+                notas: document.getElementById('notas').value.trim() || null
+            };
+
+            try {
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = 'Registrando...';
+
+                const result = await API.registrarPartida(partidaData);
+
+                if (result.success) {
+                    UI.showAlert('¡Combate registrado! Pendiente de aprobación del admin.', 'success');
+
+                    // Actualizar contador
+                    partidasHoy = result.partidasHoy || partidasHoy + 1;
+                    document.getElementById('partidas-hoy').textContent = partidasHoy;
+
+                    // Limpiar formulario
+                    document.getElementById('combate-form').reset();
+                    document.querySelectorAll('.ganador-btn').forEach(b => b.classList.remove('selected'));
+                    ganadorSeleccionado = null;
+
+                    if (partidasHoy >= 10) {
+                        UI.showAlert('Has alcanzado el límite de 10 partidas por día', 'warning');
+                        btn.disabled = true;
+                        btn.textContent = 'Límite alcanzado';
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Registrar Combate';
+                    }
+                } else {
+                    throw new Error(result.message || 'Error al registrar combate');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                UI.showAlert(error.message || 'Error al registrar combate', 'error');
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = false;
+                btn.textContent = 'Registrar Combate';
+            }
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', cargarDatos);
+    </script>
+</body>
+</html>

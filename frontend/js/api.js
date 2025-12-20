@@ -155,6 +155,38 @@ class API {
     static async compararJugadores(jugador1_id, jugador2_id) {
         return await this.request(`/estadisticas/comparar/jugadores/${jugador1_id}/${jugador2_id}`);
     }
+
+    // Registro de partidas por usuarios
+    static async registrarPartida(partidaData) {
+        return await this.request('/partidas/registrar', {
+            method: 'POST',
+            body: JSON.stringify(partidaData)
+        });
+    }
+
+    // Admin: Partidas pendientes
+    static async getPartidasPendientes() {
+        return await this.request('/partidas/pendientes');
+    }
+
+    static async aprobarPartida(id) {
+        return await this.request(`/partidas/${id}/aprobar`, {
+            method: 'PUT'
+        });
+    }
+
+    static async rechazarPartida(id) {
+        return await this.request(`/partidas/${id}/rechazar`, {
+            method: 'PUT'
+        });
+    }
+
+    // Admin: Migración
+    static async ejecutarMigracion() {
+        return await this.request('/migration/run-aprobacion-migration', {
+            method: 'POST'
+        });
+    }
 }
 
 // Utilidades UI
