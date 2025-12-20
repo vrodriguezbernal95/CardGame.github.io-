@@ -12,37 +12,85 @@ router.post('/run-aprobacion-migration', verifyToken, verifyAdmin, async (req, r
         const dbType = process.env.DB_TYPE || 'mysql';
 
         if (dbType === 'postgres') {
-            // Migración PostgreSQL
-            await db.query(`
-                DO $$ BEGIN
-                    CREATE TYPE estado_partida AS ENUM ('pendiente', 'aprobada', 'rechazada');
-                EXCEPTION
-                    WHEN duplicate_object THEN null;
-                END $$;
-            `);
+            // Migración PostgreSQL - Ejecutar paso a paso con mejor manejo de errores
 
-            await db.query(`
-                ALTER TABLE partidas
-                ADD COLUMN IF NOT EXISTS estado estado_partida DEFAULT 'aprobada',
-                ADD COLUMN IF NOT EXISTS usuario_registro_id INT;
-            `);
+            // 1. Crear ENUM si no existe
+            try {
+                await db.query(`
+                    DO $$ BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'estado_partida') THEN
+                            CREATE TYPE estado_partida AS ENUM ('pendiente', 'aprobada', 'rechazada');
+                        END IF;
+                    END $$;
+                `);
+                console.log('✓ ENUM estado_partida creado/verificado');
+            } catch (err) {
+                console.log('ENUM ya existe o error:', err.message);
+            }
 
-            await db.query(`
-                DO $$ BEGIN
-                    ALTER TABLE partidas
-                    ADD CONSTRAINT fk_usuario_registro
-                    FOREIGN KEY (usuario_registro_id) REFERENCES usuarios(id) ON DELETE SET NULL;
-                EXCEPTION
-                    WHEN duplicate_object THEN null;
-                END $$;
-            `);
+            // 2. Agregar columna estado
+            try {
+                await db.query(`
+                    DO $$ BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='partidas' AND column_name='estado') THEN
+                            ALTER TABLE partidas ADD COLUMN estado estado_partida DEFAULT 'aprobada';
+                        END IF;
+                    END $$;
+                `);
+                console.log('✓ Columna estado agregada/verificada');
+            } catch (err) {
+                console.log('Columna estado ya existe o error:', err.message);
+            }
 
-            await db.query(`CREATE INDEX IF NOT EXISTS idx_partidas_estado ON partidas(estado);`);
+            // 3. Agregar columna usuario_registro_id
+            try {
+                await db.query(`
+                    DO $$ BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='partidas' AND column_name='usuario_registro_id') THEN
+                            ALTER TABLE partidas ADD COLUMN usuario_registro_id INT;
+                        END IF;
+                    END $$;
+                `);
+                console.log('✓ Columna usuario_registro_id agregada/verificada');
+            } catch (err) {
+                console.log('Columna usuario_registro_id ya existe o error:', err.message);
+            }
 
-            await db.query(`UPDATE partidas SET estado = 'aprobada' WHERE estado IS NULL;`);
+            // 4. Agregar foreign key
+            try {
+                await db.query(`
+                    DO $$ BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name='fk_usuario_registro') THEN
+                            ALTER TABLE partidas
+                            ADD CONSTRAINT fk_usuario_registro
+                            FOREIGN KEY (usuario_registro_id) REFERENCES usuarios(id) ON DELETE SET NULL;
+                        END IF;
+                    END $$;
+                `);
+                console.log('✓ Foreign key agregada/verificada');
+            } catch (err) {
+                console.log('Foreign key ya existe o error:', err.message);
+            }
 
-            // Recrear vistas
-            await db.query(`DROP VIEW IF EXISTS estadisticas_jugadores;`);
+            // 5. Crear índice
+            try {
+                await db.query(`CREATE INDEX IF NOT EXISTS idx_partidas_estado ON partidas(estado);`);
+                console.log('✓ Índice creado/verificado');
+            } catch (err) {
+                console.log('Índice ya existe o error:', err.message);
+            }
+
+            // 6. Actualizar partidas existentes
+            try {
+                await db.query(`UPDATE partidas SET estado = 'aprobada' WHERE estado IS NULL;`);
+                console.log('✓ Partidas existentes actualizadas');
+            } catch (err) {
+                console.log('Error actualizando partidas:', err.message);
+            }
+
+            // 7. Recrear vistas
+            try {
+                await db.query(`DROP VIEW IF EXISTS estadisticas_jugadores;`);
             await db.query(`
                 CREATE VIEW estadisticas_jugadores AS
                 SELECT
@@ -62,50 +110,59 @@ router.post('/run-aprobacion-migration', verifyToken, verifyAdmin, async (req, r
                 GROUP BY u.id, u.nombre;
             `);
 
-            await db.query(`DROP VIEW IF EXISTS estadisticas_mazos;`);
-            await db.query(`
-                CREATE VIEW estadisticas_mazos AS
-                SELECT
-                    m.id,
-                    m.nombre,
-                    m.serie,
-                    COUNT(p.id) as total_partidas,
-                    SUM(CASE
-                        WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
-                             (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
-                        THEN 1 ELSE 0
-                    END) as victorias,
-                    SUM(CASE WHEN p.resultado = 'empate' AND (p.mazo1_id = m.id OR p.mazo2_id = m.id) THEN 1 ELSE 0 END) as empates,
-                    SUM(CASE
-                        WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2') OR
-                             (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
-                        THEN 1 ELSE 0
-                    END) as derrotas,
-                    ROUND(
-                        (SUM(CASE
+                await db.query(`DROP VIEW IF EXISTS estadisticas_mazos;`);
+                await db.query(`
+                    CREATE VIEW estadisticas_mazos AS
+                    SELECT
+                        m.id,
+                        m.nombre,
+                        m.serie,
+                        COUNT(p.id) as total_partidas,
+                        SUM(CASE
                             WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
                                  (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
                             THEN 1 ELSE 0
-                        END) * 100.0) /
-                        NULLIF(COUNT(p.id), 0),
-                        2
-                    ) as winrate
-                FROM mazos m
-                LEFT JOIN partidas p ON (m.id = p.mazo1_id OR m.id = p.mazo2_id) AND p.estado = 'aprobada'
-                GROUP BY m.id, m.nombre, m.serie;
-            `);
+                        END) as victorias,
+                        SUM(CASE WHEN p.resultado = 'empate' AND (p.mazo1_id = m.id OR p.mazo2_id = m.id) THEN 1 ELSE 0 END) as empates,
+                        SUM(CASE
+                            WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2') OR
+                                 (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
+                            THEN 1 ELSE 0
+                        END) as derrotas,
+                        ROUND(
+                            (SUM(CASE
+                                WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
+                                     (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                                THEN 1 ELSE 0
+                            END) * 100.0) /
+                            NULLIF(COUNT(p.id), 0),
+                            2
+                        ) as winrate
+                    FROM mazos m
+                    LEFT JOIN partidas p ON (m.id = p.mazo1_id OR m.id = p.mazo2_id) AND p.estado = 'aprobada'
+                    GROUP BY m.id, m.nombre, m.serie;
+                `);
+                console.log('✓ Vistas recreadas');
+            } catch (err) {
+                console.log('Error recreando vistas:', err.message);
+            }
 
-            // Tabla de tracking diario
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS partidas_registro_diario (
-                    id SERIAL PRIMARY KEY,
-                    usuario_id INT NOT NULL,
-                    fecha DATE NOT NULL,
-                    cantidad INT DEFAULT 1,
-                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-                    UNIQUE (usuario_id, fecha)
-                );
-            `);
+            // 8. Crear tabla de tracking diario
+            try {
+                await db.query(`
+                    CREATE TABLE IF NOT EXISTS partidas_registro_diario (
+                        id SERIAL PRIMARY KEY,
+                        usuario_id INT NOT NULL,
+                        fecha DATE NOT NULL,
+                        cantidad INT DEFAULT 1,
+                        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                        UNIQUE (usuario_id, fecha)
+                    );
+                `);
+                console.log('✓ Tabla partidas_registro_diario creada/verificada');
+            } catch (err) {
+                console.log('Tabla ya existe o error:', err.message);
+            }
 
         } else {
             // Migración MySQL
