@@ -134,35 +134,29 @@
         .share-buttons {
             margin-top: 20px;
             display: flex;
-            gap: 10px;
             justify-content: center;
         }
 
-        .btn-share {
-            flex: 1;
-            padding: 15px;
+        .btn-download {
+            padding: 18px 40px;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-share:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-download {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
 
-        .btn-whatsapp {
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-download:active {
+            transform: translateY(0);
         }
 
         @media (max-width: 500px) {
@@ -252,33 +246,67 @@
         </div>
 
         <div class="share-buttons">
-            <button class="btn-share btn-download" onclick="descargarCarta()">
-                📥 Descargar
-            </button>
-            <button class="btn-share btn-whatsapp" onclick="compartirWhatsApp()">
-                💬 WhatsApp
+            <button class="btn-download" onclick="descargarCarta()">
+                📥 Descargar Carta
             </button>
         </div>
     </div>
 
+    <!-- html2canvas para convertir la carta en imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <script>
-        function compartirWhatsApp() {
-            const mensaje = encodeURIComponent('¡Únete al mejor juego de cartas! 🎴\n\nhttps://vrodriguezbernal95.github.io/CardGame.github.io-/frontend/pages/login.html');
-            window.open(`https://wa.me/?text=${mensaje}`, '_blank');
-        }
+        async function descargarCarta() {
+            const button = document.querySelector('.btn-download');
+            const originalText = button.textContent;
 
-        function descargarCarta() {
-            // Crear un enlace temporal para descargar la página como referencia
-            const url = 'https://vrodriguezbernal95.github.io/CardGame.github.io-/frontend/pages/compartir.html';
-            const mensaje = `Para compartir esta carta, copia este link:\n\n${url}\n\nO escanea el QR code para registrarte directamente.`;
-            alert(mensaje);
-        }
+            try {
+                // Cambiar texto del botón
+                button.textContent = '⏳ Generando imagen...';
+                button.disabled = true;
 
-        // Si se comparte la URL, mostrar un mensaje de bienvenida
-        if (window.location.search.includes('compartido')) {
-            setTimeout(() => {
-                alert('¡Bienvenido! Escanea el QR code para registrarte en el mejor juego de cartas 🎴');
-            }, 500);
+                // Capturar la carta como imagen
+                const cartaElement = document.querySelector('.card');
+                const canvas = await html2canvas(cartaElement, {
+                    backgroundColor: null,
+                    scale: 2, // Mayor calidad
+                    logging: false,
+                    useCORS: true // Para cargar imágenes externas (QR)
+                });
+
+                // Convertir canvas a blob
+                canvas.toBlob(function(blob) {
+                    // Crear enlace de descarga
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = 'card-game-anime-invitacion.png';
+                    link.href = url;
+                    link.click();
+
+                    // Limpiar
+                    URL.revokeObjectURL(url);
+
+                    // Restaurar botón
+                    button.textContent = originalText;
+                    button.disabled = false;
+
+                    // Mensaje de éxito
+                    setTimeout(() => {
+                        button.textContent = '✅ ¡Descargada!';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                        }, 2000);
+                    }, 100);
+                }, 'image/png');
+
+            } catch (error) {
+                console.error('Error al descargar la carta:', error);
+                button.textContent = '❌ Error. Intenta de nuevo';
+                button.disabled = false;
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }
         }
     </script>
 </body>
