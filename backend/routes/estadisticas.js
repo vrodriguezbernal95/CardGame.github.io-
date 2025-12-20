@@ -139,4 +139,196 @@ router.get('/usuarios/list', async (req, res) => {
     }
 });
 
+// Comparar dos mazos (enfrentamientos directos)
+router.get('/comparar/mazos/:mazo1_id/:mazo2_id', async (req, res) => {
+    try {
+        const { mazo1_id, mazo2_id } = req.params;
+
+        // Obtener información de los mazos
+        const [mazos] = await db.query(`
+            SELECT id, nombre, serie FROM mazos WHERE id IN (?, ?)
+        `, [mazo1_id, mazo2_id]);
+
+        if (mazos.length !== 2) {
+            return res.status(404).json({
+                success: false,
+                message: 'Uno o ambos mazos no existen'
+            });
+        }
+
+        // Obtener enfrentamientos entre estos mazos
+        const [partidas] = await db.query(`
+            SELECT
+                p.id,
+                p.fecha_partida,
+                p.resultado,
+                p.notas,
+                u1.nombre as jugador1_nombre,
+                u2.nombre as jugador2_nombre,
+                m1.id as mazo1_id,
+                m1.nombre as mazo1_nombre,
+                m1.serie as mazo1_serie,
+                m2.id as mazo2_id,
+                m2.nombre as mazo2_nombre,
+                m2.serie as mazo2_serie
+            FROM partidas p
+            JOIN usuarios u1 ON p.jugador1_id = u1.id
+            JOIN usuarios u2 ON p.jugador2_id = u2.id
+            JOIN mazos m1 ON p.mazo1_id = m1.id
+            JOIN mazos m2 ON p.mazo2_id = m2.id
+            WHERE (p.mazo1_id = ? AND p.mazo2_id = ?)
+               OR (p.mazo1_id = ? AND p.mazo2_id = ?)
+            ORDER BY p.fecha_partida DESC
+        `, [mazo1_id, mazo2_id, mazo2_id, mazo1_id]);
+
+        // Calcular estadísticas
+        let mazo1_victorias = 0;
+        let mazo2_victorias = 0;
+        let empates = 0;
+
+        partidas.forEach(p => {
+            if (p.resultado === 'empate') {
+                empates++;
+            } else if (
+                (p.mazo1_id == mazo1_id && p.resultado === 'victoria_jugador1') ||
+                (p.mazo2_id == mazo1_id && p.resultado === 'victoria_jugador2')
+            ) {
+                mazo1_victorias++;
+            } else {
+                mazo2_victorias++;
+            }
+        });
+
+        res.json({
+            success: true,
+            mazo1: mazos.find(m => m.id == mazo1_id),
+            mazo2: mazos.find(m => m.id == mazo2_id),
+            estadisticas: {
+                total_partidas: partidas.length,
+                mazo1_victorias,
+                mazo2_victorias,
+                empates,
+                mazo1_winrate: partidas.length > 0 ? ((mazo1_victorias / partidas.length) * 100).toFixed(2) : 0,
+                mazo2_winrate: partidas.length > 0 ? ((mazo2_victorias / partidas.length) * 100).toFixed(2) : 0
+            },
+            partidas
+        });
+    } catch (error) {
+        console.error('Error comparando mazos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al comparar mazos'
+        });
+    }
+});
+
+// Comparar dos jugadores (enfrentamientos directos)
+router.get('/comparar/jugadores/:jugador1_id/:jugador2_id', async (req, res) => {
+    try {
+        const { jugador1_id, jugador2_id } = req.params;
+
+        // Obtener información de los jugadores
+        const [jugadores] = await db.query(`
+            SELECT id, nombre FROM usuarios WHERE id IN (?, ?)
+        `, [jugador1_id, jugador2_id]);
+
+        if (jugadores.length !== 2) {
+            return res.status(404).json({
+                success: false,
+                message: 'Uno o ambos jugadores no existen'
+            });
+        }
+
+        // Obtener enfrentamientos entre estos jugadores
+        const [partidas] = await db.query(`
+            SELECT
+                p.id,
+                p.fecha_partida,
+                p.resultado,
+                p.notas,
+                u1.id as jugador1_id,
+                u1.nombre as jugador1_nombre,
+                u2.id as jugador2_id,
+                u2.nombre as jugador2_nombre,
+                m1.nombre as mazo1_nombre,
+                m1.serie as mazo1_serie,
+                m2.nombre as mazo2_nombre,
+                m2.serie as mazo2_serie
+            FROM partidas p
+            JOIN usuarios u1 ON p.jugador1_id = u1.id
+            JOIN usuarios u2 ON p.jugador2_id = u2.id
+            JOIN mazos m1 ON p.mazo1_id = m1.id
+            JOIN mazos m2 ON p.mazo2_id = m2.id
+            WHERE (p.jugador1_id = ? AND p.jugador2_id = ?)
+               OR (p.jugador1_id = ? AND p.jugador2_id = ?)
+            ORDER BY p.fecha_partida DESC
+        `, [jugador1_id, jugador2_id, jugador2_id, jugador1_id]);
+
+        // Calcular estadísticas
+        let jugador1_victorias = 0;
+        let jugador2_victorias = 0;
+        let empates = 0;
+
+        // Mazos usados por cada jugador
+        const mazosJugador1 = {};
+        const mazosJugador2 = {};
+
+        partidas.forEach(p => {
+            // Contar victorias
+            if (p.resultado === 'empate') {
+                empates++;
+            } else if (
+                (p.jugador1_id == jugador1_id && p.resultado === 'victoria_jugador1') ||
+                (p.jugador2_id == jugador1_id && p.resultado === 'victoria_jugador2')
+            ) {
+                jugador1_victorias++;
+            } else {
+                jugador2_victorias++;
+            }
+
+            // Registrar mazos usados
+            if (p.jugador1_id == jugador1_id) {
+                const key = `${p.mazo1_nombre} (${p.mazo1_serie})`;
+                mazosJugador1[key] = (mazosJugador1[key] || 0) + 1;
+            } else {
+                const key = `${p.mazo2_nombre} (${p.mazo2_serie})`;
+                mazosJugador1[key] = (mazosJugador1[key] || 0) + 1;
+            }
+
+            if (p.jugador2_id == jugador2_id) {
+                const key = `${p.mazo2_nombre} (${p.mazo2_serie})`;
+                mazosJugador2[key] = (mazosJugador2[key] || 0) + 1;
+            } else {
+                const key = `${p.mazo1_nombre} (${p.mazo1_serie})`;
+                mazosJugador2[key] = (mazosJugador2[key] || 0) + 1;
+            }
+        });
+
+        res.json({
+            success: true,
+            jugador1: jugadores.find(j => j.id == jugador1_id),
+            jugador2: jugadores.find(j => j.id == jugador2_id),
+            estadisticas: {
+                total_partidas: partidas.length,
+                jugador1_victorias,
+                jugador2_victorias,
+                empates,
+                jugador1_winrate: partidas.length > 0 ? ((jugador1_victorias / partidas.length) * 100).toFixed(2) : 0,
+                jugador2_winrate: partidas.length > 0 ? ((jugador2_victorias / partidas.length) * 100).toFixed(2) : 0
+            },
+            mazosUsados: {
+                jugador1: mazosJugador1,
+                jugador2: mazosJugador2
+            },
+            partidas
+        });
+    } catch (error) {
+        console.error('Error comparando jugadores:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al comparar jugadores'
+        });
+    }
+});
+
 module.exports = router;

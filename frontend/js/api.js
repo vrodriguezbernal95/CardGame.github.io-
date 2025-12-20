@@ -146,6 +146,15 @@ class API {
     static async getUsuarios() {
         return await this.request('/estadisticas/usuarios/list');
     }
+
+    // Comparativas
+    static async compararMazos(mazo1_id, mazo2_id) {
+        return await this.request(`/estadisticas/comparar/mazos/${mazo1_id}/${mazo2_id}`);
+    }
+
+    static async compararJugadores(jugador1_id, jugador2_id) {
+        return await this.request(`/estadisticas/comparar/jugadores/${jugador1_id}/${jugador2_id}`);
+    }
 }
 
 // Utilidades UI
