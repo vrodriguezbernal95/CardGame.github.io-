@@ -295,14 +295,16 @@ class UI {
 
 // Protección de rutas
 function checkAuth(requireAdmin = false) {
+    const isInPagesFolder = window.location.pathname.includes('/pages/');
+
     if (!API.isAuthenticated()) {
-        window.location.href = 'login.html';
+        window.location.href = isInPagesFolder ? 'login.html' : 'pages/login.html';
         return false;
     }
 
     if (requireAdmin && !API.isAdmin()) {
         UI.showAlert('No tienes permisos para acceder a esta página', 'error');
-        window.location.href = 'index.html';
+        window.location.href = isInPagesFolder ? '../index.html' : 'index.html';
         return false;
     }
 
