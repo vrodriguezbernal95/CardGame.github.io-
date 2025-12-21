@@ -251,14 +251,19 @@
 
                 <h3 style="margin-bottom: 1.5rem;">🗑️ Gestionar Partidas Existentes</h3>
 
-                <div class="form-group" style="max-width: 400px; margin-bottom: 1.5rem;">
-                    <input
-                        type="text"
-                        id="buscar-partida"
-                        class="form-control"
-                        placeholder="🔍 Buscar por jugador o mazo..."
-                        style="padding-left: 1rem;"
-                    >
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; max-width: 400px; margin-bottom: 0;">
+                        <input
+                            type="text"
+                            id="buscar-partida"
+                            class="form-control"
+                            placeholder="🔍 Buscar por jugador o mazo..."
+                            style="padding-left: 1rem;"
+                        >
+                    </div>
+                    <button onclick="descargarExcel()" class="btn btn-success">
+                        📥 Descargar Excel
+                    </button>
                 </div>
 
                 <div id="partidas-lista-container">
