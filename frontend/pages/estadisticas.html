@@ -116,6 +116,31 @@
             margin-bottom: 0.5rem;
         }
 
+        .winrate-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .winrate-box {
+            text-align: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .winrate-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .winrate-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
         /* Responsive Mobile */
         @media (max-width: 768px) {
             .tabs {
@@ -169,6 +194,24 @@
 
             .mazo-usado-item {
                 font-size: 0.9rem;
+            }
+
+            .winrate-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .winrate-box {
+                padding: 0.75rem;
+            }
+
+            .winrate-label {
+                font-size: 0.8rem;
+            }
+
+            .winrate-value {
+                font-size: 1.8rem;
             }
         }
     </style>
@@ -595,20 +638,20 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-                            <div style="text-align: center; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        <div class="winrate-grid">
+                            <div class="winrate-box">
+                                <div class="winrate-label">
                                     Winrate ${mazo1.nombre}
                                 </div>
-                                <div style="font-size: 2.5rem; font-weight: 700; color: var(--success);">
+                                <div class="winrate-value" style="color: var(--success);">
                                     ${estadisticas.mazo1_winrate}%
                                 </div>
                             </div>
-                            <div style="text-align: center; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                            <div class="winrate-box">
+                                <div class="winrate-label">
                                     Winrate ${mazo2.nombre}
                                 </div>
-                                <div style="font-size: 2.5rem; font-weight: 700; color: var(--error);">
+                                <div class="winrate-value" style="color: var(--error);">
                                     ${estadisticas.mazo2_winrate}%
                                 </div>
                             </div>
@@ -744,20 +787,20 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-                            <div style="text-align: center; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        <div class="winrate-grid">
+                            <div class="winrate-box">
+                                <div class="winrate-label">
                                     Winrate ${jugador1.nombre}
                                 </div>
-                                <div style="font-size: 2.5rem; font-weight: 700; color: var(--success);">
+                                <div class="winrate-value" style="color: var(--success);">
                                     ${estadisticas.jugador1_winrate}%
                                 </div>
                             </div>
-                            <div style="text-align: center; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                            <div class="winrate-box">
+                                <div class="winrate-label">
                                     Winrate ${jugador2.nombre}
                                 </div>
-                                <div style="font-size: 2.5rem; font-weight: 700; color: var(--error);">
+                                <div class="winrate-value" style="color: var(--error);">
                                     ${estadisticas.jugador2_winrate}%
                                 </div>
                             </div>
