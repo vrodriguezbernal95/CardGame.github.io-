@@ -242,6 +242,27 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Añadir Partida</button>
                 </form>
+
+                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+
+                <h3 style="margin-bottom: 1.5rem;">🗑️ Gestionar Partidas Existentes</h3>
+
+                <div class="form-group" style="max-width: 400px; margin-bottom: 1.5rem;">
+                    <input
+                        type="text"
+                        id="buscar-partida"
+                        class="form-control"
+                        placeholder="🔍 Buscar por jugador o mazo..."
+                        style="padding-left: 1rem;"
+                    >
+                </div>
+
+                <div id="partidas-lista-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando partidas...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab: Usuarios -->
@@ -361,6 +382,7 @@
             event.target.classList.add('active');
 
             if (tab === 'pendientes') cargarPartidasPendientes();
+            if (tab === 'agregar') cargarPartidasLista();
             if (tab === 'usuarios') cargarUsuarios();
             if (tab === 'mazos') cargarMazos();
         }
@@ -570,6 +592,7 @@
                     UI.showAlert('Partida añadida exitosamente', 'success');
                     e.target.reset();
                     cargarResumen();
+                    cargarPartidasLista();
                 }
             } catch (error) {
                 UI.showAlert('Error al añadir partida: ' + error.message, 'error');
@@ -835,6 +858,121 @@
                 }
             } catch (error) {
                 UI.showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        // ========== GESTIÓN DE PARTIDAS ==========
+
+        let todasLasPartidas = [];
+
+        // Cargar lista de partidas
+        async function cargarPartidasLista() {
+            const container = document.getElementById('partidas-lista-container');
+
+            try {
+                const result = await API.getPartidas();
+
+                if (!result.success || result.partidas.length === 0) {
+                    container.innerHTML = '<p class="text-center">No hay partidas registradas</p>';
+                    todasLasPartidas = [];
+                    return;
+                }
+
+                todasLasPartidas = result.partidas;
+                renderizarPartidas(todasLasPartidas);
+
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Renderizar tabla de partidas
+        function renderizarPartidas(partidas) {
+            const container = document.getElementById('partidas-lista-container');
+
+            if (partidas.length === 0) {
+                container.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">No se encontraron partidas</p>';
+                return;
+            }
+
+            let html = `
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Jugador 1</th>
+                                <th>Mazo 1</th>
+                                <th style="text-align: center;">VS</th>
+                                <th>Jugador 2</th>
+                                <th>Mazo 2</th>
+                                <th>Resultado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            partidas.forEach(p => {
+                const fecha = new Date(p.fecha_partida).toLocaleDateString();
+                const ganador = p.ganador_nombre || 'Empate';
+
+                html += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${fecha}</td>
+                        <td><strong>${p.jugador1_nombre}</strong></td>
+                        <td><span class="badge badge-info">${p.mazo1_nombre}</span></td>
+                        <td style="text-align: center;">⚔️</td>
+                        <td><strong>${p.jugador2_nombre}</strong></td>
+                        <td><span class="badge badge-info">${p.mazo2_nombre}</span></td>
+                        <td><span class="badge ${UI.getBadgeClass(p.resultado)}">${UI.formatResultado(p.resultado)}</span></td>
+                        <td>
+                            <button onclick="eliminarPartida(${p.id})" class="btn btn-danger btn-sm">
+                                🗑️ Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // Filtrar partidas
+        document.getElementById('buscar-partida').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+
+            if (query === '') {
+                renderizarPartidas(todasLasPartidas);
+                return;
+            }
+
+            const partidasFiltradas = todasLasPartidas.filter(p =>
+                p.jugador1_nombre.toLowerCase().includes(query) ||
+                p.jugador2_nombre.toLowerCase().includes(query) ||
+                p.mazo1_nombre.toLowerCase().includes(query) ||
+                p.mazo2_nombre.toLowerCase().includes(query)
+            );
+
+            renderizarPartidas(partidasFiltradas);
+        });
+
+        // Eliminar partida
+        async function eliminarPartida(id) {
+            if (!confirm('¿Eliminar esta partida del historial? Esta acción no se puede deshacer.')) return;
+
+            try {
+                const result = await API.deletePartida(id);
+                if (result.success) {
+                    UI.showAlert('Partida eliminada exitosamente', 'success');
+                    cargarPartidasLista();
+                    cargarResumen();
+                }
+            } catch (error) {
+                UI.showAlert('Error al eliminar partida: ' + error.message, 'error');
             }
         }
 
