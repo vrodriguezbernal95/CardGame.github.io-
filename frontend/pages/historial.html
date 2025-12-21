@@ -5,6 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Partidas - Card Game Anime</title>
     <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .filtros-container {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filtros-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-container {
+                padding: 1rem;
+            }
+
+            .filtros-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .filtros-actions {
+                flex-direction: column;
+            }
+
+            .filtros-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header Principal -->
@@ -37,6 +77,36 @@
                 <p class="card-subtitle">Todas las batallas épicas registradas</p>
             </div>
 
+            <!-- Filtros -->
+            <div class="filtros-container">
+                <div class="filtros-grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Fecha desde</label>
+                        <input type="date" id="filtro-fecha-desde" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Fecha hasta</label>
+                        <input type="date" id="filtro-fecha-hasta" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Jugador</label>
+                        <select id="filtro-jugador" class="form-control">
+                            <option value="">Todos los jugadores</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Mazo</label>
+                        <select id="filtro-mazo" class="form-control">
+                            <option value="">Todos los mazos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filtros-actions">
+                    <button onclick="limpiarFiltros()" class="btn btn-secondary">Limpiar Filtros</button>
+                    <button onclick="aplicarFiltros()" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </div>
+
             <div id="partidas-container">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -53,7 +123,11 @@
             document.getElementById('admin-link').style.display = 'block';
         }
 
-        async function cargarPartidas() {
+        let todasLasPartidas = [];
+        let jugadores = new Set();
+        let mazos = new Set();
+
+        async function cargarDatos() {
             const container = document.getElementById('partidas-container');
 
             try {
@@ -68,67 +142,36 @@
                     return;
                 }
 
-                // Construir tabla
-                let html = `
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Jugador 1</th>
-                                <th>Mazo 1</th>
-                                <th style="text-align: center;">VS</th>
-                                <th>Jugador 2</th>
-                                <th>Mazo 2</th>
-                                <th>Resultado</th>
-                                <th>Ganador</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
+                todasLasPartidas = result.partidas;
 
-                result.partidas.forEach(partida => {
-                    const fecha = UI.formatDate(partida.fecha_partida);
-                    const ganador = partida.ganador_nombre || 'Empate';
-                    const badgeClass = UI.getBadgeClass(partida.resultado);
-
-                    html += `
-                        <tr>
-                            <td>${fecha}</td>
-                            <td><strong>${partida.jugador1_nombre}</strong></td>
-                            <td>
-                                <span class="badge badge-info">${partida.mazo1_nombre}</span>
-                                <br><small style="color: var(--text-secondary);">${partida.mazo1_serie}</small>
-                            </td>
-                            <td style="text-align: center; font-size: 1.5rem;">⚔️</td>
-                            <td><strong>${partida.jugador2_nombre}</strong></td>
-                            <td>
-                                <span class="badge badge-info">${partida.mazo2_nombre}</span>
-                                <br><small style="color: var(--text-secondary);">${partida.mazo2_serie}</small>
-                            </td>
-                            <td>
-                                <span class="badge ${badgeClass}">${UI.formatResultado(partida.resultado)}</span>
-                            </td>
-                            <td><strong>${ganador}</strong></td>
-                        </tr>
-                    `;
-
-                    if (partida.notas) {
-                        html += `
-                            <tr>
-                                <td colspan="8" style="background: #f9fafb; font-style: italic; color: var(--text-secondary);">
-                                    📝 ${partida.notas}
-                                </td>
-                            </tr>
-                        `;
-                    }
+                // Extraer jugadores y mazos únicos
+                todasLasPartidas.forEach(partida => {
+                    jugadores.add(partida.jugador1_nombre);
+                    jugadores.add(partida.jugador2_nombre);
+                    mazos.add(partida.mazo1_nombre);
+                    mazos.add(partida.mazo2_nombre);
                 });
 
-                html += `
-                        </tbody>
-                    </table>
-                `;
+                // Llenar selects de filtros
+                const selectJugador = document.getElementById('filtro-jugador');
+                const selectMazo = document.getElementById('filtro-mazo');
 
-                container.innerHTML = html;
+                Array.from(jugadores).sort().forEach(jugador => {
+                    const option = document.createElement('option');
+                    option.value = jugador;
+                    option.textContent = jugador;
+                    selectJugador.appendChild(option);
+                });
+
+                Array.from(mazos).sort().forEach(mazo => {
+                    const option = document.createElement('option');
+                    option.value = mazo;
+                    option.textContent = mazo;
+                    selectMazo.appendChild(option);
+                });
+
+                // Renderizar todas las partidas
+                renderizarPartidas(todasLasPartidas);
 
             } catch (error) {
                 container.innerHTML = `
@@ -139,8 +182,129 @@
             }
         }
 
-        // Cargar partidas al iniciar
-        document.addEventListener('DOMContentLoaded', cargarPartidas);
+        function renderizarPartidas(partidas) {
+            const container = document.getElementById('partidas-container');
+
+            if (partidas.length === 0) {
+                container.innerHTML = `
+                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        No se encontraron partidas con los filtros seleccionados.
+                    </p>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Jugador 1</th>
+                            <th>Mazo 1</th>
+                            <th style="text-align: center;">VS</th>
+                            <th>Jugador 2</th>
+                            <th>Mazo 2</th>
+                            <th>Resultado</th>
+                            <th>Ganador</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            partidas.forEach(partida => {
+                const fecha = UI.formatDate(partida.fecha_partida);
+                const ganador = partida.ganador_nombre || 'Empate';
+                const badgeClass = UI.getBadgeClass(partida.resultado);
+
+                html += `
+                    <tr>
+                        <td>${fecha}</td>
+                        <td><strong>${partida.jugador1_nombre}</strong></td>
+                        <td>
+                            <span class="badge badge-info">${partida.mazo1_nombre}</span>
+                            <br><small style="color: var(--text-secondary);">${partida.mazo1_serie}</small>
+                        </td>
+                        <td style="text-align: center; font-size: 1.5rem;">⚔️</td>
+                        <td><strong>${partida.jugador2_nombre}</strong></td>
+                        <td>
+                            <span class="badge badge-info">${partida.mazo2_nombre}</span>
+                            <br><small style="color: var(--text-secondary);">${partida.mazo2_serie}</small>
+                        </td>
+                        <td>
+                            <span class="badge ${badgeClass}">${UI.formatResultado(partida.resultado)}</span>
+                        </td>
+                        <td><strong>${ganador}</strong></td>
+                    </tr>
+                `;
+
+                if (partida.notas) {
+                    html += `
+                        <tr>
+                            <td colspan="8" style="background: #f9fafb; font-style: italic; color: var(--text-secondary);">
+                                📝 ${partida.notas}
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function aplicarFiltros() {
+            const fechaDesde = document.getElementById('filtro-fecha-desde').value;
+            const fechaHasta = document.getElementById('filtro-fecha-hasta').value;
+            const jugador = document.getElementById('filtro-jugador').value;
+            const mazo = document.getElementById('filtro-mazo').value;
+
+            let partidasFiltradas = todasLasPartidas.filter(partida => {
+                // Filtro por fecha desde
+                if (fechaDesde) {
+                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
+                    if (fechaPartida < fechaDesde) return false;
+                }
+
+                // Filtro por fecha hasta
+                if (fechaHasta) {
+                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
+                    if (fechaPartida > fechaHasta) return false;
+                }
+
+                // Filtro por jugador
+                if (jugador) {
+                    if (partida.jugador1_nombre !== jugador && partida.jugador2_nombre !== jugador) {
+                        return false;
+                    }
+                }
+
+                // Filtro por mazo
+                if (mazo) {
+                    if (partida.mazo1_nombre !== mazo && partida.mazo2_nombre !== mazo) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderizarPartidas(partidasFiltradas);
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-fecha-desde').value = '';
+            document.getElementById('filtro-fecha-hasta').value = '';
+            document.getElementById('filtro-jugador').value = '';
+            document.getElementById('filtro-mazo').value = '';
+            renderizarPartidas(todasLasPartidas);
+        }
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', cargarDatos);
     </script>
 </body>
 </html>
