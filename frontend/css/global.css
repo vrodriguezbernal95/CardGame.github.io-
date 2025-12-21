@@ -55,11 +55,12 @@ nav {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    white-space: nowrap;
 }
 
 .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: center;
     list-style: none;
 }
@@ -70,6 +71,7 @@ nav {
     font-weight: 500;
     transition: color 0.3s;
     position: relative;
+    white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -95,6 +97,7 @@ nav {
     display: flex;
     align-items: center;
     gap: 1rem;
+    white-space: nowrap;
 }
 
 .user-name {
