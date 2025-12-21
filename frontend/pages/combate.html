@@ -78,6 +78,55 @@
             color: var(--accent-color);
             font-size: 1.5rem;
         }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .vs-section {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin: 1rem 0;
+            }
+
+            .vs-divider {
+                font-size: 1.5rem;
+                text-align: center;
+                margin: 0.5rem 0;
+            }
+
+            .jugador-section {
+                padding: 1rem;
+            }
+
+            .jugador-section h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .ganador-options {
+                flex-direction: column;
+                gap: 0.75rem;
+                margin: 1.5rem 0;
+            }
+
+            .ganador-btn {
+                padding: 0.85rem;
+                font-size: 0.95rem;
+            }
+
+            .limite-info {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .limite-info strong {
+                font-size: 1.2rem;
+            }
+
+            .combate-form {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
