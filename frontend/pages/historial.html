@@ -41,7 +41,6 @@
     </div>
 
     <script src="../js/api.js"></script>
-    <script src="../js/navbar.js"></script>
     <script>
         // Mostrar link de admin si es admin
         if (API.isAdmin()) {
@@ -65,21 +64,20 @@
 
                 // Construir tabla
                 let html = `
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Jugador 1</th>
-                                    <th>Mazo 1</th>
-                                    <th style="text-align: center;">VS</th>
-                                    <th>Jugador 2</th>
-                                    <th>Mazo 2</th>
-                                    <th>Resultado</th>
-                                    <th>Ganador</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Jugador 1</th>
+                                <th>Mazo 1</th>
+                                <th style="text-align: center;">VS</th>
+                                <th>Jugador 2</th>
+                                <th>Mazo 2</th>
+                                <th>Resultado</th>
+                                <th>Ganador</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
 
                 result.partidas.forEach(partida => {
@@ -120,9 +118,8 @@
                 });
 
                 html += `
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 `;
 
                 container.innerHTML = html;

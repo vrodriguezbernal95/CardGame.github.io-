@@ -110,93 +110,6 @@ nav {
     font-weight: 600;
 }
 
-/* Menú Hamburguesa */
-.hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 8px;
-    background: none;
-    border: none;
-    z-index: 1001;
-}
-
-.hamburger span {
-    width: 25px;
-    height: 3px;
-    background: var(--primary-color);
-    border-radius: 3px;
-    transition: all 0.3s ease;
-}
-
-.hamburger.active span:nth-child(1) {
-    transform: rotate(45deg) translate(8px, 8px);
-}
-
-.hamburger.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.hamburger.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
-}
-
-/* Responsive Navbar */
-@media (max-width: 768px) {
-    .hamburger {
-        display: flex;
-    }
-
-    .nav-links {
-        position: fixed;
-        left: -100%;
-        top: 70px;
-        flex-direction: column;
-        background: rgba(255, 255, 255, 0.98);
-        width: 100%;
-        text-align: center;
-        transition: left 0.3s;
-        box-shadow: 0 10px 27px rgba(0, 0, 0, 0.1);
-        padding: 2rem 0;
-        gap: 0;
-    }
-
-    .nav-links.active {
-        left: 0;
-    }
-
-    .nav-links li {
-        padding: 1rem 0;
-        width: 100%;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .nav-links a {
-        display: block;
-        width: 100%;
-        padding: 0.5rem 0;
-    }
-
-    .nav-links a::after {
-        display: none;
-    }
-
-    #user-nav {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 300px;
-        z-index: 1002;
-    }
-
-    .nav-user button {
-        width: 100%;
-    }
-}
-
 /* Container */
 .container {
     max-width: 1400px;
@@ -477,46 +390,18 @@ nav {
 
     .container {
         padding: 0 1rem;
-        margin: 1rem auto;
     }
 
     .card {
         padding: 1rem;
     }
 
-    .card-title {
-        font-size: 1.3rem;
-    }
-
-    .card-subtitle {
-        font-size: 0.9rem;
-    }
-
-    /* Tablas con scroll horizontal en móvil */
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -1rem;
-        padding: 0 1rem;
-    }
-
     .table {
-        font-size: 0.75rem;
-        min-width: 600px;
+        font-size: 0.875rem;
     }
 
     .table th,
     .table td {
-        padding: 0.5rem 0.3rem;
-        white-space: nowrap;
-    }
-
-    .table th {
-        font-size: 0.7rem;
-    }
-
-    .btn {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
+        padding: 0.5rem;
     }
 }
