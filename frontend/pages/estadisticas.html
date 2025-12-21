@@ -115,6 +115,62 @@
             border-radius: 4px;
             margin-bottom: 0.5rem;
         }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .tabs {
+                gap: 0.25rem;
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .comparador {
+                padding: 1rem;
+            }
+
+            .comparador-selects {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .vs-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                margin: 0.5rem 0;
+            }
+
+            .resultado-comparacion {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .mazos-usados {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .mazo-usado-item {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
