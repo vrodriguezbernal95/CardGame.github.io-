@@ -251,19 +251,35 @@
 
                 <h3 style="margin-bottom: 1.5rem;">🗑️ Gestionar Partidas Existentes</h3>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <div class="form-group" style="flex: 1; max-width: 400px; margin-bottom: 0;">
-                        <input
-                            type="text"
-                            id="buscar-partida"
-                            class="form-control"
-                            placeholder="🔍 Buscar por jugador o mazo..."
-                            style="padding-left: 1rem;"
-                        >
+                <!-- Filtros Admin -->
+                <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.9rem;">Fecha desde</label>
+                            <input type="date" id="filtro-admin-fecha-desde" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.9rem;">Fecha hasta</label>
+                            <input type="date" id="filtro-admin-fecha-hasta" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.9rem;">Jugador</label>
+                            <select id="filtro-admin-jugador" class="form-control">
+                                <option value="">Todos los jugadores</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.9rem;">Mazo</label>
+                            <select id="filtro-admin-mazo" class="form-control">
+                                <option value="">Todos los mazos</option>
+                            </select>
+                        </div>
                     </div>
-                    <button onclick="descargarExcel()" class="btn btn-success">
-                        📥 Descargar Excel
-                    </button>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
+                        <button onclick="limpiarFiltrosAdmin()" class="btn btn-secondary">Limpiar Filtros</button>
+                        <button onclick="aplicarFiltrosAdmin()" class="btn btn-primary">Aplicar Filtros</button>
+                        <button onclick="descargarExcel()" class="btn btn-success">📥 Descargar Excel</button>
+                    </div>
                 </div>
 
                 <div id="partidas-lista-container">
@@ -884,6 +900,7 @@
         // ========== GESTIÓN DE PARTIDAS ==========
 
         let todasLasPartidas = [];
+        let partidasFiltradas = [];
 
         // Cargar lista de partidas
         async function cargarPartidasLista() {
@@ -895,15 +912,57 @@
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = '<p class="text-center">No hay partidas registradas</p>';
                     todasLasPartidas = [];
+                    partidasFiltradas = [];
                     return;
                 }
 
                 todasLasPartidas = result.partidas;
-                renderizarPartidas(todasLasPartidas);
+                partidasFiltradas = [...todasLasPartidas];
+
+                // Poblar selects de filtros
+                poblarSelectsFiltros();
+
+                renderizarPartidas(partidasFiltradas);
 
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
             }
+        }
+
+        // Poblar selects de filtros
+        function poblarSelectsFiltros() {
+            const selectJugador = document.getElementById('filtro-admin-jugador');
+            const selectMazo = document.getElementById('filtro-admin-mazo');
+
+            // Limpiar opciones existentes (excepto la primera)
+            selectJugador.innerHTML = '<option value="">Todos los jugadores</option>';
+            selectMazo.innerHTML = '<option value="">Todos los mazos</option>';
+
+            // Extraer jugadores y mazos únicos
+            const jugadores = new Set();
+            const mazos = new Set();
+
+            todasLasPartidas.forEach(p => {
+                jugadores.add(p.jugador1_nombre);
+                jugadores.add(p.jugador2_nombre);
+                mazos.add(p.mazo1_nombre);
+                mazos.add(p.mazo2_nombre);
+            });
+
+            // Agregar opciones
+            Array.from(jugadores).sort().forEach(jugador => {
+                const option = document.createElement('option');
+                option.value = jugador;
+                option.textContent = jugador;
+                selectJugador.appendChild(option);
+            });
+
+            Array.from(mazos).sort().forEach(mazo => {
+                const option = document.createElement('option');
+                option.value = mazo;
+                option.textContent = mazo;
+                selectMazo.appendChild(option);
+            });
         }
 
         // Renderizar tabla de partidas
@@ -961,24 +1020,55 @@
             container.innerHTML = html;
         }
 
-        // Filtrar partidas
-        document.getElementById('buscar-partida').addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
+        // Aplicar filtros
+        function aplicarFiltrosAdmin() {
+            const fechaDesde = document.getElementById('filtro-admin-fecha-desde').value;
+            const fechaHasta = document.getElementById('filtro-admin-fecha-hasta').value;
+            const jugador = document.getElementById('filtro-admin-jugador').value;
+            const mazo = document.getElementById('filtro-admin-mazo').value;
 
-            if (query === '') {
-                renderizarPartidas(todasLasPartidas);
-                return;
-            }
+            partidasFiltradas = todasLasPartidas.filter(partida => {
+                // Filtro por fecha desde
+                if (fechaDesde) {
+                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
+                    if (fechaPartida < fechaDesde) return false;
+                }
 
-            const partidasFiltradas = todasLasPartidas.filter(p =>
-                p.jugador1_nombre.toLowerCase().includes(query) ||
-                p.jugador2_nombre.toLowerCase().includes(query) ||
-                p.mazo1_nombre.toLowerCase().includes(query) ||
-                p.mazo2_nombre.toLowerCase().includes(query)
-            );
+                // Filtro por fecha hasta
+                if (fechaHasta) {
+                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
+                    if (fechaPartida > fechaHasta) return false;
+                }
+
+                // Filtro por jugador
+                if (jugador) {
+                    if (partida.jugador1_nombre !== jugador && partida.jugador2_nombre !== jugador) {
+                        return false;
+                    }
+                }
+
+                // Filtro por mazo
+                if (mazo) {
+                    if (partida.mazo1_nombre !== mazo && partida.mazo2_nombre !== mazo) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
 
             renderizarPartidas(partidasFiltradas);
-        });
+        }
+
+        // Limpiar filtros
+        function limpiarFiltrosAdmin() {
+            document.getElementById('filtro-admin-fecha-desde').value = '';
+            document.getElementById('filtro-admin-fecha-hasta').value = '';
+            document.getElementById('filtro-admin-jugador').value = '';
+            document.getElementById('filtro-admin-mazo').value = '';
+            partidasFiltradas = [...todasLasPartidas];
+            renderizarPartidas(partidasFiltradas);
+        }
 
         // Eliminar partida
         async function eliminarPartida(id) {
@@ -998,13 +1088,13 @@
 
         // Descargar historial en Excel
         function descargarExcel() {
-            if (!todasLasPartidas || todasLasPartidas.length === 0) {
-                UI.showAlert('No hay partidas para descargar', 'error');
+            if (!partidasFiltradas || partidasFiltradas.length === 0) {
+                UI.showAlert('No hay partidas para descargar con los filtros actuales', 'error');
                 return;
             }
 
-            // Preparar datos para Excel
-            const datosExcel = todasLasPartidas.map(p => {
+            // Preparar datos para Excel (solo partidas filtradas)
+            const datosExcel = partidasFiltradas.map(p => {
                 const fecha = new Date(p.fecha_partida).toLocaleDateString('es-ES');
                 const ganador = p.ganador_nombre || 'Empate';
 
@@ -1058,7 +1148,8 @@
             // Descargar archivo
             XLSX.writeFile(wb, nombreArchivo);
 
-            UI.showAlert(`Archivo ${nombreArchivo} descargado exitosamente`, 'success');
+            const numPartidas = partidasFiltradas.length;
+            UI.showAlert(`${numPartidas} partida${numPartidas !== 1 ? 's' : ''} descargada${numPartidas !== 1 ? 's' : ''} en ${nombreArchivo}`, 'success');
         }
 
         // Inicializar
