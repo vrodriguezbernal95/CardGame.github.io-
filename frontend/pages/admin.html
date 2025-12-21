@@ -237,6 +237,10 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Fecha del Combate</label>
+                        <input type="date" id="fecha-partida" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Notas (opcional)</label>
                         <textarea id="notas-partida" class="form-control" rows="3"></textarea>
                     </div>
@@ -583,6 +587,7 @@
                 mazo1_id: parseInt(document.getElementById('mazo1').value),
                 mazo2_id: parseInt(document.getElementById('mazo2').value),
                 resultado: document.getElementById('resultado').value,
+                fecha_partida: document.getElementById('fecha-partida').value,
                 notas: document.getElementById('notas-partida').value.trim() || null
             };
 
@@ -591,6 +596,9 @@
                 if (result.success) {
                     UI.showAlert('Partida añadida exitosamente', 'success');
                     e.target.reset();
+                    // Restablecer fecha a hoy
+                    const hoy = new Date().toISOString().split('T')[0];
+                    document.getElementById('fecha-partida').value = hoy;
                     cargarResumen();
                     cargarPartidasLista();
                 }
@@ -981,6 +989,13 @@
             cargarResumen();
             cargarPartidasPendientes();
             cargarSelectores();
+
+            // Establecer fecha de hoy por defecto en el formulario de añadir partida
+            const fechaInput = document.getElementById('fecha-partida');
+            if (fechaInput) {
+                const hoy = new Date().toISOString().split('T')[0];
+                fechaInput.value = hoy;
+            }
         });
     </script>
 </body>
