@@ -248,7 +248,8 @@ router.post('/', verifyToken, verifyAdmin, [
     body('jugador2_id').isInt().withMessage('ID de jugador 2 inválido'),
     body('mazo1_id').isInt().withMessage('ID de mazo 1 inválido'),
     body('mazo2_id').isInt().withMessage('ID de mazo 2 inválido'),
-    body('resultado').isIn(['victoria_jugador1', 'victoria_jugador2', 'empate']).withMessage('Resultado inválido')
+    body('resultado').isIn(['victoria_jugador1', 'victoria_jugador2', 'empate']).withMessage('Resultado inválido'),
+    body('fecha_partida').optional().isISO8601().withMessage('Fecha inválida')
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -258,7 +259,7 @@ router.post('/', verifyToken, verifyAdmin, [
         });
     }
 
-    const { jugador1_id, jugador2_id, mazo1_id, mazo2_id, resultado, notas } = req.body;
+    const { jugador1_id, jugador2_id, mazo1_id, mazo2_id, resultado, fecha_partida, notas } = req.body;
 
     // Calcular ganador_id según resultado
     let ganador_id = null;
@@ -270,9 +271,9 @@ router.post('/', verifyToken, verifyAdmin, [
 
     try {
         const [result] = await db.query(`
-            INSERT INTO partidas (jugador1_id, jugador2_id, mazo1_id, mazo2_id, ganador_id, resultado, notas)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [jugador1_id, jugador2_id, mazo1_id, mazo2_id, ganador_id, resultado, notas || null]);
+            INSERT INTO partidas (jugador1_id, jugador2_id, mazo1_id, mazo2_id, ganador_id, resultado, fecha_partida, notas)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [jugador1_id, jugador2_id, mazo1_id, mazo2_id, ganador_id, resultado, fecha_partida || null, notas || null]);
 
         res.status(201).json({
             success: true,
