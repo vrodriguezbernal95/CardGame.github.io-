@@ -153,6 +153,30 @@
                 font-size: 0.85rem;
             }
 
+            /* Filtros en móvil */
+            #tab-generales > div:first-child {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            #tab-generales > div:first-child h3 {
+                font-size: 1rem;
+                margin-bottom: 0.75rem;
+            }
+
+            #tab-generales > div:first-child > div:first-of-type {
+                grid-template-columns: 1fr !important;
+            }
+
+            #tab-generales > div:first-child > div:last-of-type {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            #tab-generales > div:first-child > div:last-of-type button {
+                width: 100%;
+            }
+
             .comparador {
                 padding: 1rem;
             }
@@ -256,11 +280,32 @@
 
             <!-- Tab: Estadísticas Generales -->
             <div id="tab-generales" class="tab-content active">
+                <!-- Filtros -->
+                <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🔍 Filtros</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Mes/Año</label>
+                            <input type="month" id="filtro-mes" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Jugador</label>
+                            <select id="filtro-jugador-stats" class="form-control">
+                                <option value="">Todos los jugadores</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button onclick="limpiarFiltrosStats()" class="btn btn-secondary">Limpiar Filtros</button>
+                        <button onclick="aplicarFiltrosStats()" class="btn btn-primary">Aplicar Filtros</button>
+                    </div>
+                </div>
+
                 <!-- Estadísticas de Jugadores -->
                 <div class="card" style="margin-bottom: 2rem;">
                     <div class="card-header">
                         <h2 class="card-title">👥 Estadísticas de Jugadores</h2>
-                        <p class="card-subtitle">Winrate y récord de todos los jugadores</p>
+                        <p class="card-subtitle" id="subtitle-jugadores">Winrate y récord de todos los jugadores</p>
                     </div>
 
                     <div id="estadisticas-jugadores">
@@ -275,7 +320,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">🎴 Estadísticas de Mazos</h2>
-                        <p class="card-subtitle">Winrate y récord de todos los mazos</p>
+                        <p class="card-subtitle" id="subtitle-mazos">Winrate y récord de todos los mazos</p>
                     </div>
 
                     <div id="estadisticas-mazos">
@@ -346,6 +391,11 @@
         // SearchableSelects para comparaciones
         let selectMazo1, selectMazo2, selectJugador1, selectJugador2;
 
+        // Variables globales para filtros
+        let todasLasPartidas = [];
+        let todosLosJugadores = [];
+        let todosLosMazos = [];
+
         // Cambiar entre tabs
         function cambiarTab(tab) {
             // Ocultar todos los tabs
@@ -357,17 +407,195 @@
             event.target.classList.add('active');
         }
 
-        // Cargar estadísticas generales
-        async function cargarEstadisticasJugadores() {
+        // Cargar todas las partidas y llenar filtros
+        async function cargarDatosIniciales() {
+            try {
+                // Cargar partidas
+                const resultPartidas = await API.getPartidas();
+                if (resultPartidas.success) {
+                    todasLasPartidas = resultPartidas.partidas;
+                }
+
+                // Cargar jugadores
+                const resultJugadores = await API.getUsuarios();
+                if (resultJugadores.success) {
+                    todosLosJugadores = resultJugadores.usuarios;
+
+                    // Llenar select de jugadores para filtro
+                    const selectJugador = document.getElementById('filtro-jugador-stats');
+                    todosLosJugadores.sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach(jugador => {
+                        const option = document.createElement('option');
+                        option.value = jugador.id;
+                        option.textContent = jugador.nombre;
+                        selectJugador.appendChild(option);
+                    });
+                }
+
+                // Cargar mazos
+                const resultMazos = await API.getMazos();
+                if (resultMazos.success) {
+                    todosLosMazos = resultMazos.mazos;
+                }
+
+                // Cargar estadísticas iniciales (sin filtros)
+                cargarEstadisticasJugadores(todasLasPartidas);
+                cargarEstadisticasMazos(todasLasPartidas);
+
+            } catch (error) {
+                console.error('Error cargando datos iniciales:', error);
+            }
+        }
+
+        // Aplicar filtros
+        function aplicarFiltrosStats() {
+            const mes = document.getElementById('filtro-mes').value;
+            const jugadorId = document.getElementById('filtro-jugador-stats').value;
+
+            let partidasFiltradas = todasLasPartidas.filter(partida => {
+                // Filtro por mes
+                if (mes) {
+                    const fechaPartida = new Date(partida.fecha_partida);
+                    const [year, month] = mes.split('-');
+                    if (fechaPartida.getFullYear() !== parseInt(year) ||
+                        (fechaPartida.getMonth() + 1) !== parseInt(month)) {
+                        return false;
+                    }
+                }
+
+                // Filtro por jugador (si el jugador participó en la partida)
+                if (jugadorId) {
+                    const jugadorIdInt = parseInt(jugadorId);
+                    // Necesitamos obtener los IDs de los jugadores de la partida
+                    // Como solo tenemos los nombres, buscaremos por nombre
+                    const jugadorSeleccionado = todosLosJugadores.find(j => j.id === jugadorIdInt);
+                    if (jugadorSeleccionado) {
+                        if (partida.jugador1_nombre !== jugadorSeleccionado.nombre &&
+                            partida.jugador2_nombre !== jugadorSeleccionado.nombre) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            });
+
+            // Actualizar subtítulos
+            let subtituloTexto = '';
+            if (mes || jugadorId) {
+                const partes = [];
+                if (mes) {
+                    const [year, month] = mes.split('-');
+                    const fecha = new Date(year, month - 1);
+                    const nombreMes = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                    partes.push(nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1));
+                }
+                if (jugadorId) {
+                    const jugadorSeleccionado = todosLosJugadores.find(j => j.id === parseInt(jugadorId));
+                    if (jugadorSeleccionado) {
+                        partes.push(`Jugador: ${jugadorSeleccionado.nombre}`);
+                    }
+                }
+                subtituloTexto = `Filtrado por: ${partes.join(' - ')} (${partidasFiltradas.length} partidas)`;
+            } else {
+                subtituloTexto = 'Winrate y récord de todos los jugadores';
+            }
+
+            document.getElementById('subtitle-jugadores').textContent = subtituloTexto;
+            document.getElementById('subtitle-mazos').textContent = subtituloTexto.replace('jugadores', 'mazos');
+
+            // Recargar estadísticas con partidas filtradas
+            cargarEstadisticasJugadores(partidasFiltradas);
+            cargarEstadisticasMazos(partidasFiltradas);
+        }
+
+        // Limpiar filtros
+        function limpiarFiltrosStats() {
+            document.getElementById('filtro-mes').value = '';
+            document.getElementById('filtro-jugador-stats').value = '';
+            document.getElementById('subtitle-jugadores').textContent = 'Winrate y récord de todos los jugadores';
+            document.getElementById('subtitle-mazos').textContent = 'Winrate y récord de todos los mazos';
+            cargarEstadisticasJugadores(todasLasPartidas);
+            cargarEstadisticasMazos(todasLasPartidas);
+        }
+
+        // Cargar estadísticas de jugadores (modificada para aceptar partidas filtradas)
+        function cargarEstadisticasJugadores(partidas) {
             const container = document.getElementById('estadisticas-jugadores');
 
-            try {
-                const result = await API.getEstadisticasJugadores();
+            if (!partidas || partidas.length === 0) {
+                container.innerHTML = `
+                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        No hay estadísticas disponibles con los filtros seleccionados.
+                    </p>
+                `;
+                return;
+            }
 
-                if (!result.success || result.estadisticas.length === 0) {
+            try {
+                // Calcular estadísticas manualmente desde partidas
+                const statsJugadores = {};
+
+                partidas.forEach(partida => {
+                    // Inicializar stats para jugador1 si no existe
+                    if (!statsJugadores[partida.jugador1_nombre]) {
+                        statsJugadores[partida.jugador1_nombre] = {
+                            nombre: partida.jugador1_nombre,
+                            total_partidas: 0,
+                            victorias: 0,
+                            derrotas: 0,
+                            empates: 0
+                        };
+                    }
+
+                    // Inicializar stats para jugador2 si no existe
+                    if (!statsJugadores[partida.jugador2_nombre]) {
+                        statsJugadores[partida.jugador2_nombre] = {
+                            nombre: partida.jugador2_nombre,
+                            total_partidas: 0,
+                            victorias: 0,
+                            derrotas: 0,
+                            empates: 0
+                        };
+                    }
+
+                    // Actualizar total de partidas
+                    statsJugadores[partida.jugador1_nombre].total_partidas++;
+                    statsJugadores[partida.jugador2_nombre].total_partidas++;
+
+                    // Actualizar victorias/derrotas/empates
+                    if (partida.resultado === 'empate') {
+                        statsJugadores[partida.jugador1_nombre].empates++;
+                        statsJugadores[partida.jugador2_nombre].empates++;
+                    } else if (partida.resultado === 'victoria_jugador1') {
+                        statsJugadores[partida.jugador1_nombre].victorias++;
+                        statsJugadores[partida.jugador2_nombre].derrotas++;
+                    } else if (partida.resultado === 'victoria_jugador2') {
+                        statsJugadores[partida.jugador2_nombre].victorias++;
+                        statsJugadores[partida.jugador1_nombre].derrotas++;
+                    }
+                });
+
+                // Convertir a array y calcular winrate
+                const estadisticas = Object.values(statsJugadores).map(stat => {
+                    const partidasNoEmpate = stat.total_partidas - stat.empates;
+                    stat.winrate = partidasNoEmpate > 0
+                        ? Math.round((stat.victorias / partidasNoEmpate) * 100)
+                        : 0;
+                    return stat;
+                });
+
+                // Ordenar por winrate descendente
+                estadisticas.sort((a, b) => {
+                    if (b.winrate !== a.winrate) {
+                        return b.winrate - a.winrate;
+                    }
+                    return b.victorias - a.victorias;
+                });
+
+                if (estadisticas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                            No hay estadísticas disponibles.
+                            No hay estadísticas disponibles con los filtros seleccionados.
                         </p>
                     `;
                     return;
@@ -389,7 +617,7 @@
                         <tbody>
                 `;
 
-                result.estadisticas.forEach((stat, index) => {
+                estadisticas.forEach((stat, index) => {
                     const posicion = index + 1;
                     let medal = '';
 
@@ -436,16 +664,87 @@
             }
         }
 
-        async function cargarEstadisticasMazos() {
+        function cargarEstadisticasMazos(partidas) {
             const container = document.getElementById('estadisticas-mazos');
 
-            try {
-                const result = await API.getEstadisticasMazos();
+            if (!partidas || partidas.length === 0) {
+                container.innerHTML = `
+                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        No hay estadísticas disponibles con los filtros seleccionados.
+                    </p>
+                `;
+                return;
+            }
 
-                if (!result.success || result.estadisticas.length === 0) {
+            try {
+                // Calcular estadísticas manualmente desde partidas
+                const statsMazos = {};
+
+                partidas.forEach(partida => {
+                    // Inicializar stats para mazo1 si no existe
+                    const mazo1Key = `${partida.mazo1_nombre}|||${partida.mazo1_serie}`;
+                    if (!statsMazos[mazo1Key]) {
+                        statsMazos[mazo1Key] = {
+                            nombre: partida.mazo1_nombre,
+                            serie: partida.mazo1_serie,
+                            total_partidas: 0,
+                            victorias: 0,
+                            derrotas: 0,
+                            empates: 0
+                        };
+                    }
+
+                    // Inicializar stats para mazo2 si no existe
+                    const mazo2Key = `${partida.mazo2_nombre}|||${partida.mazo2_serie}`;
+                    if (!statsMazos[mazo2Key]) {
+                        statsMazos[mazo2Key] = {
+                            nombre: partida.mazo2_nombre,
+                            serie: partida.mazo2_serie,
+                            total_partidas: 0,
+                            victorias: 0,
+                            derrotas: 0,
+                            empates: 0
+                        };
+                    }
+
+                    // Actualizar total de partidas
+                    statsMazos[mazo1Key].total_partidas++;
+                    statsMazos[mazo2Key].total_partidas++;
+
+                    // Actualizar victorias/derrotas/empates
+                    if (partida.resultado === 'empate') {
+                        statsMazos[mazo1Key].empates++;
+                        statsMazos[mazo2Key].empates++;
+                    } else if (partida.resultado === 'victoria_jugador1') {
+                        statsMazos[mazo1Key].victorias++;
+                        statsMazos[mazo2Key].derrotas++;
+                    } else if (partida.resultado === 'victoria_jugador2') {
+                        statsMazos[mazo2Key].victorias++;
+                        statsMazos[mazo1Key].derrotas++;
+                    }
+                });
+
+                // Convertir a array y calcular winrate
+                const estadisticas = Object.values(statsMazos).map(stat => {
+                    const partidasNoEmpate = stat.total_partidas - stat.empates;
+                    stat.winrate = partidasNoEmpate > 0
+                        ? Math.round((stat.victorias / partidasNoEmpate) * 100)
+                        : 0;
+                    return stat;
+                });
+
+                // Ordenar por winrate descendente
+                estadisticas.sort((a, b) => {
+                    if (b.winrate !== a.winrate) {
+                        return b.winrate - a.winrate;
+                    }
+                    return b.victorias - a.victorias;
+                });
+
+                if (estadisticas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                            No hay estadísticas disponibles.
+                            No hay estadísticas disponibles con los filtros seleccionados.
                         </p>
                     `;
                     return;
@@ -468,7 +767,7 @@
                         <tbody>
                 `;
 
-                result.estadisticas.forEach((stat, index) => {
+                estadisticas.forEach((stat, index) => {
                     const posicion = index + 1;
                     let medal = '';
 
@@ -902,8 +1201,7 @@
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', () => {
-            cargarEstadisticasJugadores();
-            cargarEstadisticasMazos();
+            cargarDatosIniciales();
             cargarSelectores();
         });
     </script>
