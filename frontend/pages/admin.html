@@ -289,6 +289,9 @@
                     </div>
                 </div>
 
+                <!-- Controles de paginación -->
+                <div id="paginacion-admin-container" style="display: none;"></div>
+
                 <div style="margin-top: 2rem; text-align: center;">
                     <button onclick="descargarExcel()" class="btn btn-success" style="min-width: 250px;">
                         📥 Descargar Historial en Excel
@@ -414,7 +417,7 @@
             event.target.classList.add('active');
 
             if (tab === 'pendientes') cargarPartidasPendientes();
-            if (tab === 'agregar') cargarPartidasLista();
+            if (tab === 'agregar') cargarPartidasLista(1);
             if (tab === 'usuarios') cargarUsuarios();
             if (tab === 'mazos') cargarMazos();
         }
@@ -901,28 +904,37 @@
 
         let todasLasPartidas = [];
         let partidasFiltradas = [];
+        let paginaActualAdmin = 1;
+        let totalPaginasAdmin = 1;
+        const PARTIDAS_POR_PAGINA_ADMIN = 50;
 
         // Cargar lista de partidas
-        async function cargarPartidasLista() {
+        async function cargarPartidasLista(pagina = 1) {
             const container = document.getElementById('partidas-lista-container');
+            paginaActualAdmin = pagina;
 
             try {
-                const result = await API.getPartidas();
+                const result = await API.getPartidas(pagina, PARTIDAS_POR_PAGINA_ADMIN);
 
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = '<p class="text-center">No hay partidas registradas</p>';
                     todasLasPartidas = [];
                     partidasFiltradas = [];
+                    document.getElementById('paginacion-admin-container').style.display = 'none';
                     return;
                 }
 
                 todasLasPartidas = result.partidas;
                 partidasFiltradas = [...todasLasPartidas];
+                totalPaginasAdmin = result.pagination.totalPages;
 
-                // Poblar selects de filtros
-                poblarSelectsFiltros();
+                // Poblar selects de filtros (solo la primera vez)
+                if (pagina === 1) {
+                    poblarSelectsFiltros();
+                }
 
                 renderizarPartidas(partidasFiltradas);
+                renderizarPaginacionAdmin(result.pagination);
 
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
@@ -1020,6 +1032,81 @@
             container.innerHTML = html;
         }
 
+        // Renderizar paginación
+        function renderizarPaginacionAdmin(pagination) {
+            const container = document.getElementById('paginacion-admin-container');
+
+            if (pagination.totalPages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            let html = '<div class="pagination">';
+
+            // Botón Anterior
+            html += `
+                <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cargarPartidasLista(${pagination.page - 1})">
+                    ❮❮ Anterior
+                </button>
+            `;
+
+            // Números de página
+            const maxBotones = 7;
+            let inicio = Math.max(1, pagination.page - Math.floor(maxBotones / 2));
+            let fin = Math.min(pagination.totalPages, inicio + maxBotones - 1);
+
+            if (fin - inicio < maxBotones - 1) {
+                inicio = Math.max(1, fin - maxBotones + 1);
+            }
+
+            // Primera página
+            if (inicio > 1) {
+                html += `<button class="pagination-btn" onclick="cargarPartidasLista(1)">1</button>`;
+                if (inicio > 2) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+
+            // Páginas del medio
+            for (let i = inicio; i <= fin; i++) {
+                html += `
+                    <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="cargarPartidasLista(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Última página
+            if (fin < pagination.totalPages) {
+                if (fin < pagination.totalPages - 1) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+                html += `<button class="pagination-btn" onclick="cargarPartidasLista(${pagination.totalPages})">${pagination.totalPages}</button>`;
+            }
+
+            // Botón Siguiente
+            html += `
+                <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cargarPartidasLista(${pagination.page + 1})">
+                    Siguiente ❯❯
+                </button>
+            `;
+
+            html += '</div>';
+
+            // Info de página
+            const inicio_registro = (pagination.page - 1) * pagination.limit + 1;
+            const fin_registro = Math.min(pagination.page * pagination.limit, pagination.total);
+            html += `
+                <div class="pagination-info">
+                    Mostrando ${inicio_registro}-${fin_registro} de ${pagination.total} partidas
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
         // Aplicar filtros
         function aplicarFiltrosAdmin() {
             const fechaDesde = document.getElementById('filtro-admin-fecha-desde').value;
@@ -1058,6 +1145,8 @@
             });
 
             renderizarPartidas(partidasFiltradas);
+            // Ocultar paginación cuando hay filtros aplicados
+            document.getElementById('paginacion-admin-container').style.display = 'none';
         }
 
         // Limpiar filtros
@@ -1066,8 +1155,7 @@
             document.getElementById('filtro-admin-fecha-hasta').value = '';
             document.getElementById('filtro-admin-jugador').value = '';
             document.getElementById('filtro-admin-mazo').value = '';
-            partidasFiltradas = [...todasLasPartidas];
-            renderizarPartidas(partidasFiltradas);
+            cargarPartidasLista(1); // Recargar desde la página 1
         }
 
         // Eliminar partida

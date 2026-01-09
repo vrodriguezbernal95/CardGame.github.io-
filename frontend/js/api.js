@@ -94,8 +94,12 @@ class API {
     }
 
     // Partidas
-    static async getPartidas() {
-        return await this.request('/partidas');
+    static async getPartidas(page = null, limit = null) {
+        let endpoint = '/partidas';
+        if (page && limit) {
+            endpoint += `?page=${page}&limit=${limit}`;
+        }
+        return await this.request(endpoint);
     }
 
     static async getPartida(id) {

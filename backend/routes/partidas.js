@@ -142,9 +142,15 @@ router.post('/registrar', verifyToken, [
 // ========== RUTAS GENERALES ==========
 
 // Obtener todas las partidas APROBADAS (con nombres de jugadores y mazos)
+// Soporta paginación: ?page=1&limit=50
 router.get('/', async (req, res) => {
     try {
         const dbType = process.env.DB_TYPE || 'mysql';
+
+        // Parámetros de paginación
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
 
         // Verificar si la columna estado existe (para compatibilidad)
         let whereClause = '';
@@ -166,6 +172,16 @@ router.get('/', async (req, res) => {
             whereClause = '';
         }
 
+        // Obtener total de partidas
+        const [countResult] = await db.query(`
+            SELECT COUNT(*) as total
+            FROM partidas p
+            ${whereClause}
+        `);
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+
+        // Obtener partidas con paginación
         const [partidas] = await db.query(`
             SELECT
                 p.id,
@@ -187,11 +203,20 @@ router.get('/', async (req, res) => {
             LEFT JOIN usuarios ug ON p.ganador_id = ug.id
             ${whereClause}
             ORDER BY p.fecha_partida DESC
-        `);
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
 
         res.json({
             success: true,
-            partidas
+            partidas,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         });
     } catch (error) {
         console.error('Error obteniendo partidas:', error);
