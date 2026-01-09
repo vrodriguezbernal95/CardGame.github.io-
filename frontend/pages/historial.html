@@ -156,18 +156,20 @@
         let paginaActual = 1;
         let totalPaginas = 1;
         const PARTIDAS_POR_PAGINA = 50;
+        let filtrosActivos = {};
 
-        async function cargarDatos(pagina = 1) {
+        async function cargarDatos(pagina = 1, filtros = {}) {
             const container = document.getElementById('partidas-container');
             paginaActual = pagina;
+            filtrosActivos = filtros;
 
             try {
-                const result = await API.getPartidas(pagina, PARTIDAS_POR_PAGINA);
+                const result = await API.getPartidas(pagina, PARTIDAS_POR_PAGINA, filtros);
 
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                            No hay partidas registradas todavía.
+                            No se encontraron partidas con los filtros seleccionados.
                         </p>
                     `;
                     document.getElementById('paginacion-container').style.display = 'none';
@@ -177,9 +179,34 @@
                 todasLasPartidas = result.partidas;
                 totalPaginas = result.pagination.totalPages;
 
-                // Extraer jugadores y mazos únicos (solo primera vez)
-                if (pagina === 1) {
-                    todasLasPartidas.forEach(partida => {
+                // Cargar jugadores y mazos para selects (solo primera vez sin filtros)
+                if (pagina === 1 && Object.keys(filtros).length === 0) {
+                    await cargarOpcionesFiltros();
+                }
+
+                // Renderizar partidas
+                renderizarPartidas(todasLasPartidas);
+
+                // Renderizar paginación
+                renderizarPaginacion(result.pagination);
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar las partidas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar todas las opciones para los filtros (jugadores y mazos únicos)
+        async function cargarOpcionesFiltros() {
+            try {
+                // Obtener una cantidad grande para conseguir todos los jugadores/mazos únicos
+                const result = await API.getPartidas(1, 10000);
+
+                if (result.success && result.partidas.length > 0) {
+                    result.partidas.forEach(partida => {
                         jugadores.add(partida.jugador1_nombre);
                         jugadores.add(partida.jugador2_nombre);
                         mazos.add(partida.mazo1_nombre);
@@ -208,19 +235,8 @@
                         selectMazo.appendChild(option);
                     });
                 }
-
-                // Renderizar partidas
-                renderizarPartidas(todasLasPartidas);
-
-                // Renderizar paginación
-                renderizarPaginacion(result.pagination);
-
             } catch (error) {
-                container.innerHTML = `
-                    <div class="alert alert-error">
-                        Error al cargar las partidas: ${error.message}
-                    </div>
-                `;
+                console.error('Error cargando opciones de filtros:', error);
             }
         }
 
@@ -312,7 +328,7 @@
 
             // Botón Anterior
             html += `
-                <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cargarDatos(${pagination.page - 1})">
+                <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cambiarPagina(${pagination.page - 1})">
                     ❮❮ Anterior
                 </button>
             `;
@@ -328,7 +344,7 @@
 
             // Primera página
             if (inicio > 1) {
-                html += `<button class="pagination-btn" onclick="cargarDatos(1)">1</button>`;
+                html += `<button class="pagination-btn" onclick="cambiarPagina(1)">1</button>`;
                 if (inicio > 2) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
@@ -337,7 +353,7 @@
             // Páginas del medio
             for (let i = inicio; i <= fin; i++) {
                 html += `
-                    <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="cargarDatos(${i})">
+                    <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="cambiarPagina(${i})">
                         ${i}
                     </button>
                 `;
@@ -348,12 +364,12 @@
                 if (fin < pagination.totalPages - 1) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
-                html += `<button class="pagination-btn" onclick="cargarDatos(${pagination.totalPages})">${pagination.totalPages}</button>`;
+                html += `<button class="pagination-btn" onclick="cambiarPagina(${pagination.totalPages})">${pagination.totalPages}</button>`;
             }
 
             // Botón Siguiente
             html += `
-                <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cargarDatos(${pagination.page + 1})">
+                <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cambiarPagina(${pagination.page + 1})">
                     Siguiente ❯❯
                 </button>
             `;
@@ -372,45 +388,25 @@
             container.innerHTML = html;
         }
 
+        // Cambiar página manteniendo los filtros activos
+        function cambiarPagina(pagina) {
+            cargarDatos(pagina, filtrosActivos);
+        }
+
         function aplicarFiltros() {
             const fechaDesde = document.getElementById('filtro-fecha-desde').value;
             const fechaHasta = document.getElementById('filtro-fecha-hasta').value;
             const jugador = document.getElementById('filtro-jugador').value;
             const mazo = document.getElementById('filtro-mazo').value;
 
-            let partidasFiltradas = todasLasPartidas.filter(partida => {
-                // Filtro por fecha desde
-                if (fechaDesde) {
-                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
-                    if (fechaPartida < fechaDesde) return false;
-                }
+            const filtros = {};
+            if (fechaDesde) filtros.fechaDesde = fechaDesde;
+            if (fechaHasta) filtros.fechaHasta = fechaHasta;
+            if (jugador) filtros.jugador = jugador;
+            if (mazo) filtros.mazo = mazo;
 
-                // Filtro por fecha hasta
-                if (fechaHasta) {
-                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
-                    if (fechaPartida > fechaHasta) return false;
-                }
-
-                // Filtro por jugador
-                if (jugador) {
-                    if (partida.jugador1_nombre !== jugador && partida.jugador2_nombre !== jugador) {
-                        return false;
-                    }
-                }
-
-                // Filtro por mazo
-                if (mazo) {
-                    if (partida.mazo1_nombre !== mazo && partida.mazo2_nombre !== mazo) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-
-            renderizarPartidas(partidasFiltradas);
-            // Ocultar paginación cuando hay filtros aplicados
-            document.getElementById('paginacion-container').style.display = 'none';
+            // Cargar desde la página 1 con filtros aplicados en el backend
+            cargarDatos(1, filtros);
         }
 
         function limpiarFiltros() {
@@ -418,7 +414,7 @@
             document.getElementById('filtro-fecha-hasta').value = '';
             document.getElementById('filtro-jugador').value = '';
             document.getElementById('filtro-mazo').value = '';
-            cargarDatos(1); // Recargar desde la página 1
+            cargarDatos(1, {}); // Recargar sin filtros desde la página 1
         }
 
         // Cargar datos al iniciar

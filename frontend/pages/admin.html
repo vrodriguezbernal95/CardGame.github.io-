@@ -1005,17 +1005,19 @@
         let paginaActualAdmin = 1;
         let totalPaginasAdmin = 1;
         const PARTIDAS_POR_PAGINA_ADMIN = 50;
+        let filtrosActivosAdmin = {};
 
         // Cargar lista de partidas
-        async function cargarPartidasLista(pagina = 1) {
+        async function cargarPartidasLista(pagina = 1, filtros = {}) {
             const container = document.getElementById('partidas-lista-container');
             paginaActualAdmin = pagina;
+            filtrosActivosAdmin = filtros;
 
             try {
-                const result = await API.getPartidas(pagina, PARTIDAS_POR_PAGINA_ADMIN);
+                const result = await API.getPartidas(pagina, PARTIDAS_POR_PAGINA_ADMIN, filtros);
 
                 if (!result.success || result.partidas.length === 0) {
-                    container.innerHTML = '<p class="text-center">No hay partidas registradas</p>';
+                    container.innerHTML = '<p class="text-center">No se encontraron partidas con los filtros seleccionados</p>';
                     todasLasPartidas = [];
                     partidasFiltradas = [];
                     document.getElementById('paginacion-admin-container').style.display = 'none';
@@ -1026,9 +1028,9 @@
                 partidasFiltradas = [...todasLasPartidas];
                 totalPaginasAdmin = result.pagination.totalPages;
 
-                // Poblar selects de filtros (solo la primera vez)
-                if (pagina === 1) {
-                    poblarSelectsFiltros();
+                // Poblar selects de filtros (solo la primera vez sin filtros)
+                if (pagina === 1 && Object.keys(filtros).length === 0) {
+                    await poblarSelectsFiltros();
                 }
 
                 renderizarPartidas(partidasFiltradas);
@@ -1039,40 +1041,51 @@
             }
         }
 
-        // Poblar selects de filtros
-        function poblarSelectsFiltros() {
-            const selectJugador = document.getElementById('filtro-admin-jugador');
-            const selectMazo = document.getElementById('filtro-admin-mazo');
+        // Poblar selects de filtros (cargar todas las opciones)
+        async function poblarSelectsFiltros() {
+            try {
+                // Obtener una cantidad grande para conseguir todos los jugadores/mazos únicos
+                const result = await API.getPartidas(1, 10000);
 
-            // Limpiar opciones existentes (excepto la primera)
-            selectJugador.innerHTML = '<option value="">Todos los jugadores</option>';
-            selectMazo.innerHTML = '<option value="">Todos los mazos</option>';
+                if (!result.success || result.partidas.length === 0) {
+                    return;
+                }
 
-            // Extraer jugadores y mazos únicos
-            const jugadores = new Set();
-            const mazos = new Set();
+                const selectJugador = document.getElementById('filtro-admin-jugador');
+                const selectMazo = document.getElementById('filtro-admin-mazo');
 
-            todasLasPartidas.forEach(p => {
-                jugadores.add(p.jugador1_nombre);
-                jugadores.add(p.jugador2_nombre);
-                mazos.add(p.mazo1_nombre);
-                mazos.add(p.mazo2_nombre);
-            });
+                // Limpiar opciones existentes (excepto la primera)
+                selectJugador.innerHTML = '<option value="">Todos los jugadores</option>';
+                selectMazo.innerHTML = '<option value="">Todos los mazos</option>';
 
-            // Agregar opciones
-            Array.from(jugadores).sort().forEach(jugador => {
-                const option = document.createElement('option');
-                option.value = jugador;
-                option.textContent = jugador;
-                selectJugador.appendChild(option);
-            });
+                // Extraer jugadores y mazos únicos
+                const jugadores = new Set();
+                const mazos = new Set();
 
-            Array.from(mazos).sort().forEach(mazo => {
-                const option = document.createElement('option');
-                option.value = mazo;
-                option.textContent = mazo;
-                selectMazo.appendChild(option);
-            });
+                result.partidas.forEach(p => {
+                    jugadores.add(p.jugador1_nombre);
+                    jugadores.add(p.jugador2_nombre);
+                    mazos.add(p.mazo1_nombre);
+                    mazos.add(p.mazo2_nombre);
+                });
+
+                // Agregar opciones
+                Array.from(jugadores).sort().forEach(jugador => {
+                    const option = document.createElement('option');
+                    option.value = jugador;
+                    option.textContent = jugador;
+                    selectJugador.appendChild(option);
+                });
+
+                Array.from(mazos).sort().forEach(mazo => {
+                    const option = document.createElement('option');
+                    option.value = mazo;
+                    option.textContent = mazo;
+                    selectMazo.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando opciones de filtros:', error);
+            }
         }
 
         // Renderizar tabla de partidas
@@ -1145,7 +1158,7 @@
 
             // Botón Anterior
             html += `
-                <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cargarPartidasLista(${pagination.page - 1})">
+                <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cambiarPaginaAdmin(${pagination.page - 1})">
                     ❮❮ Anterior
                 </button>
             `;
@@ -1161,7 +1174,7 @@
 
             // Primera página
             if (inicio > 1) {
-                html += `<button class="pagination-btn" onclick="cargarPartidasLista(1)">1</button>`;
+                html += `<button class="pagination-btn" onclick="cambiarPaginaAdmin(1)">1</button>`;
                 if (inicio > 2) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
@@ -1170,7 +1183,7 @@
             // Páginas del medio
             for (let i = inicio; i <= fin; i++) {
                 html += `
-                    <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="cargarPartidasLista(${i})">
+                    <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="cambiarPaginaAdmin(${i})">
                         ${i}
                     </button>
                 `;
@@ -1181,12 +1194,12 @@
                 if (fin < pagination.totalPages - 1) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
-                html += `<button class="pagination-btn" onclick="cargarPartidasLista(${pagination.totalPages})">${pagination.totalPages}</button>`;
+                html += `<button class="pagination-btn" onclick="cambiarPaginaAdmin(${pagination.totalPages})">${pagination.totalPages}</button>`;
             }
 
             // Botón Siguiente
             html += `
-                <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cargarPartidasLista(${pagination.page + 1})">
+                <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cambiarPaginaAdmin(${pagination.page + 1})">
                     Siguiente ❯❯
                 </button>
             `;
@@ -1205,6 +1218,11 @@
             container.innerHTML = html;
         }
 
+        // Cambiar página manteniendo los filtros activos
+        function cambiarPaginaAdmin(pagina) {
+            cargarPartidasLista(pagina, filtrosActivosAdmin);
+        }
+
         // Aplicar filtros
         function aplicarFiltrosAdmin() {
             const fechaDesde = document.getElementById('filtro-admin-fecha-desde').value;
@@ -1212,39 +1230,14 @@
             const jugador = document.getElementById('filtro-admin-jugador').value;
             const mazo = document.getElementById('filtro-admin-mazo').value;
 
-            partidasFiltradas = todasLasPartidas.filter(partida => {
-                // Filtro por fecha desde
-                if (fechaDesde) {
-                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
-                    if (fechaPartida < fechaDesde) return false;
-                }
+            const filtros = {};
+            if (fechaDesde) filtros.fechaDesde = fechaDesde;
+            if (fechaHasta) filtros.fechaHasta = fechaHasta;
+            if (jugador) filtros.jugador = jugador;
+            if (mazo) filtros.mazo = mazo;
 
-                // Filtro por fecha hasta
-                if (fechaHasta) {
-                    const fechaPartida = new Date(partida.fecha_partida).toISOString().split('T')[0];
-                    if (fechaPartida > fechaHasta) return false;
-                }
-
-                // Filtro por jugador
-                if (jugador) {
-                    if (partida.jugador1_nombre !== jugador && partida.jugador2_nombre !== jugador) {
-                        return false;
-                    }
-                }
-
-                // Filtro por mazo
-                if (mazo) {
-                    if (partida.mazo1_nombre !== mazo && partida.mazo2_nombre !== mazo) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-
-            renderizarPartidas(partidasFiltradas);
-            // Ocultar paginación cuando hay filtros aplicados
-            document.getElementById('paginacion-admin-container').style.display = 'none';
+            // Cargar desde la página 1 con filtros aplicados en el backend
+            cargarPartidasLista(1, filtros);
         }
 
         // Limpiar filtros
@@ -1253,7 +1246,7 @@
             document.getElementById('filtro-admin-fecha-hasta').value = '';
             document.getElementById('filtro-admin-jugador').value = '';
             document.getElementById('filtro-admin-mazo').value = '';
-            cargarPartidasLista(1); // Recargar desde la página 1
+            cargarPartidasLista(1, {}); // Recargar sin filtros desde la página 1
         }
 
         // Eliminar partida
@@ -1273,69 +1266,79 @@
         }
 
         // Descargar historial en Excel
-        function descargarExcel() {
-            if (!partidasFiltradas || partidasFiltradas.length === 0) {
-                UI.showAlert('No hay partidas para descargar con los filtros actuales', 'error');
-                return;
+        async function descargarExcel() {
+            try {
+                // Obtener TODAS las partidas con los filtros activos
+                const result = await API.getPartidas(1, 100000, filtrosActivosAdmin);
+
+                if (!result.success || result.partidas.length === 0) {
+                    UI.showAlert('No hay partidas para descargar con los filtros actuales', 'error');
+                    return;
+                }
+
+                const todasLasPartidasFiltradas = result.partidas;
+
+                // Preparar datos para Excel
+                const datosExcel = todasLasPartidasFiltradas.map(p => {
+                    const fecha = new Date(p.fecha_partida).toLocaleDateString('es-ES');
+                    const ganador = p.ganador_nombre || 'Empate';
+
+                    let resultadoTexto = '';
+                    if (p.resultado === 'victoria_jugador1') resultadoTexto = `Victoria ${p.jugador1_nombre}`;
+                    else if (p.resultado === 'victoria_jugador2') resultadoTexto = `Victoria ${p.jugador2_nombre}`;
+                    else resultadoTexto = 'Empate';
+
+                    return {
+                        'ID': p.id,
+                        'Fecha': fecha,
+                        'Jugador 1': p.jugador1_nombre,
+                        'Mazo 1': p.mazo1_nombre,
+                        'Serie 1': p.mazo1_serie,
+                        'Jugador 2': p.jugador2_nombre,
+                        'Mazo 2': p.mazo2_nombre,
+                        'Serie 2': p.mazo2_serie,
+                        'Resultado': resultadoTexto,
+                        'Ganador': ganador,
+                        'Notas': p.notas || ''
+                    };
+                });
+
+                // Crear libro de Excel
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+                // Ajustar anchos de columna
+                const colWidths = [
+                    { wch: 5 },   // ID
+                    { wch: 12 },  // Fecha
+                    { wch: 20 },  // Jugador 1
+                    { wch: 25 },  // Mazo 1
+                    { wch: 20 },  // Serie 1
+                    { wch: 20 },  // Jugador 2
+                    { wch: 25 },  // Mazo 2
+                    { wch: 20 },  // Serie 2
+                    { wch: 25 },  // Resultado
+                    { wch: 20 },  // Ganador
+                    { wch: 40 }   // Notas
+                ];
+                ws['!cols'] = colWidths;
+
+                // Agregar hoja al libro
+                XLSX.utils.book_append_sheet(wb, ws, 'Historial de Partidas');
+
+                // Generar nombre de archivo con fecha actual
+                const fechaActual = new Date().toISOString().split('T')[0];
+                const nombreArchivo = `Historial_Partidas_${fechaActual}.xlsx`;
+
+                // Descargar archivo
+                XLSX.writeFile(wb, nombreArchivo);
+
+                const numPartidas = todasLasPartidasFiltradas.length;
+                UI.showAlert(`${numPartidas} partida${numPartidas !== 1 ? 's' : ''} descargada${numPartidas !== 1 ? 's' : ''} en ${nombreArchivo}`, 'success');
+            } catch (error) {
+                console.error('Error descargando Excel:', error);
+                UI.showAlert('Error al descargar el archivo Excel', 'error');
             }
-
-            // Preparar datos para Excel (solo partidas filtradas)
-            const datosExcel = partidasFiltradas.map(p => {
-                const fecha = new Date(p.fecha_partida).toLocaleDateString('es-ES');
-                const ganador = p.ganador_nombre || 'Empate';
-
-                let resultadoTexto = '';
-                if (p.resultado === 'victoria_jugador1') resultadoTexto = `Victoria ${p.jugador1_nombre}`;
-                else if (p.resultado === 'victoria_jugador2') resultadoTexto = `Victoria ${p.jugador2_nombre}`;
-                else resultadoTexto = 'Empate';
-
-                return {
-                    'ID': p.id,
-                    'Fecha': fecha,
-                    'Jugador 1': p.jugador1_nombre,
-                    'Mazo 1': p.mazo1_nombre,
-                    'Serie 1': p.mazo1_serie,
-                    'Jugador 2': p.jugador2_nombre,
-                    'Mazo 2': p.mazo2_nombre,
-                    'Serie 2': p.mazo2_serie,
-                    'Resultado': resultadoTexto,
-                    'Ganador': ganador,
-                    'Notas': p.notas || ''
-                };
-            });
-
-            // Crear libro de Excel
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(datosExcel);
-
-            // Ajustar anchos de columna
-            const colWidths = [
-                { wch: 5 },   // ID
-                { wch: 12 },  // Fecha
-                { wch: 20 },  // Jugador 1
-                { wch: 25 },  // Mazo 1
-                { wch: 20 },  // Serie 1
-                { wch: 20 },  // Jugador 2
-                { wch: 25 },  // Mazo 2
-                { wch: 20 },  // Serie 2
-                { wch: 25 },  // Resultado
-                { wch: 20 },  // Ganador
-                { wch: 40 }   // Notas
-            ];
-            ws['!cols'] = colWidths;
-
-            // Agregar hoja al libro
-            XLSX.utils.book_append_sheet(wb, ws, 'Historial de Partidas');
-
-            // Generar nombre de archivo con fecha actual
-            const fechaActual = new Date().toISOString().split('T')[0];
-            const nombreArchivo = `Historial_Partidas_${fechaActual}.xlsx`;
-
-            // Descargar archivo
-            XLSX.writeFile(wb, nombreArchivo);
-
-            const numPartidas = partidasFiltradas.length;
-            UI.showAlert(`${numPartidas} partida${numPartidas !== 1 ? 's' : ''} descargada${numPartidas !== 1 ? 's' : ''} en ${nombreArchivo}`, 'success');
         }
 
         // ========== GESTIÓN DE NOTICIAS ==========

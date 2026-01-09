@@ -143,6 +143,7 @@ router.post('/registrar', verifyToken, [
 
 // Obtener todas las partidas APROBADAS (con nombres de jugadores y mazos)
 // Soporta paginación: ?page=1&limit=50
+// Soporta filtros: ?fechaDesde=YYYY-MM-DD&fechaHasta=YYYY-MM-DD&jugador=nombre&mazo=nombre
 router.get('/', async (req, res) => {
     try {
         const dbType = process.env.DB_TYPE || 'mysql';
@@ -152,32 +153,65 @@ router.get('/', async (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
 
+        // Parámetros de filtro
+        const fechaDesde = req.query.fechaDesde || null;
+        const fechaHasta = req.query.fechaHasta || null;
+        const jugadorNombre = req.query.jugador || null;
+        const mazoNombre = req.query.mazo || null;
+
         // Verificar si la columna estado existe (para compatibilidad)
-        let whereClause = '';
+        let whereConditions = [];
+        let queryParams = [];
+
         try {
             if (dbType === 'postgres') {
                 const [cols] = await db.query(`
                     SELECT column_name FROM information_schema.columns
                     WHERE table_name='partidas' AND column_name='estado'
                 `);
-                if (cols.length > 0) whereClause = "WHERE p.estado = 'aprobada'";
+                if (cols.length > 0) whereConditions.push("p.estado = 'aprobada'");
             } else {
                 const [cols] = await db.query(`
                     SHOW COLUMNS FROM partidas LIKE 'estado'
                 `);
-                if (cols.length > 0) whereClause = "WHERE p.estado = 'aprobada'";
+                if (cols.length > 0) whereConditions.push("p.estado = 'aprobada'");
             }
         } catch (e) {
             // Si hay error, asumimos que no existe la columna
-            whereClause = '';
         }
+
+        // Agregar filtros si existen
+        if (fechaDesde) {
+            whereConditions.push('DATE(p.fecha_partida) >= ?');
+            queryParams.push(fechaDesde);
+        }
+        if (fechaHasta) {
+            whereConditions.push('DATE(p.fecha_partida) <= ?');
+            queryParams.push(fechaHasta);
+        }
+        if (jugadorNombre) {
+            whereConditions.push('(u1.nombre = ? OR u2.nombre = ?)');
+            queryParams.push(jugadorNombre, jugadorNombre);
+        }
+        if (mazoNombre) {
+            whereConditions.push('(m1.nombre = ? OR m2.nombre = ?)');
+            queryParams.push(mazoNombre, mazoNombre);
+        }
+
+        const whereClause = whereConditions.length > 0
+            ? 'WHERE ' + whereConditions.join(' AND ')
+            : '';
 
         // Obtener total de partidas
         const [countResult] = await db.query(`
             SELECT COUNT(*) as total
             FROM partidas p
+            JOIN usuarios u1 ON p.jugador1_id = u1.id
+            JOIN usuarios u2 ON p.jugador2_id = u2.id
+            JOIN mazos m1 ON p.mazo1_id = m1.id
+            JOIN mazos m2 ON p.mazo2_id = m2.id
             ${whereClause}
-        `);
+        `, queryParams);
         const total = countResult[0].total;
         const totalPages = Math.ceil(total / limit);
 
@@ -204,7 +238,7 @@ router.get('/', async (req, res) => {
             ${whereClause}
             ORDER BY p.fecha_partida DESC
             LIMIT ? OFFSET ?
-        `, [limit, offset]);
+        `, [...queryParams, limit, offset]);
 
         res.json({
             success: true,
@@ -216,6 +250,12 @@ router.get('/', async (req, res) => {
                 totalPages,
                 hasNextPage: page < totalPages,
                 hasPrevPage: page > 1
+            },
+            filtros: {
+                fechaDesde,
+                fechaHasta,
+                jugador: jugadorNombre,
+                mazo: mazoNombre
             }
         });
     } catch (error) {

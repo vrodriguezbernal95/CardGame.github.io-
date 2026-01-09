@@ -94,11 +94,26 @@ class API {
     }
 
     // Partidas
-    static async getPartidas(page = null, limit = null) {
+    static async getPartidas(page = null, limit = null, filtros = {}) {
         let endpoint = '/partidas';
+        const params = new URLSearchParams();
+
         if (page && limit) {
-            endpoint += `?page=${page}&limit=${limit}`;
+            params.append('page', page);
+            params.append('limit', limit);
         }
+
+        // Agregar filtros si existen
+        if (filtros.fechaDesde) params.append('fechaDesde', filtros.fechaDesde);
+        if (filtros.fechaHasta) params.append('fechaHasta', filtros.fechaHasta);
+        if (filtros.jugador) params.append('jugador', filtros.jugador);
+        if (filtros.mazo) params.append('mazo', filtros.mazo);
+
+        const queryString = params.toString();
+        if (queryString) {
+            endpoint += `?${queryString}`;
+        }
+
         return await this.request(endpoint);
     }
 
