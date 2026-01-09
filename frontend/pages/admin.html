@@ -179,6 +179,17 @@
                 </div>
             </div>
 
+            <!-- Alerta de migración de noticias -->
+            <div id="migracion-noticias-alert" style="margin-bottom: 1rem;">
+                <div class="alert alert-warning">
+                    <strong>📰 Migración del Sistema de Noticias</strong>
+                    <p>Para activar el sistema de noticias en producción, ejecuta esta migración una vez (crea tabla de noticias en la base de datos).</p>
+                    <button onclick="ejecutarMigracionNoticias()" class="migrar-btn" id="btn-migrar-noticias">
+                        ⚙️ Ejecutar Migración de Noticias
+                    </button>
+                </div>
+            </div>
+
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="cambiarTab('pendientes')">
@@ -611,6 +622,28 @@
                 UI.showAlert('Error en migración: ' + error.message, 'error');
                 btn.disabled = false;
                 btn.textContent = 'Ejecutar Migración Ahora';
+            }
+        }
+
+        // Ejecutar migración de noticias
+        async function ejecutarMigracionNoticias() {
+            if (!confirm('¿Ejecutar migración del sistema de noticias? Esto creará la tabla de noticias en la base de datos.')) return;
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Ejecutando migración...';
+
+            try {
+                const result = await API.ejecutarMigracionNoticias();
+                if (result.success) {
+                    UI.showAlert('✅ Migración de noticias ejecutada exitosamente. Sistema activado!', 'success');
+                    document.getElementById('migracion-noticias-alert').style.display = 'none';
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (error) {
+                UI.showAlert('Error en migración: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Ejecutar Migración de Noticias';
             }
         }
 

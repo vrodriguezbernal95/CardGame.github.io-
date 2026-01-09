@@ -214,6 +214,12 @@ class API {
         });
     }
 
+    static async ejecutarMigracionNoticias() {
+        return await this.request('/migration/run-noticias-migration', {
+            method: 'POST'
+        });
+    }
+
     // Búsqueda (autocompletado)
     static async buscarUsuarios(query) {
         if (query.length < 4) {

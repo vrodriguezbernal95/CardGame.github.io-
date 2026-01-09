@@ -261,4 +261,84 @@ router.post('/run-aprobacion-migration', verifyToken, verifyAdmin, async (req, r
     }
 });
 
+// ENDPOINT TEMPORAL - Ejecutar migración de tabla de noticias
+// SOLO ADMIN puede ejecutar esto
+router.post('/run-noticias-migration', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        console.log('🔧 Iniciando migración: Tabla de noticias...');
+
+        const dbType = process.env.DB_TYPE || 'mysql';
+
+        if (dbType === 'postgres') {
+            // Migración PostgreSQL
+            try {
+                await db.query(`
+                    CREATE TABLE IF NOT EXISTS noticias (
+                        id SERIAL PRIMARY KEY,
+                        titulo VARCHAR(255) NOT NULL,
+                        contenido TEXT NOT NULL,
+                        imagen_url VARCHAR(500),
+                        autor_id INT NOT NULL,
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE
+                    );
+                `);
+                console.log('✓ Tabla noticias creada/verificada');
+            } catch (err) {
+                console.log('Tabla noticias ya existe o error:', err.message);
+            }
+
+            // Crear índice
+            try {
+                await db.query(`CREATE INDEX IF NOT EXISTS idx_noticias_fecha ON noticias(fecha_creacion DESC);`);
+                console.log('✓ Índice creado/verificado');
+            } catch (err) {
+                console.log('Índice ya existe o error:', err.message);
+            }
+
+        } else {
+            // Migración MySQL
+            try {
+                await db.query(`
+                    CREATE TABLE IF NOT EXISTS noticias (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        titulo VARCHAR(255) NOT NULL,
+                        contenido TEXT NOT NULL,
+                        imagen_url VARCHAR(500),
+                        autor_id INT NOT NULL,
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                        INDEX idx_fecha_creacion (fecha_creacion DESC)
+                    ) ENGINE=InnoDB;
+                `);
+                console.log('✓ Tabla noticias creada/verificada');
+            } catch (err) {
+                if (err.code === 'ER_TABLE_EXISTS_ERROR') {
+                    console.log('Tabla noticias ya existe');
+                } else {
+                    throw err;
+                }
+            }
+        }
+
+        console.log('✅ Migración de noticias completada exitosamente');
+
+        res.json({
+            success: true,
+            message: 'Migración de noticias ejecutada correctamente. Sistema de noticias activado.',
+            dbType
+        });
+
+    } catch (error) {
+        console.error('❌ Error en migración de noticias:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al ejecutar migración de noticias',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
