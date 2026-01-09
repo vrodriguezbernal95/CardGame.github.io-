@@ -179,6 +179,17 @@
                 </div>
             </div>
 
+            <!-- Alerta de corrección de estadísticas -->
+            <div id="estadisticas-fix-alert" style="margin-bottom: 1rem;">
+                <div class="alert alert-warning">
+                    <strong>📊 Corregir Estadísticas</strong>
+                    <p>Si las estadísticas solo muestran datos de 50 partidas, ejecuta esta corrección para calcular sobre TODAS las partidas aprobadas.</p>
+                    <button onclick="corregirEstadisticas()" class="migrar-btn">
+                        🔧 Corregir Estadísticas Ahora
+                    </button>
+                </div>
+            </div>
+
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="cambiarTab('pendientes')">
@@ -633,6 +644,28 @@
                 UI.showAlert('Error en migración: ' + error.message, 'error');
                 btn.disabled = false;
                 btn.textContent = 'Ejecutar Migración de Noticias';
+            }
+        }
+
+        // Corregir estadísticas
+        async function corregirEstadisticas() {
+            if (!confirm('¿Corregir las vistas de estadísticas? Esto recalculará las estadísticas sobre TODAS las partidas aprobadas.')) return;
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Corrigiendo estadísticas...';
+
+            try {
+                const result = await API.corregirVistasEstadisticas();
+                if (result.success) {
+                    UI.showAlert('✅ Estadísticas corregidas exitosamente. Ahora calculan sobre todas las partidas aprobadas!', 'success');
+                    document.getElementById('estadisticas-fix-alert').style.display = 'none';
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (error) {
+                UI.showAlert('Error al corregir estadísticas: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🔧 Corregir Estadísticas Ahora';
             }
         }
 

@@ -341,4 +341,88 @@ router.post('/run-noticias-migration', verifyToken, verifyAdmin, async (req, res
     }
 });
 
+// ENDPOINT TEMPORAL - Corregir vistas de estadísticas
+// SOLO ADMIN puede ejecutar esto
+router.post('/fix-estadisticas-views', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        console.log('🔧 Iniciando corrección: Vistas de estadísticas...');
+
+        const dbType = process.env.DB_TYPE || 'mysql';
+
+        // Recrear vistas con filtro de estado
+        await db.query(`DROP VIEW IF EXISTS estadisticas_jugadores;`);
+        await db.query(`
+            CREATE VIEW estadisticas_jugadores AS
+            SELECT
+                u.id,
+                u.nombre,
+                COUNT(p.id) as total_partidas,
+                SUM(CASE WHEN p.ganador_id = u.id THEN 1 ELSE 0 END) as victorias,
+                SUM(CASE WHEN p.ganador_id IS NULL THEN 1 ELSE 0 END) as empates,
+                SUM(CASE WHEN (p.jugador1_id = u.id OR p.jugador2_id = u.id) AND p.ganador_id != u.id AND p.ganador_id IS NOT NULL THEN 1 ELSE 0 END) as derrotas,
+                ROUND(
+                    (SUM(CASE WHEN p.ganador_id = u.id THEN 1 ELSE 0 END) * 100.0) /
+                    NULLIF(COUNT(p.id), 0),
+                    2
+                ) as winrate
+            FROM usuarios u
+            LEFT JOIN partidas p ON (u.id = p.jugador1_id OR u.id = p.jugador2_id)
+                AND (p.estado = 'aprobada' OR p.estado IS NULL)
+            GROUP BY u.id, u.nombre;
+        `);
+        console.log('✓ Vista estadisticas_jugadores recreada');
+
+        await db.query(`DROP VIEW IF EXISTS estadisticas_mazos;`);
+        await db.query(`
+            CREATE VIEW estadisticas_mazos AS
+            SELECT
+                m.id,
+                m.nombre,
+                m.serie,
+                COUNT(p.id) as total_partidas,
+                SUM(CASE
+                    WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
+                         (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                    THEN 1 ELSE 0
+                END) as victorias,
+                SUM(CASE WHEN p.resultado = 'empate' AND (p.mazo1_id = m.id OR p.mazo2_id = m.id) THEN 1 ELSE 0 END) as empates,
+                SUM(CASE
+                    WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2') OR
+                         (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
+                    THEN 1 ELSE 0
+                END) as derrotas,
+                ROUND(
+                    (SUM(CASE
+                        WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
+                             (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0
+                    END) * 100.0) /
+                    NULLIF(COUNT(p.id), 0),
+                    2
+                ) as winrate
+            FROM mazos m
+            LEFT JOIN partidas p ON (m.id = p.mazo1_id OR m.id = p.mazo2_id)
+                AND (p.estado = 'aprobada' OR p.estado IS NULL)
+            GROUP BY m.id, m.nombre, m.serie;
+        `);
+        console.log('✓ Vista estadisticas_mazos recreada');
+
+        console.log('✅ Corrección de vistas completada exitosamente');
+
+        res.json({
+            success: true,
+            message: 'Vistas de estadísticas corregidas. Ahora se calculan sobre TODAS las partidas aprobadas.',
+            dbType
+        });
+
+    } catch (error) {
+        console.error('❌ Error corrigiendo vistas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al corregir vistas de estadísticas',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

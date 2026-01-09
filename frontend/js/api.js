@@ -220,6 +220,12 @@ class API {
         });
     }
 
+    static async corregirVistasEstadisticas() {
+        return await this.request('/migration/fix-estadisticas-views', {
+            method: 'POST'
+        });
+    }
+
     // Búsqueda (autocompletado)
     static async buscarUsuarios(query) {
         if (query.length < 4) {
