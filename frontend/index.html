@@ -3,10 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=pages/historial.html">
-    <title>Card Game Anime - Redirigiendo...</title>
+    <title>Card Game Anime - Inicio</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .quick-link-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .quick-link-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .quick-link-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-link-title {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-link-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .noticias-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .noticia-card-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .noticia-card-preview:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .noticia-card-preview h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .noticia-meta-preview {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .noticia-extracto-preview {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .ver-todas-noticias {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .quick-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>Redirigiendo...</p>
+    <!-- Header Principal -->
+    <header class="header-main">
+        <div class="header-main-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <div id="user-nav"></div>
+        </div>
+    </header>
+
+    <!-- Header Navegación -->
+    <nav class="header-nav">
+        <div class="header-nav-container">
+            <ul class="nav-links">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="pages/historial.html">Historial</a></li>
+                <li><a href="pages/estadisticas.html">Estadísticas</a></li>
+                <li><a href="pages/mazos.html">Mazos</a></li>
+                <li><a href="pages/noticias.html">Noticias</a></li>
+                <li><a href="pages/combate.html">Registrar Combate</a></li>
+                <li><a href="pages/contador.html">Contador</a></li>
+                <li><a href="pages/compartir.html">📤 Compartir</a></li>
+                <li id="admin-link" style="display:none;"><a href="pages/admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>🎴 Bienvenido a Card Game Anime</h1>
+            <p>Tu plataforma para gestionar partidas de Trading Card Games de anime</p>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="quick-links">
+            <a href="pages/historial.html" class="quick-link-card">
+                <div class="quick-link-icon">⚔️</div>
+                <div class="quick-link-title">Historial</div>
+                <div class="quick-link-desc">Ver todas las partidas registradas</div>
+            </a>
+
+            <a href="pages/estadisticas.html" class="quick-link-card">
+                <div class="quick-link-icon">📊</div>
+                <div class="quick-link-title">Estadísticas</div>
+                <div class="quick-link-desc">Rankings y análisis de jugadores</div>
+            </a>
+
+            <a href="pages/mazos.html" class="quick-link-card">
+                <div class="quick-link-icon">🎴</div>
+                <div class="quick-link-title">Mazos</div>
+                <div class="quick-link-desc">Explora todos los mazos disponibles</div>
+            </a>
+
+            <a href="pages/combate.html" class="quick-link-card">
+                <div class="quick-link-icon">⚡</div>
+                <div class="quick-link-title">Registrar Combate</div>
+                <div class="quick-link-desc">Registra el resultado de tu partida</div>
+            </a>
+        </div>
+
+        <!-- Noticias Recientes -->
+        <div class="noticias-section">
+            <h2>📰 Últimas Noticias</h2>
+            <div id="noticias-recientes-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando noticias...</p>
+                </div>
+            </div>
+            <div class="ver-todas-noticias">
+                <a href="pages/noticias.html" class="btn btn-primary">Ver todas las noticias</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        // Cargar noticias recientes
+        async function cargarNoticiasRecientes() {
+            const container = document.getElementById('noticias-recientes-container');
+
+            try {
+                const result = await API.getNoticiasRecientes(5);
+
+                if (!result.success || result.noticias.length === 0) {
+                    container.innerHTML = `
+                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                            No hay noticias publicadas todavía.
+                        </p>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                result.noticias.forEach(noticia => {
+                    const fecha = new Date(noticia.fecha_creacion).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    const extracto = noticia.contenido.length > 150
+                        ? noticia.contenido.substring(0, 150) + '...'
+                        : noticia.contenido;
+
+                    html += `
+                        <div class="noticia-card-preview" onclick="window.location.href='pages/noticias.html'">
+                            <h3>${noticia.titulo}</h3>
+                            <p class="noticia-meta-preview">📅 ${fecha} | Por: ${noticia.autor_nombre}</p>
+                            <p class="noticia-extracto-preview">${extracto}</p>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error cargando noticias:', error);
+                container.innerHTML = `
+                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        No se pudieron cargar las noticias.
+                    </p>
+                `;
+            }
+        }
+
+        // Cargar al iniciar
+        document.addEventListener('DOMContentLoaded', cargarNoticiasRecientes);
+    </script>
 </body>
 </html>

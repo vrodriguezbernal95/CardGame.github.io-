@@ -242,6 +242,43 @@ class API {
             method: 'DELETE'
         });
     }
+
+    // Noticias
+    static async getNoticias(page = null, limit = null) {
+        let endpoint = '/noticias';
+        if (page && limit) {
+            endpoint += `?page=${page}&limit=${limit}`;
+        }
+        return await this.request(endpoint);
+    }
+
+    static async getNoticiasRecientes(limit = 5) {
+        return await this.request(`/noticias/recientes?limit=${limit}`);
+    }
+
+    static async getNoticia(id) {
+        return await this.request(`/noticias/${id}`);
+    }
+
+    static async createNoticia(noticiaData) {
+        return await this.request('/noticias', {
+            method: 'POST',
+            body: JSON.stringify(noticiaData)
+        });
+    }
+
+    static async updateNoticia(id, noticiaData) {
+        return await this.request(`/noticias/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(noticiaData)
+        });
+    }
+
+    static async deleteNoticia(id) {
+        return await this.request(`/noticias/${id}`, {
+            method: 'DELETE'
+        });
+    }
 }
 
 // Utilidades UI

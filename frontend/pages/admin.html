@@ -185,6 +185,7 @@
                     📝 Partidas Pendientes <span id="badge-pendientes" class="badge badge-warning" style="margin-left: 0.5rem;">0</span>
                 </button>
                 <button class="tab" onclick="cambiarTab('agregar')">⚔️ Añadir Partida</button>
+                <button class="tab" onclick="cambiarTab('noticias')">📰 Noticias</button>
                 <button class="tab" onclick="cambiarTab('usuarios')">👥 Usuarios</button>
                 <button class="tab" onclick="cambiarTab('mazos')">🎴 Mazos</button>
             </div>
@@ -296,6 +297,47 @@
                     <button onclick="descargarExcel()" class="btn btn-success" style="min-width: 250px;">
                         📥 Descargar Historial en Excel
                     </button>
+                </div>
+            </div>
+
+            <!-- Tab: Noticias -->
+            <div id="tab-noticias" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nueva Noticia</h3>
+                <form id="form-noticia" style="max-width: 800px; margin-bottom: 3rem;">
+                    <input type="hidden" id="noticia-id">
+
+                    <div class="form-group">
+                        <label class="form-label">Título *</label>
+                        <input type="text" id="noticia-titulo" class="form-control" placeholder="Ej: Nuevo torneo de One Piece TCG" maxlength="255" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contenido *</label>
+                        <textarea id="noticia-contenido" class="form-control" rows="8" placeholder="Escribe el contenido completo de la noticia..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">URL de Imagen (opcional)</label>
+                        <input type="url" id="noticia-imagen" class="form-control" placeholder="https://ejemplo.com/imagen.jpg" maxlength="500">
+                        <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                            💡 Pega el enlace de una imagen alojada en internet (Imgur, Google Drive, etc.)
+                        </small>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary">Publicar Noticia</button>
+                        <button type="button" onclick="cancelarEdicionNoticia()" id="btn-cancelar-noticia" class="btn btn-secondary" style="display: none;">Cancelar</button>
+                    </div>
+                </form>
+
+                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+
+                <h3 style="margin-bottom: 1.5rem;">📰 Noticias Publicadas</h3>
+                <div id="noticias-lista-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando noticias...</p>
+                    </div>
                 </div>
             </div>
 
@@ -418,6 +460,7 @@
 
             if (tab === 'pendientes') cargarPartidasPendientes();
             if (tab === 'agregar') cargarPartidasLista(1);
+            if (tab === 'noticias') cargarNoticias();
             if (tab === 'usuarios') cargarUsuarios();
             if (tab === 'mazos') cargarMazos();
         }
@@ -1238,6 +1281,151 @@
 
             const numPartidas = partidasFiltradas.length;
             UI.showAlert(`${numPartidas} partida${numPartidas !== 1 ? 's' : ''} descargada${numPartidas !== 1 ? 's' : ''} en ${nombreArchivo}`, 'success');
+        }
+
+        // ========== GESTIÓN DE NOTICIAS ==========
+
+        // Cargar noticias
+        async function cargarNoticias() {
+            const container = document.getElementById('noticias-lista-container');
+
+            try {
+                const result = await API.getNoticias();
+
+                if (!result.success || result.noticias.length === 0) {
+                    container.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">No hay noticias publicadas todavía.</p>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; gap: 1.5rem;">';
+
+                result.noticias.forEach(noticia => {
+                    const fecha = new Date(noticia.fecha_creacion).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    const extracto = noticia.contenido.length > 200
+                        ? noticia.contenido.substring(0, 200) + '...'
+                        : noticia.contenido;
+
+                    html += `
+                        <div style="border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; background: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">${noticia.titulo}</h4>
+                                    <small style="color: var(--text-secondary);">📅 ${fecha} | Por: ${noticia.autor_nombre}</small>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button onclick="editarNoticia(${noticia.id})" class="btn btn-secondary btn-sm">✏️ Editar</button>
+                                    <button onclick="eliminarNoticia(${noticia.id})" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                                </div>
+                            </div>
+                            ${noticia.imagen_url ? `<img src="${noticia.imagen_url}" alt="${noticia.titulo}" style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` : ''}
+                            <p style="color: var(--text-secondary); white-space: pre-wrap;">${extracto}</p>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error cargando noticias:', error);
+                container.innerHTML = '<div class="alert alert-error">Error al cargar noticias</div>';
+            }
+        }
+
+        // Manejar formulario de noticia
+        document.getElementById('form-noticia').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const noticiaId = document.getElementById('noticia-id').value;
+            const noticiaData = {
+                titulo: document.getElementById('noticia-titulo').value.trim(),
+                contenido: document.getElementById('noticia-contenido').value.trim(),
+                imagen_url: document.getElementById('noticia-imagen').value.trim() || null
+            };
+
+            try {
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = noticiaId ? 'Actualizando...' : 'Publicando...';
+
+                let result;
+                if (noticiaId) {
+                    result = await API.updateNoticia(noticiaId, noticiaData);
+                } else {
+                    result = await API.createNoticia(noticiaData);
+                }
+
+                if (result.success) {
+                    UI.showAlert(noticiaId ? 'Noticia actualizada exitosamente' : 'Noticia publicada exitosamente', 'success');
+                    document.getElementById('form-noticia').reset();
+                    document.getElementById('noticia-id').value = '';
+                    document.getElementById('btn-cancelar-noticia').style.display = 'none';
+                    btn.textContent = 'Publicar Noticia';
+                    cargarNoticias();
+                } else {
+                    throw new Error(result.message || 'Error al guardar noticia');
+                }
+
+                btn.disabled = false;
+            } catch (error) {
+                console.error('Error:', error);
+                UI.showAlert(error.message || 'Error al guardar noticia', 'error');
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = false;
+                btn.textContent = noticiaId ? 'Actualizar Noticia' : 'Publicar Noticia';
+            }
+        });
+
+        // Editar noticia
+        async function editarNoticia(id) {
+            try {
+                const result = await API.getNoticia(id);
+
+                if (result.success) {
+                    const noticia = result.noticia;
+                    document.getElementById('noticia-id').value = noticia.id;
+                    document.getElementById('noticia-titulo').value = noticia.titulo;
+                    document.getElementById('noticia-contenido').value = noticia.contenido;
+                    document.getElementById('noticia-imagen').value = noticia.imagen_url || '';
+                    document.getElementById('btn-cancelar-noticia').style.display = 'block';
+                    document.querySelector('#form-noticia button[type="submit"]').textContent = 'Actualizar Noticia';
+
+                    // Scroll al formulario
+                    document.getElementById('form-noticia').scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                UI.showAlert('Error al cargar noticia', 'error');
+            }
+        }
+
+        // Cancelar edición
+        function cancelarEdicionNoticia() {
+            document.getElementById('form-noticia').reset();
+            document.getElementById('noticia-id').value = '';
+            document.getElementById('btn-cancelar-noticia').style.display = 'none';
+            document.querySelector('#form-noticia button[type="submit"]').textContent = 'Publicar Noticia';
+        }
+
+        // Eliminar noticia
+        async function eliminarNoticia(id) {
+            if (!confirm('¿Seguro que quieres eliminar esta noticia? Esta acción no se puede deshacer.')) return;
+
+            try {
+                const result = await API.deleteNoticia(id);
+                if (result.success) {
+                    UI.showAlert('Noticia eliminada exitosamente', 'success');
+                    cargarNoticias();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                UI.showAlert('Error al eliminar noticia', 'error');
+            }
         }
 
         // Inicializar
