@@ -354,8 +354,12 @@
                     <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🔍 Filtros</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Mes/Año</label>
-                            <input type="month" id="filtro-mes" class="form-control">
+                            <label class="form-label">Fecha desde</label>
+                            <input type="date" id="filtro-fecha-desde" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Fecha hasta</label>
+                            <input type="date" id="filtro-fecha-hasta" class="form-control">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Jugadores</label>
@@ -577,37 +581,48 @@
 
         // Aplicar filtros (usando endpoints del servidor + filtro de checkboxes)
         async function aplicarFiltrosStats() {
-            const mes = document.getElementById('filtro-mes').value;
+            const fechaDesde = document.getElementById('filtro-fecha-desde').value;
+            const fechaHasta = document.getElementById('filtro-fecha-hasta').value;
             const jugadoresSeleccionados = getJugadoresSeleccionados();
             const totalJugadores = getTotalJugadoresCheckboxes();
             const hayFiltroJugadores = jugadoresSeleccionados.length < totalJugadores;
+            const hayFiltroFecha = fechaDesde || fechaHasta;
 
             const filtros = {};
-            if (mes) filtros.mes = mes;
+            if (fechaDesde) filtros.fechaDesde = fechaDesde;
+            if (fechaHasta) filtros.fechaHasta = fechaHasta;
 
             // Actualizar subtítulos
             let subtituloTexto = '';
-            if (mes || hayFiltroJugadores) {
+            let subtituloMazos = '';
+            if (hayFiltroFecha || hayFiltroJugadores) {
                 const partes = [];
-                if (mes) {
-                    const [year, month] = mes.split('-');
-                    const fecha = new Date(year, month - 1);
-                    const nombreMes = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-                    partes.push(nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1));
+                const partesMazos = [];
+                if (hayFiltroFecha) {
+                    let textoFecha = '';
+                    if (fechaDesde && fechaHasta) {
+                        textoFecha = `Del ${new Date(fechaDesde + 'T00:00:00').toLocaleDateString('es-ES')} al ${new Date(fechaHasta + 'T00:00:00').toLocaleDateString('es-ES')}`;
+                    } else if (fechaDesde) {
+                        textoFecha = `Desde ${new Date(fechaDesde + 'T00:00:00').toLocaleDateString('es-ES')}`;
+                    } else {
+                        textoFecha = `Hasta ${new Date(fechaHasta + 'T00:00:00').toLocaleDateString('es-ES')}`;
+                    }
+                    partes.push(textoFecha);
+                    partesMazos.push(textoFecha);
                 }
                 if (hayFiltroJugadores) {
                     const excluidos = totalJugadores - jugadoresSeleccionados.length;
                     partes.push(`${excluidos} jugador${excluidos > 1 ? 'es' : ''} excluido${excluidos > 1 ? 's' : ''}`);
                 }
                 subtituloTexto = `Filtrado por: ${partes.join(' - ')}`;
+                subtituloMazos = partesMazos.length > 0 ? `Filtrado por: ${partesMazos.join(' - ')}` : 'Winrate y récord de todos los mazos';
             } else {
                 subtituloTexto = 'Winrate y récord de todos los jugadores';
+                subtituloMazos = 'Winrate y récord de todos los mazos';
             }
 
             document.getElementById('subtitle-jugadores').textContent = subtituloTexto;
-            document.getElementById('subtitle-mazos').textContent = mes
-                ? `Filtrado por: ${new Date(mes.split('-')[0], mes.split('-')[1] - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`
-                : 'Winrate y récord de todos los mazos';
+            document.getElementById('subtitle-mazos').textContent = subtituloMazos;
 
             // Recargar estadísticas con filtros
             await cargarEstadisticasJugadores(filtros, hayFiltroJugadores ? jugadoresSeleccionados : null);
@@ -616,7 +631,8 @@
 
         // Limpiar filtros
         async function limpiarFiltrosStats() {
-            document.getElementById('filtro-mes').value = '';
+            document.getElementById('filtro-fecha-desde').value = '';
+            document.getElementById('filtro-fecha-hasta').value = '';
             toggleAllJugadores(true);
             document.getElementById('subtitle-jugadores').textContent = 'Winrate y récord de todos los jugadores';
             document.getElementById('subtitle-mazos').textContent = 'Winrate y récord de todos los mazos';
@@ -630,9 +646,9 @@
             const container = document.getElementById('estadisticas-jugadores');
 
             try {
-                // Usar endpoint filtrado si hay filtro de mes, sino el de la vista SQL
+                // Usar endpoint filtrado si hay filtro de fecha, sino el de la vista SQL
                 let estadisticas;
-                if (filtros.mes) {
+                if (filtros.fechaDesde || filtros.fechaHasta) {
                     const result = await API.getEstadisticasJugadoresFiltrado(filtros);
                     if (!result.success) throw new Error('Error del servidor');
                     estadisticas = result.estadisticas;
@@ -726,9 +742,9 @@
             const container = document.getElementById('estadisticas-mazos');
 
             try {
-                // Usar endpoint filtrado si hay filtros, sino el de la vista SQL
+                // Usar endpoint filtrado si hay filtros de fecha, sino el de la vista SQL
                 let estadisticas;
-                if (filtros.mes || filtros.jugador_id) {
+                if (filtros.fechaDesde || filtros.fechaHasta) {
                     const result = await API.getEstadisticasMazosFiltrado(filtros);
                     if (!result.success) throw new Error('Error del servidor');
                     estadisticas = result.estadisticas;

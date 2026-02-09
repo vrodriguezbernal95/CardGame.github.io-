@@ -196,8 +196,8 @@ class API {
     // Estadísticas filtradas (calculadas en servidor)
     static async getEstadisticasJugadoresFiltrado(filtros = {}) {
         const params = new URLSearchParams();
-        if (filtros.mes) params.append('mes', filtros.mes);
-        if (filtros.jugador_id) params.append('jugador_id', filtros.jugador_id);
+        if (filtros.fechaDesde) params.append('fechaDesde', filtros.fechaDesde);
+        if (filtros.fechaHasta) params.append('fechaHasta', filtros.fechaHasta);
         const queryString = params.toString();
         const endpoint = queryString ? `/estadisticas/jugadores/filtrado?${queryString}` : '/estadisticas/jugadores/filtrado';
         return await this.request(endpoint);
@@ -205,8 +205,8 @@ class API {
 
     static async getEstadisticasMazosFiltrado(filtros = {}) {
         const params = new URLSearchParams();
-        if (filtros.mes) params.append('mes', filtros.mes);
-        if (filtros.jugador_id) params.append('jugador_id', filtros.jugador_id);
+        if (filtros.fechaDesde) params.append('fechaDesde', filtros.fechaDesde);
+        if (filtros.fechaHasta) params.append('fechaHasta', filtros.fechaHasta);
         const queryString = params.toString();
         const endpoint = queryString ? `/estadisticas/mazos/filtrado?${queryString}` : '/estadisticas/mazos/filtrado';
         return await this.request(endpoint);

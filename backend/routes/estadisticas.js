@@ -23,13 +23,12 @@ router.get('/jugadores', async (req, res) => {
     }
 });
 
-// Obtener estadísticas de jugadores con filtros (mes, jugador)
-// GET /estadisticas/jugadores/filtrado?mes=YYYY-MM&jugador_id=X
+// Obtener estadísticas de jugadores con filtros (rango de fechas)
+// GET /estadisticas/jugadores/filtrado?fechaDesde=YYYY-MM-DD&fechaHasta=YYYY-MM-DD
 router.get('/jugadores/filtrado', async (req, res) => {
     try {
-        const dbType = process.env.DB_TYPE || 'mysql';
-        const mes = req.query.mes || null;
-        const jugadorId = req.query.jugador_id || null;
+        const fechaDesde = req.query.fechaDesde || null;
+        const fechaHasta = req.query.fechaHasta || null;
 
         let whereConditions = [];
         let queryParams = [];
@@ -37,19 +36,13 @@ router.get('/jugadores/filtrado', async (req, res) => {
         // Filtro de estado
         whereConditions.push("(p.estado = 'aprobada' OR p.estado IS NULL)");
 
-        if (mes) {
-            const [year, month] = mes.split('-');
-            if (dbType === 'postgres') {
-                whereConditions.push("EXTRACT(YEAR FROM p.fecha_partida) = ? AND EXTRACT(MONTH FROM p.fecha_partida) = ?");
-            } else {
-                whereConditions.push("YEAR(p.fecha_partida) = ? AND MONTH(p.fecha_partida) = ?");
-            }
-            queryParams.push(parseInt(year), parseInt(month));
+        if (fechaDesde) {
+            whereConditions.push("DATE(p.fecha_partida) >= ?");
+            queryParams.push(fechaDesde);
         }
-
-        if (jugadorId) {
-            whereConditions.push("(p.jugador1_id = ? OR p.jugador2_id = ?)");
-            queryParams.push(parseInt(jugadorId), parseInt(jugadorId));
+        if (fechaHasta) {
+            whereConditions.push("DATE(p.fecha_partida) <= ?");
+            queryParams.push(fechaHasta);
         }
 
         const whereClause = whereConditions.length > 0
@@ -89,13 +82,12 @@ router.get('/jugadores/filtrado', async (req, res) => {
     }
 });
 
-// Obtener estadísticas de mazos con filtros (mes, jugador)
-// GET /estadisticas/mazos/filtrado?mes=YYYY-MM&jugador_id=X
+// Obtener estadísticas de mazos con filtros (rango de fechas)
+// GET /estadisticas/mazos/filtrado?fechaDesde=YYYY-MM-DD&fechaHasta=YYYY-MM-DD
 router.get('/mazos/filtrado', async (req, res) => {
     try {
-        const dbType = process.env.DB_TYPE || 'mysql';
-        const mes = req.query.mes || null;
-        const jugadorId = req.query.jugador_id || null;
+        const fechaDesde = req.query.fechaDesde || null;
+        const fechaHasta = req.query.fechaHasta || null;
 
         let whereConditions = [];
         let queryParams = [];
@@ -103,19 +95,13 @@ router.get('/mazos/filtrado', async (req, res) => {
         // Filtro de estado
         whereConditions.push("(p.estado = 'aprobada' OR p.estado IS NULL)");
 
-        if (mes) {
-            const [year, month] = mes.split('-');
-            if (dbType === 'postgres') {
-                whereConditions.push("EXTRACT(YEAR FROM p.fecha_partida) = ? AND EXTRACT(MONTH FROM p.fecha_partida) = ?");
-            } else {
-                whereConditions.push("YEAR(p.fecha_partida) = ? AND MONTH(p.fecha_partida) = ?");
-            }
-            queryParams.push(parseInt(year), parseInt(month));
+        if (fechaDesde) {
+            whereConditions.push("DATE(p.fecha_partida) >= ?");
+            queryParams.push(fechaDesde);
         }
-
-        if (jugadorId) {
-            whereConditions.push("(p.jugador1_id = ? OR p.jugador2_id = ?)");
-            queryParams.push(parseInt(jugadorId), parseInt(jugadorId));
+        if (fechaHasta) {
+            whereConditions.push("DATE(p.fecha_partida) <= ?");
+            queryParams.push(fechaHasta);
         }
 
         const whereClause = whereConditions.length > 0
