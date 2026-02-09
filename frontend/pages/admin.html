@@ -133,6 +133,8 @@
                 <li><a href="historial.html">Historial</a></li>
                 <li><a href="estadisticas.html">Estadísticas</a></li>
                 <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="noticias.html">Noticias</a></li>
+                <li><a href="normas.html">Normas</a></li>
                 <li><a href="combate.html">Registrar Combate</a></li>
                 <li><a href="contador.html">Contador</a></li>
                 <li><a href="compartir.html">📤 Compartir</a></li>
@@ -199,6 +201,7 @@
                 <button class="tab" onclick="cambiarTab('noticias')">📰 Noticias</button>
                 <button class="tab" onclick="cambiarTab('usuarios')">👥 Usuarios</button>
                 <button class="tab" onclick="cambiarTab('mazos')">🎴 Mazos</button>
+                <button class="tab" onclick="cambiarTab('normas')">📋 Normas</button>
             </div>
 
             <!-- Tab: Partidas Pendientes -->
@@ -424,6 +427,53 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tab: Normas -->
+            <div id="tab-normas" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem;">➕ Crear/Editar Norma</h3>
+                <form id="form-norma" style="max-width: 800px; margin-bottom: 3rem;">
+                    <input type="hidden" id="norma-id">
+
+                    <div class="form-group">
+                        <label class="form-label">Título *</label>
+                        <input type="text" id="norma-titulo" class="form-control" placeholder="Ej: Fase de ataque" maxlength="255" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contenido (opcional)</label>
+                        <textarea id="norma-contenido" class="form-control" rows="5" placeholder="Texto de la norma (dejar vacío si es solo un título de sección)"></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Sección padre</label>
+                            <select id="norma-parent" class="form-control">
+                                <option value="">-- Nivel raíz (sin padre) --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Orden</label>
+                            <input type="number" id="norma-orden" class="form-control" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" id="btn-norma-submit">Crear Norma</button>
+                        <button type="button" onclick="cancelarEdicionNorma()" id="btn-cancelar-norma" class="btn btn-secondary" style="display: none;">Cancelar</button>
+                    </div>
+                </form>
+
+                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+
+                <h3 style="margin-bottom: 1.5rem;">📋 Estructura de Normas</h3>
+                <div id="normas-admin-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Cargando normas...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -474,6 +524,7 @@
             if (tab === 'noticias') cargarNoticias();
             if (tab === 'usuarios') cargarUsuarios();
             if (tab === 'mazos') cargarMazos();
+            if (tab === 'normas') cargarNormasAdmin();
         }
 
         // Cargar resumen del dashboard
@@ -1483,6 +1534,207 @@
             } catch (error) {
                 console.error('Error:', error);
                 UI.showAlert('Error al eliminar noticia', 'error');
+            }
+        }
+
+        // ========== NORMAS ==========
+
+        let todasLasNormasAdmin = [];
+
+        async function cargarNormasAdmin() {
+            const container = document.getElementById('normas-admin-container');
+
+            try {
+                const result = await API.getNormas();
+
+                if (result.success) {
+                    todasLasNormasAdmin = result.normas;
+                    actualizarSelectPadre();
+                    renderizarNormasAdmin();
+                } else {
+                    container.innerHTML = '<div class="alert alert-error">Error al cargar normas</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function buildTreeAdmin(normas) {
+            const map = {};
+            const roots = [];
+
+            normas.forEach(norma => {
+                map[norma.id] = { ...norma, children: [] };
+            });
+
+            normas.forEach(norma => {
+                if (norma.parent_id && map[norma.parent_id]) {
+                    map[norma.parent_id].children.push(map[norma.id]);
+                } else {
+                    roots.push(map[norma.id]);
+                }
+            });
+
+            return roots;
+        }
+
+        function renderizarNormasAdmin() {
+            const container = document.getElementById('normas-admin-container');
+
+            if (todasLasNormasAdmin.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No hay normas creadas todavía.</p>';
+                return;
+            }
+
+            const tree = buildTreeAdmin(todasLasNormasAdmin);
+            container.innerHTML = renderTreeAdmin(tree, 0);
+        }
+
+        function renderTreeAdmin(nodes, nivel) {
+            let html = '<div style="' + (nivel > 0 ? 'padding-left: 1.5rem; border-left: 2px solid var(--border);' : '') + '">';
+
+            nodes.forEach(node => {
+                const hasChildren = node.children.length > 0;
+                const tipoLabel = hasChildren ? '📂' : (node.contenido ? '📄' : '📌');
+
+                html += `
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; margin-bottom: 0.25rem; background: ${nivel === 0 ? '#f3f4f6' : '#f9fafb'}; border-radius: 8px; border: 1px solid var(--border);">
+                        <span>${tipoLabel}</span>
+                        <div style="flex: 1;">
+                            <strong>${escapeHtmlAdmin(node.titulo)}</strong>
+                            ${node.contenido ? '<span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: 0.5rem;">(tiene contenido)</span>' : ''}
+                            <span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 0.5rem;">orden: ${node.orden}</span>
+                        </div>
+                        <button onclick="editarNorma(${node.id})" class="btn btn-primary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">Editar</button>
+                        <button onclick="eliminarNorma(${node.id})" class="btn btn-danger" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">Eliminar</button>
+                    </div>
+                `;
+
+                if (hasChildren) {
+                    html += renderTreeAdmin(node.children, nivel + 1);
+                }
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function escapeHtmlAdmin(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function actualizarSelectPadre(excludeId = null) {
+            const select = document.getElementById('norma-parent');
+            select.innerHTML = '<option value="">-- Nivel raíz (sin padre) --</option>';
+
+            function addOptions(nodes, prefix) {
+                nodes.forEach(norma => {
+                    if (excludeId && norma.id === excludeId) return;
+                    const option = document.createElement('option');
+                    option.value = norma.id;
+                    option.textContent = prefix + norma.titulo;
+                    select.appendChild(option);
+                });
+            }
+
+            // Construir opciones con indentación visual
+            const tree = buildTreeAdmin(todasLasNormasAdmin);
+            function flattenWithPrefix(nodes, prefix) {
+                nodes.forEach(node => {
+                    if (excludeId && node.id === excludeId) return;
+                    const option = document.createElement('option');
+                    option.value = node.id;
+                    option.textContent = prefix + node.titulo;
+                    select.appendChild(option);
+                    if (node.children.length > 0) {
+                        flattenWithPrefix(node.children, prefix + '── ');
+                    }
+                });
+            }
+
+            flattenWithPrefix(tree, '');
+        }
+
+        // Formulario de normas
+        document.getElementById('form-norma').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const normaId = document.getElementById('norma-id').value;
+            const data = {
+                titulo: document.getElementById('norma-titulo').value,
+                contenido: document.getElementById('norma-contenido').value || null,
+                parent_id: document.getElementById('norma-parent').value || null,
+                orden: parseInt(document.getElementById('norma-orden').value) || 0
+            };
+
+            try {
+                let result;
+                if (normaId) {
+                    result = await API.updateNorma(normaId, data);
+                } else {
+                    result = await API.createNorma(data);
+                }
+
+                if (result.success) {
+                    alert(result.message);
+                    cancelarEdicionNorma();
+                    await cargarNormasAdmin();
+                } else {
+                    alert('Error: ' + (result.message || 'Error desconocido'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function editarNorma(id) {
+            const norma = todasLasNormasAdmin.find(n => n.id === id);
+            if (!norma) return;
+
+            document.getElementById('norma-id').value = norma.id;
+            document.getElementById('norma-titulo').value = norma.titulo;
+            document.getElementById('norma-contenido').value = norma.contenido || '';
+            document.getElementById('norma-orden').value = norma.orden || 0;
+
+            // Actualizar select excluyendo la norma actual (no puede ser padre de sí misma)
+            actualizarSelectPadre(norma.id);
+            document.getElementById('norma-parent').value = norma.parent_id || '';
+
+            document.getElementById('btn-norma-submit').textContent = 'Actualizar Norma';
+            document.getElementById('btn-cancelar-norma').style.display = 'inline-block';
+
+            // Scroll al formulario
+            document.getElementById('form-norma').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicionNorma() {
+            document.getElementById('form-norma').reset();
+            document.getElementById('norma-id').value = '';
+            document.getElementById('norma-orden').value = '0';
+            document.getElementById('btn-norma-submit').textContent = 'Crear Norma';
+            document.getElementById('btn-cancelar-norma').style.display = 'none';
+            actualizarSelectPadre();
+        }
+
+        async function eliminarNorma(id) {
+            const norma = todasLasNormasAdmin.find(n => n.id === id);
+            const tieneHijos = todasLasNormasAdmin.some(n => n.parent_id === id);
+            const mensaje = tieneHijos
+                ? `¿Eliminar "${norma.titulo}" y TODOS sus subelementos?`
+                : `¿Eliminar "${norma.titulo}"?`;
+
+            if (!confirm(mensaje)) return;
+
+            try {
+                const result = await API.deleteNorma(id);
+                if (result.success) {
+                    alert('Norma eliminada');
+                    await cargarNormasAdmin();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
             }
         }
 

@@ -330,6 +330,38 @@ class API {
             method: 'DELETE'
         });
     }
+
+    // Normas
+    static async getNormas() {
+        return await this.request('/normas');
+    }
+
+    static async createNorma(normaData) {
+        return await this.request('/normas', {
+            method: 'POST',
+            body: JSON.stringify(normaData)
+        });
+    }
+
+    static async updateNorma(id, normaData) {
+        return await this.request(`/normas/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(normaData)
+        });
+    }
+
+    static async deleteNorma(id) {
+        return await this.request(`/normas/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
+    static async reordenarNormas(normas) {
+        return await this.request('/normas/reordenar/batch', {
+            method: 'PUT',
+            body: JSON.stringify({ normas })
+        });
+    }
 }
 
 // Utilidades UI

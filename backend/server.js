@@ -27,6 +27,7 @@ const mazosRoutes = require('./routes/mazos');
 const estadisticasRoutes = require('./routes/estadisticas');
 const migrationRoutes = require('./routes/migration');
 const noticiasRoutes = require('./routes/noticias');
+const normasRoutes = require('./routes/normas');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/partidas', partidasRoutes);
@@ -34,6 +35,7 @@ app.use('/api/mazos', mazosRoutes);
 app.use('/api/estadisticas', estadisticasRoutes);
 app.use('/api/migration', migrationRoutes);
 app.use('/api/noticias', noticiasRoutes);
+app.use('/api/normas', normasRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

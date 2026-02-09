@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normas - Card Game Anime</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        .normas-tree {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .normas-tree ul {
+            list-style: none;
+            padding-left: 1.5rem;
+            margin: 0;
+        }
+
+        .norma-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .norma-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .norma-header:hover {
+            background: #f3f4f6;
+            border-color: var(--primary-color);
+        }
+
+        .norma-header.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .norma-toggle {
+            font-size: 0.75rem;
+            transition: transform 0.3s;
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .norma-toggle.open {
+            transform: rotate(90deg);
+        }
+
+        .norma-titulo {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .norma-header.nivel-0 .norma-titulo {
+            font-size: 1.1rem;
+        }
+
+        .norma-children {
+            display: none;
+            padding-top: 0.25rem;
+        }
+
+        .norma-children.open {
+            display: block;
+        }
+
+        .norma-contenido {
+            display: none;
+            padding: 1rem 1rem 1rem 2.5rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .norma-contenido.open {
+            display: block;
+        }
+
+        /* Hoja sin hijos ni contenido */
+        .norma-header.leaf {
+            cursor: default;
+            padding-left: 2.5rem;
+        }
+
+        .norma-header.leaf:hover {
+            border-color: var(--border);
+            background: #f9fafb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Principal -->
+    <header class="header-main">
+        <div class="header-main-container">
+            <div class="nav-brand">🎴 Card Game Anime</div>
+            <div id="user-nav"></div>
+        </div>
+    </header>
+
+    <!-- Header Navegación -->
+    <nav class="header-nav">
+        <div class="header-nav-container">
+            <ul class="nav-links">
+                <li><a href="../index.html">Inicio</a></li>
+                <li><a href="historial.html">Historial</a></li>
+                <li><a href="estadisticas.html">Estadísticas</a></li>
+                <li><a href="mazos.html">Mazos</a></li>
+                <li><a href="noticias.html">Noticias</a></li>
+                <li><a href="normas.html">Normas</a></li>
+                <li><a href="combate.html">Registrar Combate</a></li>
+                <li><a href="contador.html">Contador</a></li>
+                <li><a href="compartir.html">📤 Compartir</a></li>
+                <li id="admin-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">📋 Normas del Juego</h1>
+                <p class="card-subtitle">Reglas y normativa oficial</p>
+            </div>
+
+            <div id="normas-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-2">Cargando normas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // Mostrar link de admin si es admin
+        if (API.isAdmin()) {
+            document.getElementById('admin-link').style.display = 'block';
+        }
+
+        // Construir árbol desde lista plana
+        function buildTree(normas) {
+            const map = {};
+            const roots = [];
+
+            // Crear mapa de id -> nodo
+            normas.forEach(norma => {
+                map[norma.id] = { ...norma, children: [] };
+            });
+
+            // Construir relaciones padre-hijo
+            normas.forEach(norma => {
+                if (norma.parent_id && map[norma.parent_id]) {
+                    map[norma.parent_id].children.push(map[norma.id]);
+                } else {
+                    roots.push(map[norma.id]);
+                }
+            });
+
+            return roots;
+        }
+
+        // Renderizar árbol recursivamente
+        function renderTree(nodes, nivel = 0) {
+            if (nodes.length === 0) return '';
+
+            let html = nivel === 0 ? '<ul class="normas-tree">' : '<ul>';
+
+            nodes.forEach(node => {
+                const hasChildren = node.children.length > 0;
+                const hasContent = node.contenido && node.contenido.trim();
+                const isExpandable = hasChildren || hasContent;
+
+                html += `<li class="norma-item">`;
+
+                if (isExpandable) {
+                    html += `
+                        <div class="norma-header nivel-${nivel}" onclick="toggleNorma(this)">
+                            <span class="norma-toggle">▶</span>
+                            <span class="norma-titulo">${escapeHtml(node.titulo)}</span>
+                        </div>
+                    `;
+
+                    if (hasContent) {
+                        html += `<div class="norma-contenido">${escapeHtml(node.contenido)}</div>`;
+                    }
+
+                    if (hasChildren) {
+                        html += `<div class="norma-children">${renderTree(node.children, nivel + 1)}</div>`;
+                    }
+                } else {
+                    html += `
+                        <div class="norma-header leaf nivel-${nivel}">
+                            <span class="norma-titulo">${escapeHtml(node.titulo)}</span>
+                        </div>
+                    `;
+                }
+
+                html += `</li>`;
+            });
+
+            html += '</ul>';
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toggle desplegable
+        function toggleNorma(header) {
+            const item = header.parentElement;
+            const toggle = header.querySelector('.norma-toggle');
+            const children = item.querySelector('.norma-children');
+            const contenido = item.querySelector('.norma-contenido');
+
+            const isOpen = toggle.classList.contains('open');
+
+            if (isOpen) {
+                toggle.classList.remove('open');
+                header.classList.remove('active');
+                if (children) children.classList.remove('open');
+                if (contenido) contenido.classList.remove('open');
+            } else {
+                toggle.classList.add('open');
+                header.classList.add('active');
+                if (children) children.classList.add('open');
+                if (contenido) contenido.classList.add('open');
+            }
+        }
+
+        // Cargar normas
+        async function cargarNormas() {
+            const container = document.getElementById('normas-container');
+
+            try {
+                const result = await API.getNormas();
+
+                if (result.success && result.normas.length > 0) {
+                    const tree = buildTree(result.normas);
+                    container.innerHTML = renderTree(tree);
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>No hay normas publicadas todavía.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error al cargar las normas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Inicializar
+        cargarNormas();
+    </script>
+</body>
+</html>
