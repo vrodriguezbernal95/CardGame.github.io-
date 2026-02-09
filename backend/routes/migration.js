@@ -425,4 +425,82 @@ router.post('/fix-estadisticas-views', verifyToken, verifyAdmin, async (req, res
     }
 });
 
+// ENDPOINT TEMPORAL - Ejecutar migración de tabla de normas
+// SOLO ADMIN puede ejecutar esto
+router.post('/run-normas-migration', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        console.log('🔧 Iniciando migración: Tabla de normas...');
+
+        const dbType = process.env.DB_TYPE || 'mysql';
+
+        if (dbType === 'postgres') {
+            try {
+                await db.query(`
+                    CREATE TABLE IF NOT EXISTS normas (
+                        id SERIAL PRIMARY KEY,
+                        titulo VARCHAR(255) NOT NULL,
+                        contenido TEXT,
+                        parent_id INTEGER DEFAULT NULL REFERENCES normas(id) ON DELETE CASCADE,
+                        orden INTEGER DEFAULT 0,
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                `);
+                console.log('✓ Tabla normas creada/verificada');
+            } catch (err) {
+                console.log('Tabla normas ya existe o error:', err.message);
+            }
+
+            try {
+                await db.query(`CREATE INDEX IF NOT EXISTS idx_normas_parent ON normas(parent_id);`);
+                await db.query(`CREATE INDEX IF NOT EXISTS idx_normas_orden ON normas(orden);`);
+                console.log('✓ Índices creados/verificados');
+            } catch (err) {
+                console.log('Índices ya existen o error:', err.message);
+            }
+
+        } else {
+            try {
+                await db.query(`
+                    CREATE TABLE IF NOT EXISTS normas (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        titulo VARCHAR(255) NOT NULL,
+                        contenido TEXT,
+                        parent_id INT DEFAULT NULL,
+                        orden INT DEFAULT 0,
+                        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        FOREIGN KEY (parent_id) REFERENCES normas(id) ON DELETE CASCADE,
+                        INDEX idx_parent (parent_id),
+                        INDEX idx_orden (orden)
+                    ) ENGINE=InnoDB;
+                `);
+                console.log('✓ Tabla normas creada/verificada');
+            } catch (err) {
+                if (err.code === 'ER_TABLE_EXISTS_ERROR') {
+                    console.log('Tabla normas ya existe');
+                } else {
+                    throw err;
+                }
+            }
+        }
+
+        console.log('✅ Migración de normas completada exitosamente');
+
+        res.json({
+            success: true,
+            message: 'Migración de normas ejecutada correctamente. Sistema de normas activado.',
+            dbType
+        });
+
+    } catch (error) {
+        console.error('❌ Error en migración de normas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al ejecutar migración de normas',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
