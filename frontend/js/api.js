@@ -188,6 +188,30 @@ class API {
         return await this.request('/estadisticas/usuarios/list');
     }
 
+    // Opciones de filtros (jugadores y mazos únicos) - endpoint ligero
+    static async getOpcionesFiltrosPartidas() {
+        return await this.request('/partidas/opciones-filtros');
+    }
+
+    // Estadísticas filtradas (calculadas en servidor)
+    static async getEstadisticasJugadoresFiltrado(filtros = {}) {
+        const params = new URLSearchParams();
+        if (filtros.mes) params.append('mes', filtros.mes);
+        if (filtros.jugador_id) params.append('jugador_id', filtros.jugador_id);
+        const queryString = params.toString();
+        const endpoint = queryString ? `/estadisticas/jugadores/filtrado?${queryString}` : '/estadisticas/jugadores/filtrado';
+        return await this.request(endpoint);
+    }
+
+    static async getEstadisticasMazosFiltrado(filtros = {}) {
+        const params = new URLSearchParams();
+        if (filtros.mes) params.append('mes', filtros.mes);
+        if (filtros.jugador_id) params.append('jugador_id', filtros.jugador_id);
+        const queryString = params.toString();
+        const endpoint = queryString ? `/estadisticas/mazos/filtrado?${queryString}` : '/estadisticas/mazos/filtrado';
+        return await this.request(endpoint);
+    }
+
     // Comparativas
     static async compararMazos(mazo1_id, mazo2_id) {
         return await this.request(`/estadisticas/comparar/mazos/${mazo1_id}/${mazo2_id}`);

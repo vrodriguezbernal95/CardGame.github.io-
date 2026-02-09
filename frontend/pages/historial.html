@@ -202,17 +202,9 @@
         // Cargar todas las opciones para los filtros (jugadores y mazos únicos)
         async function cargarOpcionesFiltros() {
             try {
-                // Obtener una cantidad grande para conseguir todos los jugadores/mazos únicos
-                const result = await API.getPartidas(1, 10000);
+                const result = await API.getOpcionesFiltrosPartidas();
 
-                if (result.success && result.partidas.length > 0) {
-                    result.partidas.forEach(partida => {
-                        jugadores.add(partida.jugador1_nombre);
-                        jugadores.add(partida.jugador2_nombre);
-                        mazos.add(partida.mazo1_nombre);
-                        mazos.add(partida.mazo2_nombre);
-                    });
-
+                if (result.success) {
                     // Llenar selects de filtros
                     const selectJugador = document.getElementById('filtro-jugador');
                     const selectMazo = document.getElementById('filtro-mazo');
@@ -221,14 +213,14 @@
                     selectJugador.innerHTML = '<option value="">Todos los jugadores</option>';
                     selectMazo.innerHTML = '<option value="">Todos los mazos</option>';
 
-                    Array.from(jugadores).sort().forEach(jugador => {
+                    result.jugadores.forEach(jugador => {
                         const option = document.createElement('option');
                         option.value = jugador;
                         option.textContent = jugador;
                         selectJugador.appendChild(option);
                     });
 
-                    Array.from(mazos).sort().forEach(mazo => {
+                    result.mazos.forEach(mazo => {
                         const option = document.createElement('option');
                         option.value = mazo;
                         option.textContent = mazo;

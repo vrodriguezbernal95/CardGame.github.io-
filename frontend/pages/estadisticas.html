@@ -392,7 +392,6 @@
         let selectMazo1, selectMazo2, selectJugador1, selectJugador2;
 
         // Variables globales para filtros
-        let todasLasPartidas = [];
         let todosLosJugadores = [];
         let todosLosMazos = [];
 
@@ -407,16 +406,10 @@
             event.target.classList.add('active');
         }
 
-        // Cargar todas las partidas y llenar filtros
+        // Cargar datos iniciales usando endpoints del servidor
         async function cargarDatosIniciales() {
             try {
-                // Cargar partidas
-                const resultPartidas = await API.getPartidas();
-                if (resultPartidas.success) {
-                    todasLasPartidas = resultPartidas.partidas;
-                }
-
-                // Cargar jugadores
+                // Cargar jugadores para filtro
                 const resultJugadores = await API.getUsuarios();
                 if (resultJugadores.success) {
                     todosLosJugadores = resultJugadores.usuarios;
@@ -431,53 +424,29 @@
                     });
                 }
 
-                // Cargar mazos
+                // Cargar mazos para selectores de comparación
                 const resultMazos = await API.getMazos();
                 if (resultMazos.success) {
                     todosLosMazos = resultMazos.mazos;
                 }
 
-                // Cargar estadísticas iniciales (sin filtros)
-                cargarEstadisticasJugadores(todasLasPartidas);
-                cargarEstadisticasMazos(todasLasPartidas);
+                // Cargar estadísticas desde el servidor (sin filtros)
+                await cargarEstadisticasJugadores();
+                await cargarEstadisticasMazos();
 
             } catch (error) {
                 console.error('Error cargando datos iniciales:', error);
             }
         }
 
-        // Aplicar filtros
-        function aplicarFiltrosStats() {
+        // Aplicar filtros (usando endpoints del servidor)
+        async function aplicarFiltrosStats() {
             const mes = document.getElementById('filtro-mes').value;
             const jugadorId = document.getElementById('filtro-jugador-stats').value;
 
-            let partidasFiltradas = todasLasPartidas.filter(partida => {
-                // Filtro por mes
-                if (mes) {
-                    const fechaPartida = new Date(partida.fecha_partida);
-                    const [year, month] = mes.split('-');
-                    if (fechaPartida.getFullYear() !== parseInt(year) ||
-                        (fechaPartida.getMonth() + 1) !== parseInt(month)) {
-                        return false;
-                    }
-                }
-
-                // Filtro por jugador (si el jugador participó en la partida)
-                if (jugadorId) {
-                    const jugadorIdInt = parseInt(jugadorId);
-                    // Necesitamos obtener los IDs de los jugadores de la partida
-                    // Como solo tenemos los nombres, buscaremos por nombre
-                    const jugadorSeleccionado = todosLosJugadores.find(j => j.id === jugadorIdInt);
-                    if (jugadorSeleccionado) {
-                        if (partida.jugador1_nombre !== jugadorSeleccionado.nombre &&
-                            partida.jugador2_nombre !== jugadorSeleccionado.nombre) {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            });
+            const filtros = {};
+            if (mes) filtros.mes = mes;
+            if (jugadorId) filtros.jugador_id = jugadorId;
 
             // Actualizar subtítulos
             let subtituloTexto = '';
@@ -495,7 +464,7 @@
                         partes.push(`Jugador: ${jugadorSeleccionado.nombre}`);
                     }
                 }
-                subtituloTexto = `Filtrado por: ${partes.join(' - ')} (${partidasFiltradas.length} partidas)`;
+                subtituloTexto = `Filtrado por: ${partes.join(' - ')}`;
             } else {
                 subtituloTexto = 'Winrate y récord de todos los jugadores';
             }
@@ -503,96 +472,39 @@
             document.getElementById('subtitle-jugadores').textContent = subtituloTexto;
             document.getElementById('subtitle-mazos').textContent = subtituloTexto.replace('jugadores', 'mazos');
 
-            // Recargar estadísticas con partidas filtradas
-            cargarEstadisticasJugadores(partidasFiltradas);
-            cargarEstadisticasMazos(partidasFiltradas);
+            // Recargar estadísticas desde el servidor con filtros
+            await cargarEstadisticasJugadores(filtros);
+            await cargarEstadisticasMazos(filtros);
         }
 
         // Limpiar filtros
-        function limpiarFiltrosStats() {
+        async function limpiarFiltrosStats() {
             document.getElementById('filtro-mes').value = '';
             document.getElementById('filtro-jugador-stats').value = '';
             document.getElementById('subtitle-jugadores').textContent = 'Winrate y récord de todos los jugadores';
             document.getElementById('subtitle-mazos').textContent = 'Winrate y récord de todos los mazos';
-            cargarEstadisticasJugadores(todasLasPartidas);
-            cargarEstadisticasMazos(todasLasPartidas);
+            await cargarEstadisticasJugadores();
+            await cargarEstadisticasMazos();
         }
 
-        // Cargar estadísticas de jugadores (modificada para aceptar partidas filtradas)
-        function cargarEstadisticasJugadores(partidas) {
+        // Cargar estadísticas de jugadores desde el servidor
+        async function cargarEstadisticasJugadores(filtros = {}) {
             const container = document.getElementById('estadisticas-jugadores');
 
-            if (!partidas || partidas.length === 0) {
-                container.innerHTML = `
-                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                        No hay estadísticas disponibles con los filtros seleccionados.
-                    </p>
-                `;
-                return;
-            }
-
             try {
-                // Calcular estadísticas manualmente desde partidas
-                const statsJugadores = {};
+                // Usar endpoint filtrado si hay filtros, sino el de la vista SQL
+                let estadisticas;
+                if (filtros.mes || filtros.jugador_id) {
+                    const result = await API.getEstadisticasJugadoresFiltrado(filtros);
+                    if (!result.success) throw new Error('Error del servidor');
+                    estadisticas = result.estadisticas;
+                } else {
+                    const result = await API.getEstadisticasJugadores();
+                    if (!result.success) throw new Error('Error del servidor');
+                    estadisticas = result.estadisticas;
+                }
 
-                partidas.forEach(partida => {
-                    // Inicializar stats para jugador1 si no existe
-                    if (!statsJugadores[partida.jugador1_nombre]) {
-                        statsJugadores[partida.jugador1_nombre] = {
-                            nombre: partida.jugador1_nombre,
-                            total_partidas: 0,
-                            victorias: 0,
-                            derrotas: 0,
-                            empates: 0
-                        };
-                    }
-
-                    // Inicializar stats para jugador2 si no existe
-                    if (!statsJugadores[partida.jugador2_nombre]) {
-                        statsJugadores[partida.jugador2_nombre] = {
-                            nombre: partida.jugador2_nombre,
-                            total_partidas: 0,
-                            victorias: 0,
-                            derrotas: 0,
-                            empates: 0
-                        };
-                    }
-
-                    // Actualizar total de partidas
-                    statsJugadores[partida.jugador1_nombre].total_partidas++;
-                    statsJugadores[partida.jugador2_nombre].total_partidas++;
-
-                    // Actualizar victorias/derrotas/empates
-                    if (partida.resultado === 'empate') {
-                        statsJugadores[partida.jugador1_nombre].empates++;
-                        statsJugadores[partida.jugador2_nombre].empates++;
-                    } else if (partida.resultado === 'victoria_jugador1') {
-                        statsJugadores[partida.jugador1_nombre].victorias++;
-                        statsJugadores[partida.jugador2_nombre].derrotas++;
-                    } else if (partida.resultado === 'victoria_jugador2') {
-                        statsJugadores[partida.jugador2_nombre].victorias++;
-                        statsJugadores[partida.jugador1_nombre].derrotas++;
-                    }
-                });
-
-                // Convertir a array y calcular winrate
-                const estadisticas = Object.values(statsJugadores).map(stat => {
-                    const partidasNoEmpate = stat.total_partidas - stat.empates;
-                    stat.winrate = partidasNoEmpate > 0
-                        ? Math.round((stat.victorias / partidasNoEmpate) * 100)
-                        : 0;
-                    return stat;
-                });
-
-                // Ordenar por winrate descendente
-                estadisticas.sort((a, b) => {
-                    if (b.winrate !== a.winrate) {
-                        return b.winrate - a.winrate;
-                    }
-                    return b.victorias - a.victorias;
-                });
-
-                if (estadisticas.length === 0) {
+                if (!estadisticas || estadisticas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
                             No hay estadísticas disponibles con los filtros seleccionados.
@@ -600,6 +512,9 @@
                     `;
                     return;
                 }
+
+                // Filtrar jugadores sin partidas
+                estadisticas = estadisticas.filter(stat => stat.total_partidas > 0);
 
                 let html = `
                     <table class="table">
@@ -625,7 +540,7 @@
                     else if (posicion === 2) medal = '🥈';
                     else if (posicion === 3) medal = '🥉';
 
-                    const winrate = stat.winrate || 0;
+                    const winrate = parseFloat(stat.winrate) || 0;
                     let winrateColor = 'var(--text-secondary)';
                     if (winrate >= 70) winrateColor = 'var(--success)';
                     else if (winrate >= 50) winrateColor = 'var(--warning)';
@@ -641,7 +556,7 @@
                             <td style="text-align: center;"><span class="badge badge-warning">${stat.empates}</span></td>
                             <td style="text-align: center;">
                                 <strong style="color: ${winrateColor}; font-size: 1.1rem;">
-                                    ${winrate}%
+                                    ${Math.round(winrate)}%
                                 </strong>
                             </td>
                         </tr>
@@ -664,84 +579,23 @@
             }
         }
 
-        function cargarEstadisticasMazos(partidas) {
+        async function cargarEstadisticasMazos(filtros = {}) {
             const container = document.getElementById('estadisticas-mazos');
 
-            if (!partidas || partidas.length === 0) {
-                container.innerHTML = `
-                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                        No hay estadísticas disponibles con los filtros seleccionados.
-                    </p>
-                `;
-                return;
-            }
-
             try {
-                // Calcular estadísticas manualmente desde partidas
-                const statsMazos = {};
+                // Usar endpoint filtrado si hay filtros, sino el de la vista SQL
+                let estadisticas;
+                if (filtros.mes || filtros.jugador_id) {
+                    const result = await API.getEstadisticasMazosFiltrado(filtros);
+                    if (!result.success) throw new Error('Error del servidor');
+                    estadisticas = result.estadisticas;
+                } else {
+                    const result = await API.getEstadisticasMazos();
+                    if (!result.success) throw new Error('Error del servidor');
+                    estadisticas = result.estadisticas;
+                }
 
-                partidas.forEach(partida => {
-                    // Inicializar stats para mazo1 si no existe
-                    const mazo1Key = `${partida.mazo1_nombre}|||${partida.mazo1_serie}`;
-                    if (!statsMazos[mazo1Key]) {
-                        statsMazos[mazo1Key] = {
-                            nombre: partida.mazo1_nombre,
-                            serie: partida.mazo1_serie,
-                            total_partidas: 0,
-                            victorias: 0,
-                            derrotas: 0,
-                            empates: 0
-                        };
-                    }
-
-                    // Inicializar stats para mazo2 si no existe
-                    const mazo2Key = `${partida.mazo2_nombre}|||${partida.mazo2_serie}`;
-                    if (!statsMazos[mazo2Key]) {
-                        statsMazos[mazo2Key] = {
-                            nombre: partida.mazo2_nombre,
-                            serie: partida.mazo2_serie,
-                            total_partidas: 0,
-                            victorias: 0,
-                            derrotas: 0,
-                            empates: 0
-                        };
-                    }
-
-                    // Actualizar total de partidas
-                    statsMazos[mazo1Key].total_partidas++;
-                    statsMazos[mazo2Key].total_partidas++;
-
-                    // Actualizar victorias/derrotas/empates
-                    if (partida.resultado === 'empate') {
-                        statsMazos[mazo1Key].empates++;
-                        statsMazos[mazo2Key].empates++;
-                    } else if (partida.resultado === 'victoria_jugador1') {
-                        statsMazos[mazo1Key].victorias++;
-                        statsMazos[mazo2Key].derrotas++;
-                    } else if (partida.resultado === 'victoria_jugador2') {
-                        statsMazos[mazo2Key].victorias++;
-                        statsMazos[mazo1Key].derrotas++;
-                    }
-                });
-
-                // Convertir a array y calcular winrate
-                const estadisticas = Object.values(statsMazos).map(stat => {
-                    const partidasNoEmpate = stat.total_partidas - stat.empates;
-                    stat.winrate = partidasNoEmpate > 0
-                        ? Math.round((stat.victorias / partidasNoEmpate) * 100)
-                        : 0;
-                    return stat;
-                });
-
-                // Ordenar por winrate descendente
-                estadisticas.sort((a, b) => {
-                    if (b.winrate !== a.winrate) {
-                        return b.winrate - a.winrate;
-                    }
-                    return b.victorias - a.victorias;
-                });
-
-                if (estadisticas.length === 0) {
+                if (!estadisticas || estadisticas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
                             No hay estadísticas disponibles con los filtros seleccionados.
@@ -749,6 +603,9 @@
                     `;
                     return;
                 }
+
+                // Filtrar mazos sin partidas
+                estadisticas = estadisticas.filter(stat => stat.total_partidas > 0);
 
                 let html = `
                     <table class="table">
@@ -775,7 +632,7 @@
                     else if (posicion === 2) medal = '🥈';
                     else if (posicion === 3) medal = '🥉';
 
-                    const winrate = stat.winrate || 0;
+                    const winrate = parseFloat(stat.winrate) || 0;
                     let winrateColor = 'var(--text-secondary)';
                     if (winrate >= 70) winrateColor = 'var(--success)';
                     else if (winrate >= 50) winrateColor = 'var(--warning)';
@@ -792,7 +649,7 @@
                             <td style="text-align: center;"><span class="badge badge-warning">${stat.empates}</span></td>
                             <td style="text-align: center;">
                                 <strong style="color: ${winrateColor}; font-size: 1.1rem;">
-                                    ${winrate}%
+                                    ${Math.round(winrate)}%
                                 </strong>
                             </td>
                         </tr>

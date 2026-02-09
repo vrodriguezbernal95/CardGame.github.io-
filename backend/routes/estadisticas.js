@@ -23,6 +23,151 @@ router.get('/jugadores', async (req, res) => {
     }
 });
 
+// Obtener estadísticas de jugadores con filtros (mes, jugador)
+// GET /estadisticas/jugadores/filtrado?mes=YYYY-MM&jugador_id=X
+router.get('/jugadores/filtrado', async (req, res) => {
+    try {
+        const dbType = process.env.DB_TYPE || 'mysql';
+        const mes = req.query.mes || null;
+        const jugadorId = req.query.jugador_id || null;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        // Filtro de estado
+        whereConditions.push("(p.estado = 'aprobada' OR p.estado IS NULL)");
+
+        if (mes) {
+            const [year, month] = mes.split('-');
+            if (dbType === 'postgres') {
+                whereConditions.push("EXTRACT(YEAR FROM p.fecha_partida) = ? AND EXTRACT(MONTH FROM p.fecha_partida) = ?");
+            } else {
+                whereConditions.push("YEAR(p.fecha_partida) = ? AND MONTH(p.fecha_partida) = ?");
+            }
+            queryParams.push(parseInt(year), parseInt(month));
+        }
+
+        if (jugadorId) {
+            whereConditions.push("(p.jugador1_id = ? OR p.jugador2_id = ?)");
+            queryParams.push(parseInt(jugadorId), parseInt(jugadorId));
+        }
+
+        const whereClause = whereConditions.length > 0
+            ? 'WHERE ' + whereConditions.join(' AND ')
+            : '';
+
+        const [estadisticas] = await db.query(`
+            SELECT
+                u.id,
+                u.nombre,
+                COUNT(p.id) as total_partidas,
+                SUM(CASE WHEN p.ganador_id = u.id THEN 1 ELSE 0 END) as victorias,
+                SUM(CASE WHEN p.ganador_id IS NULL THEN 1 ELSE 0 END) as empates,
+                SUM(CASE WHEN (p.jugador1_id = u.id OR p.jugador2_id = u.id) AND p.ganador_id != u.id AND p.ganador_id IS NOT NULL THEN 1 ELSE 0 END) as derrotas,
+                ROUND(
+                    (SUM(CASE WHEN p.ganador_id = u.id THEN 1 ELSE 0 END) * 100.0) /
+                    NULLIF(COUNT(p.id), 0),
+                    2
+                ) as winrate
+            FROM usuarios u
+            INNER JOIN partidas p ON (u.id = p.jugador1_id OR u.id = p.jugador2_id)
+            ${whereClause}
+            GROUP BY u.id, u.nombre
+            ORDER BY winrate DESC, victorias DESC
+        `, queryParams);
+
+        res.json({
+            success: true,
+            estadisticas
+        });
+    } catch (error) {
+        console.error('Error obteniendo estadísticas filtradas de jugadores:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estadísticas'
+        });
+    }
+});
+
+// Obtener estadísticas de mazos con filtros (mes, jugador)
+// GET /estadisticas/mazos/filtrado?mes=YYYY-MM&jugador_id=X
+router.get('/mazos/filtrado', async (req, res) => {
+    try {
+        const dbType = process.env.DB_TYPE || 'mysql';
+        const mes = req.query.mes || null;
+        const jugadorId = req.query.jugador_id || null;
+
+        let whereConditions = [];
+        let queryParams = [];
+
+        // Filtro de estado
+        whereConditions.push("(p.estado = 'aprobada' OR p.estado IS NULL)");
+
+        if (mes) {
+            const [year, month] = mes.split('-');
+            if (dbType === 'postgres') {
+                whereConditions.push("EXTRACT(YEAR FROM p.fecha_partida) = ? AND EXTRACT(MONTH FROM p.fecha_partida) = ?");
+            } else {
+                whereConditions.push("YEAR(p.fecha_partida) = ? AND MONTH(p.fecha_partida) = ?");
+            }
+            queryParams.push(parseInt(year), parseInt(month));
+        }
+
+        if (jugadorId) {
+            whereConditions.push("(p.jugador1_id = ? OR p.jugador2_id = ?)");
+            queryParams.push(parseInt(jugadorId), parseInt(jugadorId));
+        }
+
+        const whereClause = whereConditions.length > 0
+            ? 'WHERE ' + whereConditions.join(' AND ')
+            : '';
+
+        const [estadisticas] = await db.query(`
+            SELECT
+                m.id,
+                m.nombre,
+                m.serie,
+                COUNT(p.id) as total_partidas,
+                SUM(CASE
+                    WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
+                         (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                    THEN 1 ELSE 0
+                END) as victorias,
+                SUM(CASE WHEN p.resultado = 'empate' THEN 1 ELSE 0 END) as empates,
+                SUM(CASE
+                    WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2') OR
+                         (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
+                    THEN 1 ELSE 0
+                END) as derrotas,
+                ROUND(
+                    (SUM(CASE
+                        WHEN (p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1') OR
+                             (p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0
+                    END) * 100.0) /
+                    NULLIF(COUNT(p.id), 0),
+                    2
+                ) as winrate
+            FROM mazos m
+            INNER JOIN partidas p ON (m.id = p.mazo1_id OR m.id = p.mazo2_id)
+            ${whereClause}
+            GROUP BY m.id, m.nombre, m.serie
+            ORDER BY winrate DESC, victorias DESC
+        `, queryParams);
+
+        res.json({
+            success: true,
+            estadisticas
+        });
+    } catch (error) {
+        console.error('Error obteniendo estadísticas filtradas de mazos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estadísticas'
+        });
+    }
+});
+
 // Obtener estadísticas de un jugador específico
 router.get('/jugadores/:id', async (req, res) => {
     try {

@@ -141,6 +141,60 @@ router.post('/registrar', verifyToken, [
 
 // ========== RUTAS GENERALES ==========
 
+// Obtener opciones únicas para filtros (jugadores y mazos de partidas aprobadas)
+router.get('/opciones-filtros', async (req, res) => {
+    try {
+        const dbType = process.env.DB_TYPE || 'mysql';
+
+        // Verificar si la columna estado existe
+        let estadoFilter = '';
+        try {
+            if (dbType === 'postgres') {
+                const [cols] = await db.query(`
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name='partidas' AND column_name='estado'
+                `);
+                if (cols.length > 0) estadoFilter = "WHERE (p.estado = 'aprobada' OR p.estado IS NULL)";
+            } else {
+                const [cols] = await db.query(`
+                    SHOW COLUMNS FROM partidas LIKE 'estado'
+                `);
+                if (cols.length > 0) estadoFilter = "WHERE (p.estado = 'aprobada' OR p.estado IS NULL)";
+            }
+        } catch (e) {
+            // Si hay error, asumimos que no existe la columna
+        }
+
+        const [jugadores] = await db.query(`
+            SELECT DISTINCT u.nombre
+            FROM usuarios u
+            INNER JOIN partidas p ON (u.id = p.jugador1_id OR u.id = p.jugador2_id)
+            ${estadoFilter}
+            ORDER BY u.nombre
+        `);
+
+        const [mazos] = await db.query(`
+            SELECT DISTINCT m.nombre
+            FROM mazos m
+            INNER JOIN partidas p ON (m.id = p.mazo1_id OR m.id = p.mazo2_id)
+            ${estadoFilter}
+            ORDER BY m.nombre
+        `);
+
+        res.json({
+            success: true,
+            jugadores: jugadores.map(j => j.nombre),
+            mazos: mazos.map(m => m.nombre)
+        });
+    } catch (error) {
+        console.error('Error obteniendo opciones de filtros:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener opciones de filtros'
+        });
+    }
+});
+
 // Obtener todas las partidas APROBADAS (con nombres de jugadores y mazos)
 // Soporta paginación: ?page=1&limit=50
 // Soporta filtros: ?fechaDesde=YYYY-MM-DD&fechaHasta=YYYY-MM-DD&jugador=nombre&mazo=nombre
