@@ -42,6 +42,75 @@
             display: block;
         }
 
+        .checkbox-dropdown {
+            position: relative;
+        }
+
+        .checkbox-dropdown-toggle {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .checkbox-dropdown-toggle:hover {
+            border-color: var(--primary-color);
+        }
+
+        .checkbox-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+
+        .checkbox-dropdown-menu.open {
+            display: block;
+        }
+
+        .checkbox-dropdown-menu label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+
+        .checkbox-dropdown-menu label:hover {
+            background: #f3f4f6;
+        }
+
+        .checkbox-dropdown-menu .select-all-option {
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .checkbox-dropdown-menu input[type="checkbox"] {
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+        }
+
         .comparador {
             background: #f9fafb;
             padding: 2rem;
@@ -289,10 +358,20 @@
                             <input type="month" id="filtro-mes" class="form-control">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Jugador</label>
-                            <select id="filtro-jugador-stats" class="form-control">
-                                <option value="">Todos los jugadores</option>
-                            </select>
+                            <label class="form-label">Jugadores</label>
+                            <div class="checkbox-dropdown" id="jugadores-dropdown">
+                                <button type="button" class="checkbox-dropdown-toggle" onclick="toggleDropdownJugadores()">
+                                    <span id="jugadores-dropdown-label">Todos los jugadores</span>
+                                    <span>▼</span>
+                                </button>
+                                <div class="checkbox-dropdown-menu" id="jugadores-dropdown-menu">
+                                    <label class="select-all-option">
+                                        <input type="checkbox" id="select-all-jugadores" checked onchange="toggleAllJugadores(this.checked)">
+                                        Seleccionar todos
+                                    </label>
+                                    <div id="jugadores-checkboxes"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -414,13 +493,12 @@
                 if (resultJugadores.success) {
                     todosLosJugadores = resultJugadores.usuarios;
 
-                    // Llenar select de jugadores para filtro
-                    const selectJugador = document.getElementById('filtro-jugador-stats');
+                    // Llenar checkboxes de jugadores
+                    const container = document.getElementById('jugadores-checkboxes');
                     todosLosJugadores.sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach(jugador => {
-                        const option = document.createElement('option');
-                        option.value = jugador.id;
-                        option.textContent = jugador.nombre;
-                        selectJugador.appendChild(option);
+                        const label = document.createElement('label');
+                        label.innerHTML = `<input type="checkbox" value="${jugador.nombre}" checked onchange="actualizarLabelJugadores()"> ${jugador.nombre}`;
+                        container.appendChild(label);
                     });
                 }
 
@@ -439,18 +517,77 @@
             }
         }
 
-        // Aplicar filtros (usando endpoints del servidor)
+        // Obtener jugadores seleccionados/excluidos de los checkboxes
+        function getJugadoresSeleccionados() {
+            const checkboxes = document.querySelectorAll('#jugadores-checkboxes input[type="checkbox"]');
+            const seleccionados = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) seleccionados.push(cb.value);
+            });
+            return seleccionados;
+        }
+
+        function getTotalJugadoresCheckboxes() {
+            return document.querySelectorAll('#jugadores-checkboxes input[type="checkbox"]').length;
+        }
+
+        // Toggle dropdown de jugadores
+        function toggleDropdownJugadores() {
+            const menu = document.getElementById('jugadores-dropdown-menu');
+            menu.classList.toggle('open');
+        }
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('jugadores-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                document.getElementById('jugadores-dropdown-menu').classList.remove('open');
+            }
+        });
+
+        // Seleccionar/deseleccionar todos
+        function toggleAllJugadores(checked) {
+            document.querySelectorAll('#jugadores-checkboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = checked;
+            });
+            actualizarLabelJugadores();
+        }
+
+        // Actualizar label del dropdown según selección
+        function actualizarLabelJugadores() {
+            const total = getTotalJugadoresCheckboxes();
+            const seleccionados = getJugadoresSeleccionados();
+            const label = document.getElementById('jugadores-dropdown-label');
+            const selectAll = document.getElementById('select-all-jugadores');
+
+            if (seleccionados.length === total) {
+                label.textContent = 'Todos los jugadores';
+                selectAll.checked = true;
+                selectAll.indeterminate = false;
+            } else if (seleccionados.length === 0) {
+                label.textContent = 'Ningún jugador seleccionado';
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            } else {
+                const excluidos = total - seleccionados.length;
+                label.textContent = `${seleccionados.length} jugadores (${excluidos} excluido${excluidos > 1 ? 's' : ''})`;
+                selectAll.indeterminate = true;
+            }
+        }
+
+        // Aplicar filtros (usando endpoints del servidor + filtro de checkboxes)
         async function aplicarFiltrosStats() {
             const mes = document.getElementById('filtro-mes').value;
-            const jugadorId = document.getElementById('filtro-jugador-stats').value;
+            const jugadoresSeleccionados = getJugadoresSeleccionados();
+            const totalJugadores = getTotalJugadoresCheckboxes();
+            const hayFiltroJugadores = jugadoresSeleccionados.length < totalJugadores;
 
             const filtros = {};
             if (mes) filtros.mes = mes;
-            if (jugadorId) filtros.jugador_id = jugadorId;
 
             // Actualizar subtítulos
             let subtituloTexto = '';
-            if (mes || jugadorId) {
+            if (mes || hayFiltroJugadores) {
                 const partes = [];
                 if (mes) {
                     const [year, month] = mes.split('-');
@@ -458,11 +595,9 @@
                     const nombreMes = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
                     partes.push(nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1));
                 }
-                if (jugadorId) {
-                    const jugadorSeleccionado = todosLosJugadores.find(j => j.id === parseInt(jugadorId));
-                    if (jugadorSeleccionado) {
-                        partes.push(`Jugador: ${jugadorSeleccionado.nombre}`);
-                    }
+                if (hayFiltroJugadores) {
+                    const excluidos = totalJugadores - jugadoresSeleccionados.length;
+                    partes.push(`${excluidos} jugador${excluidos > 1 ? 'es' : ''} excluido${excluidos > 1 ? 's' : ''}`);
                 }
                 subtituloTexto = `Filtrado por: ${partes.join(' - ')}`;
             } else {
@@ -470,17 +605,19 @@
             }
 
             document.getElementById('subtitle-jugadores').textContent = subtituloTexto;
-            document.getElementById('subtitle-mazos').textContent = subtituloTexto.replace('jugadores', 'mazos');
+            document.getElementById('subtitle-mazos').textContent = mes
+                ? `Filtrado por: ${new Date(mes.split('-')[0], mes.split('-')[1] - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`
+                : 'Winrate y récord de todos los mazos';
 
-            // Recargar estadísticas desde el servidor con filtros
-            await cargarEstadisticasJugadores(filtros);
+            // Recargar estadísticas con filtros
+            await cargarEstadisticasJugadores(filtros, hayFiltroJugadores ? jugadoresSeleccionados : null);
             await cargarEstadisticasMazos(filtros);
         }
 
         // Limpiar filtros
         async function limpiarFiltrosStats() {
             document.getElementById('filtro-mes').value = '';
-            document.getElementById('filtro-jugador-stats').value = '';
+            toggleAllJugadores(true);
             document.getElementById('subtitle-jugadores').textContent = 'Winrate y récord de todos los jugadores';
             document.getElementById('subtitle-mazos').textContent = 'Winrate y récord de todos los mazos';
             await cargarEstadisticasJugadores();
@@ -488,13 +625,14 @@
         }
 
         // Cargar estadísticas de jugadores desde el servidor
-        async function cargarEstadisticasJugadores(filtros = {}) {
+        // jugadoresVisibles: array de nombres de jugadores a mostrar (null = todos)
+        async function cargarEstadisticasJugadores(filtros = {}, jugadoresVisibles = null) {
             const container = document.getElementById('estadisticas-jugadores');
 
             try {
-                // Usar endpoint filtrado si hay filtros, sino el de la vista SQL
+                // Usar endpoint filtrado si hay filtro de mes, sino el de la vista SQL
                 let estadisticas;
-                if (filtros.mes || filtros.jugador_id) {
+                if (filtros.mes) {
                     const result = await API.getEstadisticasJugadoresFiltrado(filtros);
                     if (!result.success) throw new Error('Error del servidor');
                     estadisticas = result.estadisticas;
@@ -502,6 +640,11 @@
                     const result = await API.getEstadisticasJugadores();
                     if (!result.success) throw new Error('Error del servidor');
                     estadisticas = result.estadisticas;
+                }
+
+                // Filtrar por jugadores seleccionados (checkboxes)
+                if (jugadoresVisibles) {
+                    estadisticas = estadisticas.filter(stat => jugadoresVisibles.includes(stat.nombre));
                 }
 
                 if (!estadisticas || estadisticas.length === 0) {
