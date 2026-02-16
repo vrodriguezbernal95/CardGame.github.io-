@@ -450,8 +450,10 @@ function updateNavbar() {
             </div>
         `;
     } else {
+        const isInPagesFolder = window.location.pathname.includes('/pages/');
+        const loginUrl = isInPagesFolder ? 'login.html' : 'pages/login.html';
         userNav.innerHTML = `
-            <a href="login.html" class="btn btn-primary">Iniciar Sesión</a>
+            <a href="${loginUrl}" class="btn btn-primary">Iniciar Sesión</a>
         `;
     }
 }

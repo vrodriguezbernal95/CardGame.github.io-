@@ -12,6 +12,8 @@ const corsOptions = {
         'http://127.0.0.1:5500',
         'https://vrodriguezbernal95.github.io',
         'https://cardgame-frontend.onrender.com',
+        'https://mergeddimensions.com',
+        'https://www.mergeddimensions.com',
         /\.onrender\.com$/  // Permitir cualquier subdominio de Render
     ],
     credentials: true
