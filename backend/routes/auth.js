@@ -193,6 +193,55 @@ router.post('/create-user', verifyToken, verifyAdmin, [
     }
 });
 
+// Resetear contraseña de usuario (solo admin)
+router.post('/reset-password', verifyToken, verifyAdmin, [
+    body('email').isEmail().withMessage('Email inválido'),
+    body('nuevaPassword').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            errors: errors.array()
+        });
+    }
+
+    const { email, nuevaPassword } = req.body;
+
+    try {
+        const [users] = await db.query(
+            'SELECT id FROM usuarios WHERE email = ?',
+            [email]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró ningún usuario con ese email'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
+
+        await db.query(
+            'UPDATE usuarios SET password = ? WHERE email = ?',
+            [hashedPassword, email]
+        );
+
+        res.json({
+            success: true,
+            message: `Contraseña actualizada correctamente para ${email}`
+        });
+
+    } catch (error) {
+        console.error('Error reseteando contraseña:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al resetear la contraseña'
+        });
+    }
+});
+
 // Eliminar usuario (solo admin)
 router.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
     try {
