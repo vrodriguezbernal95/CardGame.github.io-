@@ -1218,6 +1218,9 @@
         // ========== GESTIÓN DE MAZOS ==========
 
         // Cargar mazos
+        // Cache de mazos para que el onclick no necesite incrustar texto con caracteres especiales
+        const mazosCache = {};
+
         async function cargarMazos() {
             const container = document.getElementById('mazos-lista-container');
 
@@ -1232,6 +1235,9 @@
                 let html = '<div style="display: grid; gap: 1rem;">';
 
                 result.mazos.forEach(m => {
+                    // Guardar datos en cache para evitar problemas con comillas/caracteres especiales en onclick
+                    mazosCache[m.id] = m;
+
                     html += `
                         <div class="mazo-item">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
@@ -1241,10 +1247,10 @@
                                     <p style="margin-top: 0.75rem;">${m.descripcion}</p>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
-                                    <button onclick="abrirModalEditar(${m.id}, '${m.nombre.replace(/'/g, "\\'")}', '${m.serie.replace(/'/g, "\\'")}', '${m.descripcion.replace(/'/g, "\\'")}' )" class="btn btn-primary btn-sm">
+                                    <button onclick="abrirModalEditar(${m.id})" class="btn btn-primary btn-sm">
                                         Editar
                                     </button>
-                                    <button onclick="eliminarMazo(${m.id}, '${m.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">
+                                    <button onclick="eliminarMazo(${m.id})" class="btn btn-error btn-sm">
                                         Eliminar
                                     </button>
                                 </div>
@@ -1284,12 +1290,14 @@
             }
         });
 
-        // Abrir modal editar
-        function abrirModalEditar(id, nombre, serie, descripcion) {
-            document.getElementById('edit-mazo-id').value = id;
-            document.getElementById('edit-mazo-nombre').value = nombre;
-            document.getElementById('edit-mazo-serie').value = serie;
-            document.getElementById('edit-mazo-descripcion').value = descripcion;
+        // Abrir modal editar (lee del cache para evitar problemas con caracteres especiales)
+        function abrirModalEditar(id) {
+            const m = mazosCache[id];
+            if (!m) return;
+            document.getElementById('edit-mazo-id').value = m.id;
+            document.getElementById('edit-mazo-nombre').value = m.nombre;
+            document.getElementById('edit-mazo-serie').value = m.serie;
+            document.getElementById('edit-mazo-descripcion').value = m.descripcion;
             document.getElementById('modal-editar-mazo').style.display = 'flex';
         }
 
@@ -1321,8 +1329,10 @@
             }
         });
 
-        // Eliminar mazo
-        async function eliminarMazo(id, nombre) {
+        // Eliminar mazo (lee del cache para evitar problemas con caracteres especiales)
+        async function eliminarMazo(id) {
+            const m = mazosCache[id];
+            const nombre = m ? m.nombre : `mazo #${id}`;
             if (!confirm(`¿Eliminar el mazo "${nombre}"? Esta acción no se puede deshacer.\n\nNOTA: No se puede eliminar si tiene partidas asociadas.`)) return;
 
             try {
