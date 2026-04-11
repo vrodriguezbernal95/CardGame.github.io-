@@ -5,119 +5,392 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Card Game Anime - Inicio</title>
     <link rel="stylesheet" href="css/global.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
     <style>
+        /* ===== TYPOGRAPHY ===== */
+        body {
+            font-family: 'Chakra Petch', 'Segoe UI', sans-serif;
+        }
+
+        /* ===== HERO ===== */
         .hero {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(139, 92, 246, 0.9));
-            padding: 4rem 2rem;
+            position: relative;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            padding: 5rem 2rem;
             text-align: center;
             color: white;
-            border-radius: 12px;
+            border-radius: 16px;
             margin-bottom: 3rem;
+            overflow: hidden;
         }
 
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 40% at 50% 0%, rgba(124, 58, 237, 0.45) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 30% at 85% 100%, rgba(236, 72, 153, 0.25) 0%, transparent 60%);
+            pointer-events: none;
         }
 
-        .hero p {
-            font-size: 1.25rem;
-            opacity: 0.9;
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 255, 255, 0.018) 2px,
+                rgba(255, 255, 255, 0.018) 4px
+            );
+            pointer-events: none;
         }
 
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            pointer-events: none;
+        }
+
+        .hero-orb-1 {
+            width: 320px;
+            height: 320px;
+            background: rgba(124, 58, 237, 0.55);
+            top: -120px;
+            right: -60px;
+        }
+
+        .hero-orb-2 {
+            width: 220px;
+            height: 220px;
+            background: rgba(236, 72, 153, 0.45);
+            bottom: -90px;
+            left: -40px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, 0.35);
+            padding: 0.4rem 1.25rem;
+            border-radius: 50px;
+            margin-bottom: 1.75rem;
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .hero-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: clamp(2.4rem, 6vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.25rem;
+            color: #ffffff;
+            text-shadow:
+                0 0 20px rgba(139, 92, 246, 0.9),
+                0 0 50px rgba(139, 92, 246, 0.5),
+                0 0 100px rgba(124, 58, 237, 0.3);
+            letter-spacing: 0.03em;
+        }
+
+        .hero-subtitle {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.65);
+            max-width: 580px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero-primary {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.9rem 2.25rem;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.55), 0 4px 15px rgba(0, 0, 0, 0.35);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(124, 58, 237, 0.85), 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-hero-secondary {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.9rem 2.25rem;
+            background: transparent;
+            color: #a78bfa;
+            border: 1.5px solid rgba(167, 139, 250, 0.55);
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: #a78bfa;
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 1.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .section-title span {
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== QUICK LINKS ===== */
         .quick-links {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
             margin-bottom: 3rem;
         }
 
         .quick-link-card {
-            background: white;
-            padding: 2rem;
+            background: linear-gradient(145deg, rgba(20, 17, 60, 0.9), rgba(40, 35, 95, 0.75));
+            padding: 2rem 1.5rem;
             border-radius: 12px;
-            box-shadow: var(--shadow);
             text-align: center;
-            transition: all 0.3s;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
             cursor: pointer;
+            text-decoration: none;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-link-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), transparent);
+            opacity: 0;
+            transition: opacity 0.25s;
+            border-radius: inherit;
+        }
+
+        .quick-link-card:hover::before {
+            opacity: 1;
         }
 
         .quick-link-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-6px);
+            border-color: rgba(167, 139, 250, 0.6);
+            box-shadow: 0 0 28px rgba(124, 58, 237, 0.4), 0 12px 35px rgba(0, 0, 0, 0.35);
         }
 
         .quick-link-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 1.25rem;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(139, 92, 246, 0.15));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            position: relative;
+        }
+
+        .quick-link-icon svg {
+            width: 26px;
+            height: 26px;
+            stroke: #a78bfa;
         }
 
         .quick-link-title {
-            color: var(--primary-color);
-            font-size: 1.25rem;
-            font-weight: 600;
+            font-family: 'Russo One', sans-serif;
+            color: #e0d7ff;
+            font-size: 1rem;
+            font-weight: 400;
             margin-bottom: 0.5rem;
+            letter-spacing: 0.06em;
         }
 
         .quick-link-desc {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: rgba(167, 139, 250, 0.65);
+            font-size: 0.82rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 300;
+            line-height: 1.55;
         }
 
-        .noticias-section h2 {
-            color: var(--primary-color);
-            margin-bottom: 2rem;
-            text-align: center;
+        /* ===== NEWS SECTION ===== */
+        .noticias-section {
+            margin-bottom: 3rem;
         }
 
         .noticia-card-preview {
-            background: white;
+            background: linear-gradient(145deg, rgba(20, 17, 60, 0.9), rgba(40, 35, 95, 0.75));
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-left: 3px solid rgba(124, 58, 237, 0.5);
         }
 
         .noticia-card-preview:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            transform: translateX(5px);
+            border-left-color: #a78bfa;
+            border-color: rgba(167, 139, 250, 0.4);
+            box-shadow: -4px 0 20px rgba(124, 58, 237, 0.3), 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .noticia-card-preview h3 {
-            color: var(--primary-color);
+            font-family: 'Russo One', sans-serif;
+            color: #e0d7ff;
+            font-size: 1rem;
             margin-bottom: 0.5rem;
+            letter-spacing: 0.04em;
+            font-weight: 400;
         }
 
         .noticia-meta-preview {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
+            color: rgba(167, 139, 250, 0.55);
+            font-size: 0.78rem;
+            margin-bottom: 0.75rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
 
         .noticia-extracto-preview {
-            color: var(--text-secondary);
-            line-height: 1.6;
+            color: rgba(224, 215, 255, 0.6);
+            line-height: 1.7;
+            font-size: 0.88rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 300;
         }
 
         .ver-todas-noticias {
             text-align: center;
-            margin-top: 2rem;
+            margin-top: 1.75rem;
         }
 
+        .btn-ver-noticias {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.8rem 2.25rem;
+            background: transparent;
+            color: #a78bfa;
+            border: 1.5px solid rgba(167, 139, 250, 0.45);
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .btn-ver-noticias:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: #a78bfa;
+            box-shadow: 0 0 18px rgba(124, 58, 237, 0.35);
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
+            .hero {
+                padding: 3.5rem 1.5rem;
             }
 
-            .hero p {
-                font-size: 1rem;
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-hero-primary,
+            .btn-hero-secondary {
+                width: 100%;
+                max-width: 280px;
+                text-align: center;
             }
 
             .quick-links {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .quick-link-card {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-links {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* ===== ACCESSIBILITY ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+        }
+
+        .quick-link-card:focus-visible,
+        .btn-hero-primary:focus-visible,
+        .btn-hero-secondary:focus-visible,
+        .btn-ver-noticias:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 3px;
         }
     </style>
 </head>
@@ -125,7 +398,7 @@
     <!-- Header Principal -->
     <header class="header-main">
         <div class="header-main-container">
-            <div class="nav-brand">🎴 Card Game Anime</div>
+            <div class="nav-brand">Card Game Anime</div>
             <div id="user-nav"></div>
         </div>
     </header>
@@ -142,7 +415,7 @@
                 <li><a href="pages/normas.html">Normas</a></li>
                 <li><a href="pages/combate.html">Registrar Combate</a></li>
                 <li><a href="pages/contador.html">Contador</a></li>
-                <li><a href="pages/compartir.html">📤 Compartir</a></li>
+                <li><a href="pages/compartir.html">Compartir</a></li>
                 <li id="admin-link" style="display:none;"><a href="pages/admin.html">Admin</a></li>
             </ul>
         </div>
@@ -151,32 +424,58 @@
     <div class="container">
         <!-- Hero Section -->
         <div class="hero">
-            <h1>🎴 Bienvenido a Card Game Anime</h1>
-            <p>Tu plataforma para gestionar partidas de Trading Card Games de anime</p>
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="hero-content">
+                <div class="hero-eyebrow">Trading Card Game &middot; Comunidad Anime</div>
+                <h1 class="hero-title">Card Game Anime</h1>
+                <p class="hero-subtitle">Tu plataforma para gestionar y analizar partidas de Trading Card Games de anime. Registra combates, consulta estadísticas y explora mazos.</p>
+                <div class="hero-actions">
+                    <a href="pages/combate.html" class="btn-hero-primary">Registrar Combate</a>
+                    <a href="pages/estadisticas.html" class="btn-hero-secondary">Ver Estadísticas</a>
+                </div>
+            </div>
         </div>
 
         <!-- Quick Links -->
+        <h2 class="section-title">Acceso <span>Rápido</span></h2>
         <div class="quick-links">
             <a href="pages/historial.html" class="quick-link-card">
-                <div class="quick-link-icon">⚔️</div>
+                <div class="quick-link-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
                 <div class="quick-link-title">Historial</div>
                 <div class="quick-link-desc">Ver todas las partidas registradas</div>
             </a>
 
             <a href="pages/estadisticas.html" class="quick-link-card">
-                <div class="quick-link-icon">📊</div>
+                <div class="quick-link-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    </svg>
+                </div>
                 <div class="quick-link-title">Estadísticas</div>
                 <div class="quick-link-desc">Rankings y análisis de jugadores</div>
             </a>
 
             <a href="pages/mazos.html" class="quick-link-card">
-                <div class="quick-link-icon">🎴</div>
+                <div class="quick-link-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122" />
+                    </svg>
+                </div>
                 <div class="quick-link-title">Mazos</div>
                 <div class="quick-link-desc">Explora todos los mazos disponibles</div>
             </a>
 
             <a href="pages/combate.html" class="quick-link-card">
-                <div class="quick-link-icon">⚡</div>
+                <div class="quick-link-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
                 <div class="quick-link-title">Registrar Combate</div>
                 <div class="quick-link-desc">Registra el resultado de tu partida</div>
             </a>
@@ -184,7 +483,7 @@
 
         <!-- Noticias Recientes -->
         <div class="noticias-section">
-            <h2>📰 Últimas Noticias</h2>
+            <h2 class="section-title">Últimas <span>Noticias</span></h2>
             <div id="noticias-recientes-container">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -192,7 +491,7 @@
                 </div>
             </div>
             <div class="ver-todas-noticias">
-                <a href="pages/noticias.html" class="btn btn-primary">Ver todas las noticias</a>
+                <a href="pages/noticias.html" class="btn-ver-noticias">Ver todas las noticias</a>
             </div>
         </div>
     </div>
@@ -213,7 +512,7 @@
 
                 if (!result.success || result.noticias.length === 0) {
                     container.innerHTML = `
-                        <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                        <p class="text-center" style="color: rgba(167, 139, 250, 0.6); padding: 2rem; font-family: 'Chakra Petch', sans-serif;">
                             No hay noticias publicadas todavía.
                         </p>
                     `;
@@ -236,7 +535,7 @@
                     html += `
                         <div class="noticia-card-preview" onclick="window.location.href='pages/noticias.html'">
                             <h3>${noticia.titulo}</h3>
-                            <p class="noticia-meta-preview">📅 ${fecha} | Por: ${noticia.autor_nombre}</p>
+                            <p class="noticia-meta-preview">${fecha} &middot; Por ${noticia.autor_nombre}</p>
                             <p class="noticia-extracto-preview">${extracto}</p>
                         </div>
                     `;
@@ -247,14 +546,13 @@
             } catch (error) {
                 console.error('Error cargando noticias:', error);
                 container.innerHTML = `
-                    <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
+                    <p class="text-center" style="color: rgba(167, 139, 250, 0.6); padding: 2rem; font-family: 'Chakra Petch', sans-serif;">
                         No se pudieron cargar las noticias.
                     </p>
                 `;
             }
         }
 
-        // Cargar al iniciar
         document.addEventListener('DOMContentLoaded', cargarNoticiasRecientes);
     </script>
 </body>
