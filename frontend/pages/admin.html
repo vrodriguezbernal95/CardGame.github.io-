@@ -264,18 +264,64 @@
             padding: 1.25rem 1.5rem;
         }
 
-        .mazo-item h4 {
+        .mazo-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .mazo-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mazo-item-info h4 {
             font-family: 'Russo One', sans-serif;
             background: linear-gradient(135deg, #e0d7ff, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 0.4rem;
+            font-size: 1rem;
+            word-break: break-word;
         }
 
-        .mazo-item p {
-            color: rgba(167, 139, 250, 0.7);
+        .mazo-item-desc {
+            color: rgba(167, 139, 250, 0.65);
             font-family: 'Chakra Petch', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-top: 0.6rem;
+            word-break: break-word;
+        }
+
+        .mazo-item-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .mazo-item-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .mazo-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+                border-top: 1px solid rgba(139, 92, 246, 0.15);
+                padding-top: 0.75rem;
+            }
+
+            .mazo-item-actions .btn {
+                flex: 1;
+                text-align: center;
+                font-size: 0.82rem;
+                padding: 0.6rem 0.5rem;
+            }
         }
 
         /* ===== NOTICIAS LIST ITEMS ===== */
@@ -1240,21 +1286,17 @@
 
                     html += `
                         <div class="mazo-item">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                                <div style="flex: 1;">
-                                    <h4 style="margin-bottom: 0.5rem;">${m.nombre}</h4>
+                            <div class="mazo-item-header">
+                                <div class="mazo-item-info">
+                                    <h4>${m.nombre}</h4>
                                     <span class="badge badge-info">${m.serie}</span>
-                                    <p style="margin-top: 0.75rem;">${m.descripcion}</p>
                                 </div>
-                                <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
-                                    <button onclick="abrirModalEditar(${m.id})" class="btn btn-primary btn-sm">
-                                        Editar
-                                    </button>
-                                    <button onclick="eliminarMazo(${m.id})" class="btn btn-error btn-sm">
-                                        Eliminar
-                                    </button>
+                                <div class="mazo-item-actions">
+                                    <button onclick="abrirModalEditar(${m.id})" class="btn btn-primary btn-sm">Editar</button>
+                                    <button onclick="eliminarMazo(${m.id})" class="btn btn-error btn-sm">Eliminar</button>
                                 </div>
                             </div>
+                            <p class="mazo-item-desc">${m.descripcion}</p>
                         </div>
                     `;
                 });
