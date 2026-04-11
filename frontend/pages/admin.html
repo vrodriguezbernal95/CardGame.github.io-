@@ -6,58 +6,92 @@
     <title>Panel Admin - Card Game Anime</title>
     <link rel="stylesheet" href="../css/global.css">
     <style>
+        /* ===== DASHBOARD STATS ===== */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
             margin-bottom: 2rem;
         }
 
         .stat-box {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.95), rgba(35, 30, 80, 0.9));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 24px rgba(124, 58, 237, 0.12), 0 8px 32px rgba(0, 0, 0, 0.3);
             padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #7c3aed, #a855f7);
         }
 
         .stat-box h3 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.4rem;
+            margin-bottom: 0.4rem;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-box p {
-            font-size: 0.875rem;
-            opacity: 0.9;
+            font-size: 0.8rem;
+            color: rgba(167, 139, 250, 0.6);
+            font-family: 'Chakra Petch', sans-serif;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
+        /* ===== TABS ===== */
         .tabs {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             margin-bottom: 2rem;
-            border-bottom: 2px solid var(--primary-color);
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
             flex-wrap: wrap;
+            padding-bottom: 0;
         }
 
         .tab {
-            padding: 0.75rem 1.5rem;
-            background: white;
-            border: none;
+            padding: 0.65rem 1.25rem;
+            background: rgba(15, 12, 41, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-bottom: none;
             cursor: pointer;
             font-weight: 600;
-            color: var(--text-secondary);
-            transition: all 0.3s;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            color: rgba(167, 139, 250, 0.65);
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
+            letter-spacing: 0.03em;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tab { transition: none; }
         }
 
         .tab:hover {
-            background: #f3f4f6;
+            background: rgba(35, 30, 80, 0.7);
+            color: #e0d7ff;
+            border-color: rgba(139, 92, 246, 0.45);
         }
 
         .tab.active {
-            background: var(--primary-color);
-            color: white;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 0 14px rgba(124, 58, 237, 0.4);
         }
 
         .tab-content {
@@ -68,11 +102,13 @@
             display: block;
         }
 
+        /* ===== PARTIDAS PENDIENTES ===== */
         .partida-pendiente {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 1rem;
+            background: linear-gradient(145deg, rgba(76, 29, 149, 0.15), rgba(15, 12, 41, 0.8));
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-left: 3px solid #a78bfa;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
             margin-bottom: 1rem;
         }
 
@@ -85,6 +121,15 @@
 
         .partida-info {
             flex: 1;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .partida-info strong {
+            color: #e0d7ff;
+        }
+
+        .partida-info small {
+            color: rgba(167, 139, 250, 0.6);
         }
 
         .partida-actions {
@@ -93,27 +138,270 @@
         }
 
         .badge-pendiente {
-            background: #ffc107;
-            color: #000;
-            padding: 0.25rem 0.75rem;
+            background: rgba(124, 58, 237, 0.3);
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, 0.4);
+            padding: 0.2rem 0.7rem;
             border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'Chakra Petch', sans-serif;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
 
+        /* ===== MIGRATION / ALERT BUTTONS ===== */
         .migrar-btn {
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.65rem 1.4rem;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            font-family: 'Chakra Petch', sans-serif;
             margin-bottom: 1rem;
+            box-shadow: 0 0 14px rgba(124, 58, 237, 0.35);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .migrar-btn { transition: none; }
         }
 
         .migrar-btn:hover {
-            background: #ee5a5a;
+            box-shadow: 0 0 22px rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* ===== SECTION HEADINGS INSIDE TABS ===== */
+        .tab-content h3 {
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.1rem;
+        }
+
+        /* ===== FORMS ===== */
+        .form-label {
+            color: rgba(167, 139, 250, 0.85);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .form-control,
+        select.form-control,
+        textarea.form-control,
+        input[type="date"].form-control,
+        input[type="number"].form-control,
+        input[type="text"].form-control,
+        input[type="email"].form-control,
+        input[type="password"].form-control,
+        input[type="url"].form-control {
+            background: rgba(15, 12, 41, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #e0d7ff;
+            font-family: 'Chakra Petch', sans-serif;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control::placeholder {
+            color: rgba(167, 139, 250, 0.35);
+        }
+
+        .form-control:focus {
+            border-color: rgba(167, 139, 250, 0.7);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            outline: none;
+        }
+
+        select.form-control option {
+            background: #1a1040;
+            color: #e0d7ff;
+        }
+
+        /* ===== FILTROS ADMIN ===== */
+        .filtros-admin-box {
+            background: rgba(15, 12, 41, 0.65);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== TABLE ===== */
+        .table thead th {
+            background: linear-gradient(135deg, #4c1d95, #6d28d9);
+            color: #e0d7ff;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            border: none;
+        }
+
+        .table tbody tr {
+            background: rgba(15, 12, 41, 0.5);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+            font-family: 'Chakra Petch', sans-serif;
+            color: #e0d7ff;
+            transition: background 0.15s;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(35, 30, 80, 0.7);
+        }
+
+        /* ===== MAZOS LIST ITEMS ===== */
+        .mazo-item {
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.9), rgba(35, 30, 80, 0.8));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .mazo-item h4 {
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mazo-item p {
+            color: rgba(167, 139, 250, 0.7);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* ===== NOTICIAS LIST ITEMS ===== */
+        .noticia-item {
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.9), rgba(35, 30, 80, 0.8));
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .noticia-item h4 {
+            font-family: 'Russo One', sans-serif;
+            color: #e0d7ff;
+            margin-bottom: 0.4rem;
+        }
+
+        .noticia-item small {
+            color: rgba(167, 139, 250, 0.55);
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .noticia-item p {
+            color: rgba(167, 139, 250, 0.7);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* ===== NORMAS ADMIN TREE ===== */
+        .norma-admin-node {
+            background: rgba(15, 12, 41, 0.75);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 8px;
+        }
+
+        .norma-admin-node strong {
+            color: #e0d7ff;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .norma-admin-node span {
+            color: rgba(167, 139, 250, 0.55);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        /* ===== MODAL ===== */
+        #modal-editar-mazo > div {
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.98), rgba(35, 30, 80, 0.95));
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.3), 0 30px 80px rgba(0, 0, 0, 0.6);
+            border-radius: 14px;
+        }
+
+        #modal-editar-mazo h3 {
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== BUTTONS GLOBAL ===== */
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border: none;
+            color: #fff;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary { transition: none; }
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 28px rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.45);
+            color: #a78bfa;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.12);
+            border-color: rgba(167, 139, 250, 0.65);
+            color: #e0d7ff;
+        }
+
+        /* ===== HR SEPARATOR ===== */
+        hr.section-sep {
+            border: none;
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+            margin: 2.5rem 0;
+        }
+
+        /* ===== CHECKBOX LABEL ===== */
+        .check-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: #e0d7ff;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        /* ===== SMALL/HINT TEXT ===== */
+        .hint-text {
+            color: rgba(167, 139, 250, 0.5);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.82rem;
+            display: block;
+            margin-top: 0.4rem;
+        }
+
+        *:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
         }
     </style>
 </head>
@@ -146,7 +434,7 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h1 class="card-title">⚙️ Panel de Administración</h1>
+                <h1 class="card-title">Panel de Administración</h1>
                 <p class="card-subtitle">Gestiona partidas, usuarios y aprobaciones</p>
             </div>
 
@@ -173,10 +461,10 @@
             <!-- Alerta de migración (si es necesario) -->
             <div id="migracion-alert">
                 <div class="alert alert-warning">
-                    <strong>⚠️ Migración del Sistema de Aprobación</strong>
+                    <strong>Migración del Sistema de Aprobación</strong>
                     <p>Si registrar combates da error 500, ejecuta esta migración una vez (crea tablas necesarias en la base de datos).</p>
                     <button onclick="ejecutarMigracion()" class="migrar-btn">
-                        ⚙️ Ejecutar Migración Ahora
+                        Ejecutar Migración Ahora
                     </button>
                 </div>
             </div>
@@ -184,10 +472,10 @@
             <!-- Alerta de corrección de estadísticas -->
             <div id="estadisticas-fix-alert" style="margin-bottom: 1rem;">
                 <div class="alert alert-warning">
-                    <strong>📊 Corregir Estadísticas</strong>
+                    <strong>Corregir Estadísticas</strong>
                     <p>Si las estadísticas solo muestran datos de 50 partidas, ejecuta esta corrección para calcular sobre TODAS las partidas aprobadas.</p>
                     <button onclick="corregirEstadisticas()" class="migrar-btn">
-                        🔧 Corregir Estadísticas Ahora
+                        Corregir Estadísticas Ahora
                     </button>
                 </div>
             </div>
@@ -195,13 +483,13 @@
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="cambiarTab('pendientes')">
-                    📝 Partidas Pendientes <span id="badge-pendientes" class="badge badge-warning" style="margin-left: 0.5rem;">0</span>
+                    Partidas Pendientes <span id="badge-pendientes" class="badge badge-warning" style="margin-left: 0.5rem;">0</span>
                 </button>
-                <button class="tab" onclick="cambiarTab('agregar')">⚔️ Añadir Partida</button>
-                <button class="tab" onclick="cambiarTab('noticias')">📰 Noticias</button>
-                <button class="tab" onclick="cambiarTab('usuarios')">👥 Usuarios</button>
-                <button class="tab" onclick="cambiarTab('mazos')">🎴 Mazos</button>
-                <button class="tab" onclick="cambiarTab('normas')">📋 Normas</button>
+                <button class="tab" onclick="cambiarTab('agregar')">Añadir Partida</button>
+                <button class="tab" onclick="cambiarTab('noticias')">Noticias</button>
+                <button class="tab" onclick="cambiarTab('usuarios')">Usuarios</button>
+                <button class="tab" onclick="cambiarTab('mazos')">Mazos</button>
+                <button class="tab" onclick="cambiarTab('normas')">Normas</button>
             </div>
 
             <!-- Tab: Partidas Pendientes -->
@@ -216,7 +504,7 @@
 
             <!-- Tab: Añadir Partida -->
             <div id="tab-agregar" class="tab-content">
-                <h3 style="margin-bottom: 1.5rem;">➕ Registrar Partida Manualmente</h3>
+                <h3 style="margin-bottom: 1.5rem;">Registrar Partida Manualmente</h3>
                 <form id="form-partida" style="max-width: 600px;">
                     <div class="form-group">
                         <label class="form-label">Jugador 1</label>
@@ -262,12 +550,12 @@
                     <button type="submit" class="btn btn-primary">Añadir Partida</button>
                 </form>
 
-                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+                <hr class="section-sep">
 
-                <h3 style="margin-bottom: 1.5rem;">🗑️ Gestionar Partidas Existentes</h3>
+                <h3 style="margin-bottom: 1.5rem;">Gestionar Partidas Existentes</h3>
 
                 <!-- Filtros Admin -->
-                <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <div class="filtros-admin-box">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label" style="font-size: 0.9rem;">Fecha desde</label>
@@ -293,7 +581,7 @@
                     <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
                         <button onclick="limpiarFiltrosAdmin()" class="btn btn-secondary">Limpiar Filtros</button>
                         <button onclick="aplicarFiltrosAdmin()" class="btn btn-primary">Aplicar Filtros</button>
-                        <button onclick="descargarExcel()" class="btn btn-success">📥 Descargar Excel</button>
+                        <button onclick="descargarExcel()" class="btn btn-success">Descargar Excel</button>
                     </div>
                 </div>
 
@@ -309,14 +597,14 @@
 
                 <div style="margin-top: 2rem; text-align: center;">
                     <button onclick="descargarExcel()" class="btn btn-success" style="min-width: 250px;">
-                        📥 Descargar Historial en Excel
+                        Descargar Historial en Excel
                     </button>
                 </div>
             </div>
 
             <!-- Tab: Noticias -->
             <div id="tab-noticias" class="tab-content">
-                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nueva Noticia</h3>
+                <h3 style="margin-bottom: 1.5rem;">Crear Nueva Noticia</h3>
                 <form id="form-noticia" style="max-width: 800px; margin-bottom: 3rem;">
                     <input type="hidden" id="noticia-id">
 
@@ -333,8 +621,8 @@
                     <div class="form-group">
                         <label class="form-label">URL de Imagen (opcional)</label>
                         <input type="url" id="noticia-imagen" class="form-control" placeholder="https://ejemplo.com/imagen.jpg" maxlength="500">
-                        <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
-                            💡 Pega el enlace de una imagen alojada en internet (Imgur, Google Drive, etc.)
+                        <small class="hint-text">
+                            Pega el enlace de una imagen alojada en internet (Imgur, Google Drive, etc.)
                         </small>
                     </div>
 
@@ -344,9 +632,9 @@
                     </div>
                 </form>
 
-                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+                <hr class="section-sep">
 
-                <h3 style="margin-bottom: 1.5rem;">📰 Noticias Publicadas</h3>
+                <h3 style="margin-bottom: 1.5rem;">Noticias Publicadas</h3>
                 <div id="noticias-lista-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -357,7 +645,7 @@
 
             <!-- Tab: Usuarios -->
             <div id="tab-usuarios" class="tab-content">
-                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nuevo Usuario</h3>
+                <h3 style="margin-bottom: 1.5rem;">Crear Nuevo Usuario</h3>
                 <form id="form-usuario" style="max-width: 600px; margin-bottom: 3rem;">
                     <div class="form-group">
                         <label class="form-label">Nombre</label>
@@ -372,7 +660,7 @@
                         <input type="password" id="usuario-password" class="form-control" required minlength="6">
                     </div>
                     <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <label class="check-label">
                             <input type="checkbox" id="usuario-admin">
                             <span>Es Administrador</span>
                         </label>
@@ -380,14 +668,14 @@
                     <button type="submit" class="btn btn-primary">Crear Usuario</button>
                 </form>
 
-                <h3 style="margin-bottom: 1.5rem;">👥 Lista de Usuarios</h3>
+                <h3 style="margin-bottom: 1.5rem;">Lista de Usuarios</h3>
 
                 <div class="form-group" style="max-width: 400px; margin-bottom: 1.5rem;">
                     <input
                         type="text"
                         id="buscar-usuario"
                         class="form-control"
-                        placeholder="🔍 Buscar por nombre o email..."
+                        placeholder="Buscar por nombre o email..."
                         style="padding-left: 1rem;"
                     >
                 </div>
@@ -402,7 +690,7 @@
 
             <!-- Tab: Mazos -->
             <div id="tab-mazos" class="tab-content">
-                <h3 style="margin-bottom: 1.5rem;">➕ Crear Nuevo Mazo</h3>
+                <h3 style="margin-bottom: 1.5rem;">Crear Nuevo Mazo</h3>
                 <form id="form-mazo" style="max-width: 600px; margin-bottom: 3rem;">
                     <div class="form-group">
                         <label class="form-label">Nombre del Mazo</label>
@@ -419,7 +707,7 @@
                     <button type="submit" class="btn btn-primary">Crear Mazo</button>
                 </form>
 
-                <h3 style="margin-bottom: 1.5rem;">📋 Mazos Existentes</h3>
+                <h3 style="margin-bottom: 1.5rem;">Mazos Existentes</h3>
                 <div id="mazos-lista-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -430,7 +718,7 @@
 
             <!-- Tab: Normas -->
             <div id="tab-normas" class="tab-content">
-                <h3 style="margin-bottom: 1.5rem;">➕ Crear/Editar Norma</h3>
+                <h3 style="margin-bottom: 1.5rem;">Crear/Editar Norma</h3>
                 <form id="form-norma" style="max-width: 800px; margin-bottom: 3rem;">
                     <input type="hidden" id="norma-id">
 
@@ -464,9 +752,9 @@
                     </div>
                 </form>
 
-                <hr style="margin: 3rem 0; border: none; border-top: 2px solid var(--border);">
+                <hr class="section-sep">
 
-                <h3 style="margin-bottom: 1.5rem;">📋 Estructura de Normas</h3>
+                <h3 style="margin-bottom: 1.5rem;">Estructura de Normas</h3>
                 <div id="normas-admin-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -478,9 +766,9 @@
     </div>
 
     <!-- Modal para editar mazo -->
-    <div id="modal-editar-mazo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:white; padding:2rem; border-radius:12px; max-width:500px; width:90%;">
-            <h3 style="margin-bottom:1.5rem;">✏️ Editar Mazo</h3>
+    <div id="modal-editar-mazo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="padding:2rem; max-width:500px; width:90%;">
+            <h3 style="margin-bottom:1.5rem;">Editar Mazo</h3>
             <form id="form-editar-mazo">
                 <input type="hidden" id="edit-mazo-id">
                 <div class="form-group">
@@ -562,7 +850,7 @@
                 if (!result.success || result.partidas.length === 0) {
                     container.innerHTML = `
                         <p class="text-center" style="color: var(--text-secondary); padding: 2rem;">
-                            ✅ No hay partidas pendientes de aprobación
+                            No hay partidas pendientes de aprobación
                         </p>
                     `;
                     // Actualizar badge
@@ -592,14 +880,14 @@
                                         ${p.ganador_nombre ? `<span style="margin-left: 0.5rem;">Ganador: <strong>${p.ganador_nombre}</strong></span>` : ''}
                                     </div>
                                     ${p.registrado_por ? `<small style="color: var(--text-secondary);">Registrado por: ${p.registrado_por}</small>` : ''}
-                                    ${p.notas ? `<p style="margin-top: 0.5rem; font-style: italic;">📝 ${p.notas}</p>` : ''}
+                                    ${p.notas ? `<p style="margin-top: 0.5rem; font-style: italic;">${p.notas}</p>` : ''}
                                 </div>
                                 <div class="partida-actions">
                                     <button onclick="aprobarPartida(${p.id})" class="btn btn-success btn-sm">
-                                        ✅ Aprobar
+                                        Aprobar
                                     </button>
                                     <button onclick="rechazarPartida(${p.id})" class="btn btn-error btn-sm">
-                                        ❌ Rechazar
+                                        Rechazar
                                     </button>
                                 </div>
                             </div>
@@ -849,7 +1137,7 @@
                         <td>
                             ${isCurrentUser
                                 ? '<span style="color: #999; font-size: 0.9rem;">-</span>'
-                                : `<button onclick="eliminarUsuario(${u.id}, '${u.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">🗑️ Eliminar</button>`
+                                : `<button onclick="eliminarUsuario(${u.id}, '${u.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">Eliminar</button>`
                             }
                         </td>
                     </tr>
@@ -945,19 +1233,19 @@
 
                 result.mazos.forEach(m => {
                     html += `
-                        <div style="background: white; border: 2px solid var(--primary-color); border-radius: 8px; padding: 1.5rem;">
+                        <div class="mazo-item">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                 <div style="flex: 1;">
-                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">${m.nombre}</h4>
+                                    <h4 style="margin-bottom: 0.5rem;">${m.nombre}</h4>
                                     <span class="badge badge-info">${m.serie}</span>
-                                    <p style="color: var(--text-secondary); margin-top: 0.75rem;">${m.descripcion}</p>
+                                    <p style="margin-top: 0.75rem;">${m.descripcion}</p>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
                                     <button onclick="abrirModalEditar(${m.id}, '${m.nombre.replace(/'/g, "\\'")}', '${m.serie.replace(/'/g, "\\'")}', '${m.descripcion.replace(/'/g, "\\'")}' )" class="btn btn-primary btn-sm">
-                                        ✏️ Editar
+                                        Editar
                                     </button>
                                     <button onclick="eliminarMazo(${m.id}, '${m.nombre.replace(/'/g, "\\'")}' )" class="btn btn-error btn-sm">
-                                        🗑️ Eliminar
+                                        Eliminar
                                     </button>
                                 </div>
                             </div>
@@ -1177,13 +1465,13 @@
                         <td>${fecha}</td>
                         <td><strong>${p.jugador1_nombre}</strong></td>
                         <td><span class="badge badge-info">${p.mazo1_nombre}</span></td>
-                        <td style="text-align: center;">⚔️</td>
+                        <td style="text-align: center;">VS</td>
                         <td><strong>${p.jugador2_nombre}</strong></td>
                         <td><span class="badge badge-info">${p.mazo2_nombre}</span></td>
                         <td><span class="badge ${UI.getBadgeClass(p.resultado)}">${UI.formatResultado(p.resultado)}</span></td>
                         <td>
                             <button onclick="eliminarPartida(${p.id})" class="btn btn-danger btn-sm">
-                                🗑️ Eliminar
+                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -1210,7 +1498,7 @@
             // Botón Anterior
             html += `
                 <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cambiarPaginaAdmin(${pagination.page - 1})">
-                    ❮❮ Anterior
+                    Anterior
                 </button>
             `;
 
@@ -1251,7 +1539,7 @@
             // Botón Siguiente
             html += `
                 <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cambiarPaginaAdmin(${pagination.page + 1})">
-                    Siguiente ❯❯
+                    Siguiente
                 </button>
             `;
 
@@ -1420,19 +1708,19 @@
                         : noticia.contenido;
 
                     html += `
-                        <div style="border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; background: white;">
+                        <div class="noticia-item">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                                 <div style="flex: 1;">
-                                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">${noticia.titulo}</h4>
-                                    <small style="color: var(--text-secondary);">📅 ${fecha} | Por: ${noticia.autor_nombre}</small>
+                                    <h4>${noticia.titulo}</h4>
+                                    <small>${fecha} | Por: ${noticia.autor_nombre}</small>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <button onclick="editarNoticia(${noticia.id})" class="btn btn-secondary btn-sm">✏️ Editar</button>
-                                    <button onclick="eliminarNoticia(${noticia.id})" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                                    <button onclick="editarNoticia(${noticia.id})" class="btn btn-secondary btn-sm">Editar</button>
+                                    <button onclick="eliminarNoticia(${noticia.id})" class="btn btn-danger btn-sm">Eliminar</button>
                                 </div>
                             </div>
                             ${noticia.imagen_url ? `<img src="${noticia.imagen_url}" alt="${noticia.titulo}" style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">` : ''}
-                            <p style="color: var(--text-secondary); white-space: pre-wrap;">${extracto}</p>
+                            <p style="white-space: pre-wrap;">${extracto}</p>
                         </div>
                     `;
                 });
@@ -1591,19 +1879,19 @@
         }
 
         function renderTreeAdmin(nodes, nivel) {
-            let html = '<div style="' + (nivel > 0 ? 'padding-left: 1.5rem; border-left: 2px solid var(--border);' : '') + '">';
+            let html = '<div style="' + (nivel > 0 ? 'padding-left: 1.5rem; border-left: 2px solid rgba(139,92,246,0.25);' : '') + '">';
 
             nodes.forEach(node => {
                 const hasChildren = node.children.length > 0;
-                const tipoLabel = hasChildren ? '📂' : (node.contenido ? '📄' : '📌');
+                const tipoLabel = hasChildren ? '[D]' : (node.contenido ? '[C]' : '[N]');
 
                 html += `
-                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; margin-bottom: 0.25rem; background: ${nivel === 0 ? '#f3f4f6' : '#f9fafb'}; border-radius: 8px; border: 1px solid var(--border);">
-                        <span>${tipoLabel}</span>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; margin-bottom: 0.25rem; background: ${nivel === 0 ? 'rgba(35,30,80,0.6)' : 'rgba(15,12,41,0.6)'}; border-radius: 8px; border: 1px solid rgba(139,92,246,0.2);">
+                        <span style="color: rgba(167,139,250,0.5); font-size: 0.75rem; font-family: 'Chakra Petch', sans-serif;">${tipoLabel}</span>
                         <div style="flex: 1;">
-                            <strong>${escapeHtmlAdmin(node.titulo)}</strong>
-                            ${node.contenido ? '<span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: 0.5rem;">(tiene contenido)</span>' : ''}
-                            <span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 0.5rem;">orden: ${node.orden}</span>
+                            <strong style="color: #e0d7ff; font-family: 'Chakra Petch', sans-serif;">${escapeHtmlAdmin(node.titulo)}</strong>
+                            ${node.contenido ? '<span style="color: rgba(167,139,250,0.5); font-size: 0.8rem; margin-left: 0.5rem;">(tiene contenido)</span>' : ''}
+                            <span style="color: rgba(167,139,250,0.4); font-size: 0.75rem; margin-left: 0.5rem;">orden: ${node.orden}</span>
                         </div>
                         <button onclick="editarNorma(${node.id})" class="btn btn-primary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">Editar</button>
                         <button onclick="eliminarNorma(${node.id})" class="btn btn-danger" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">Eliminar</button>

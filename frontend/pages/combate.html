@@ -20,22 +20,33 @@
         }
 
         .jugador-section {
-            background: #f9fafb;
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.85), rgba(35, 30, 80, 0.75));
             padding: 1.5rem;
             border-radius: 12px;
-            border: 2px solid var(--primary-color);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
         }
 
         .jugador-section h3 {
-            color: var(--primary-color);
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 1rem;
             text-align: center;
+            font-size: 1rem;
         }
 
         .vs-divider {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--accent-color);
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
         }
 
         .ganador-options {
@@ -48,35 +59,105 @@
         .ganador-btn {
             flex: 1;
             padding: 1rem;
-            border: 2px solid var(--primary-color);
-            background: white;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            background: rgba(15, 12, 41, 0.6);
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.15s;
             font-weight: 600;
+            font-family: 'Chakra Petch', sans-serif;
+            color: #e0d7ff;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ganador-btn { transition: none; }
         }
 
         .ganador-btn:hover {
-            background: #f3f4f6;
+            background: rgba(35, 30, 80, 0.8);
+            border-color: rgba(167, 139, 250, 0.6);
+            box-shadow: 0 0 14px rgba(124, 58, 237, 0.25);
         }
 
         .ganador-btn.selected {
-            background: var(--primary-color);
-            color: white;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.45), rgba(168, 85, 247, 0.35));
+            border-color: rgba(167, 139, 250, 0.7);
+            box-shadow: 0 0 22px rgba(124, 58, 237, 0.4);
+            color: #e0d7ff;
+            transform: translateY(-1px);
         }
 
         .limite-info {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
+            background: rgba(76, 29, 149, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.35);
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 1.5rem;
             text-align: center;
+            font-family: 'Chakra Petch', sans-serif;
+            color: rgba(167, 139, 250, 0.8);
         }
 
         .limite-info strong {
-            color: var(--accent-color);
-            font-size: 1.5rem;
+            color: #a78bfa;
+            font-size: 1.4rem;
+            font-family: 'Russo One', sans-serif;
+        }
+
+        .form-label {
+            color: rgba(167, 139, 250, 0.85);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .form-control,
+        select.form-control,
+        textarea.form-control {
+            background: rgba(15, 12, 41, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #e0d7ff;
+            font-family: 'Chakra Petch', sans-serif;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control::placeholder,
+        textarea.form-control::placeholder {
+            color: rgba(167, 139, 250, 0.35);
+        }
+
+        .form-control:focus,
+        select.form-control:focus,
+        textarea.form-control:focus {
+            border-color: rgba(167, 139, 250, 0.7);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            outline: none;
+        }
+
+        select.form-control option {
+            background: #1a1040;
+            color: #e0d7ff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border: none;
+            color: #fff;
+            font-family: 'Russo One', sans-serif;
+            letter-spacing: 0.06em;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary { transition: none; }
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 32px rgba(124, 58, 237, 0.65);
+            transform: translateY(-1px);
         }
 
         /* Responsive Mobile */
@@ -98,7 +179,7 @@
             }
 
             .jugador-section h3 {
-                font-size: 1.2rem;
+                font-size: 1rem;
                 margin-bottom: 0.75rem;
             }
 
@@ -126,6 +207,11 @@
             .combate-form {
                 padding: 1rem;
             }
+        }
+
+        *:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
         }
     </style>
 </head>
@@ -158,7 +244,7 @@
     <div class="container">
         <div class="card combate-form">
             <div class="card-header">
-                <h1 class="card-title">⚔️ Registrar Combate</h1>
+                <h1 class="card-title">Registrar Combate</h1>
                 <p class="card-subtitle">Registra tu partida (pendiente de aprobación del admin)</p>
             </div>
 
@@ -170,7 +256,7 @@
                 <div class="vs-section">
                     <!-- Mi lado -->
                     <div class="jugador-section">
-                        <h3>🎮 Yo</h3>
+                        <h3>Yo</h3>
                         <div class="form-group">
                             <label class="form-label">Mi Mazo</label>
                             <select id="mi-mazo"></select>
@@ -181,7 +267,7 @@
 
                     <!-- Lado del oponente -->
                     <div class="jugador-section">
-                        <h3>👤 Oponente</h3>
+                        <h3>Oponente</h3>
                         <div class="form-group">
                             <label class="form-label">Jugador</label>
                             <select id="oponente"></select>
@@ -197,13 +283,13 @@
                     <label class="form-label">¿Quién ganó?</label>
                     <div class="ganador-options">
                         <button type="button" class="ganador-btn" data-ganador="yo">
-                            ✅ Yo gané
+                            Yo gané
                         </button>
                         <button type="button" class="ganador-btn" data-ganador="empate">
-                            🤝 Empate
+                            Empate
                         </button>
                         <button type="button" class="ganador-btn" data-ganador="oponente">
-                            ❌ Perdí
+                            Perdí
                         </button>
                     </div>
                     <input type="hidden" id="ganador">

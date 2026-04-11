@@ -19,7 +19,7 @@
         }
 
         .norma-item {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
         }
 
         .norma-header {
@@ -27,31 +27,38 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1rem;
-            background: #f9fafb;
-            border: 1px solid var(--border);
+            background: rgba(15, 12, 41, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.25);
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
             user-select: none;
+            font-family: 'Chakra Petch', sans-serif;
         }
 
         .norma-header:hover {
-            background: #f3f4f6;
-            border-color: var(--primary-color);
+            background: rgba(35, 30, 80, 0.85);
+            border-color: rgba(139, 92, 246, 0.55);
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.2);
         }
 
         .norma-header.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(168, 85, 247, 0.25));
+            border-color: rgba(167, 139, 250, 0.6);
+            box-shadow: 0 0 18px rgba(124, 58, 237, 0.3);
         }
 
         .norma-toggle {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             transition: transform 0.3s;
             width: 16px;
             text-align: center;
             flex-shrink: 0;
+            color: #a78bfa;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .norma-toggle { transition: none; }
         }
 
         .norma-toggle.open {
@@ -60,16 +67,23 @@
 
         .norma-titulo {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            color: #e0d7ff;
+            font-family: 'Chakra Petch', sans-serif;
         }
 
         .norma-header.nivel-0 .norma-titulo {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .norma-children {
             display: none;
-            padding-top: 0.25rem;
+            padding-top: 0.3rem;
         }
 
         .norma-children.open {
@@ -78,10 +92,17 @@
 
         .norma-contenido {
             display: none;
-            padding: 1rem 1rem 1rem 2.5rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
+            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            color: rgba(167, 139, 250, 0.75);
+            line-height: 1.65;
             white-space: pre-wrap;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9rem;
+            border-left: 2px solid rgba(139, 92, 246, 0.3);
+            margin-left: 1rem;
+            margin-top: 0.25rem;
+            background: rgba(15, 12, 41, 0.4);
+            border-radius: 0 6px 6px 0;
         }
 
         .norma-contenido.open {
@@ -92,22 +113,30 @@
         .norma-header.leaf {
             cursor: default;
             padding-left: 2.5rem;
+            opacity: 0.85;
         }
 
         .norma-header.leaf:hover {
-            border-color: var(--border);
-            background: #f9fafb;
+            background: rgba(15, 12, 41, 0.7);
+            border-color: rgba(139, 92, 246, 0.25);
+            box-shadow: none;
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem;
-            color: var(--text-secondary);
+            color: rgba(167, 139, 250, 0.6);
         }
 
         .empty-state p {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             margin-top: 1rem;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        *:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
         }
     </style>
 </head>
@@ -141,7 +170,7 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h1 class="card-title">📋 Normas del Juego</h1>
+                <h1 class="card-title">Normas del Juego</h1>
                 <p class="card-subtitle">Reglas y normativa oficial</p>
             </div>
 

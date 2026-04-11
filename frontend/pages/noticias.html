@@ -6,19 +6,43 @@
     <title>Noticias - Card Game Anime</title>
     <link rel="stylesheet" href="../css/global.css">
     <style>
+        /* ── Card global overrides ── */
+        .card {
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.95), rgba(35, 30, 80, 0.9));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.15), 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-subtitle {
+            font-family: 'Chakra Petch', sans-serif;
+            color: rgba(167, 139, 250, 0.6);
+            font-size: 0.85rem;
+        }
+
+        /* ── Noticia card ── */
         .noticia-card {
-            background: white;
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.9), rgba(35, 30, 80, 0.85));
+            border: 1px solid rgba(139, 92, 246, 0.2);
             border-radius: 12px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
         }
 
         .noticia-card:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25), 0 4px 20px rgba(0, 0, 0, 0.4);
+            border-color: rgba(139, 92, 246, 0.45);
         }
 
         .noticia-header {
@@ -29,14 +53,21 @@
         }
 
         .noticia-title {
-            font-size: 1.5rem;
-            color: var(--primary-color);
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.35rem;
+            letter-spacing: 0.03em;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
         }
 
         .noticia-meta {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
+            font-family: 'Chakra Petch', sans-serif;
+            color: rgba(167, 139, 250, 0.6);
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
         }
 
         .noticia-imagen {
@@ -45,29 +76,44 @@
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 1rem;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
 
         .noticia-extracto {
-            color: var(--text-secondary);
-            line-height: 1.6;
+            font-family: 'Chakra Petch', sans-serif;
+            color: rgba(167, 139, 250, 0.75);
+            line-height: 1.7;
             margin-bottom: 1rem;
+            font-size: 0.95rem;
         }
 
         .btn-leer-mas {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.25rem;
             border-radius: 8px;
             cursor: pointer;
+            font-family: 'Chakra Petch', sans-serif;
             font-weight: 600;
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.35);
+            transition: box-shadow 0.3s, transform 0.2s;
         }
 
         .btn-leer-mas:hover {
-            background: var(--secondary-color);
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
         }
 
-        /* Modal */
+        .btn-leer-mas:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
+        }
+
+        /* ── Modal ── */
         .modal-noticia {
             display: none;
             position: fixed;
@@ -75,17 +121,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 2000;
             overflow-y: auto;
+            backdrop-filter: blur(4px);
         }
 
         .modal-content {
-            background: white;
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.98), rgba(35, 30, 80, 0.97));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.25), 0 30px 80px rgba(0, 0, 0, 0.6);
             max-width: 800px;
             margin: 2rem auto;
             padding: 2rem;
-            border-radius: 12px;
+            border-radius: 16px;
             position: relative;
         }
 
@@ -93,35 +142,125 @@
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background: var(--error);
-            color: white;
-            border: none;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
             width: 40px;
             height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, box-shadow 0.2s;
         }
 
         .modal-close:hover {
-            background: #dc2626;
+            background: rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal-close:focus-visible {
+            outline: 2px solid #f87171;
+            outline-offset: 2px;
         }
 
         .modal-imagen {
             width: 100%;
             max-height: 400px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 1.5rem;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
 
         .modal-content-text {
+            font-family: 'Chakra Petch', sans-serif;
             white-space: pre-wrap;
             line-height: 1.8;
-            color: var(--text-primary);
+            color: #e0d7ff;
+            font-size: 0.95rem;
         }
 
+        /* ── Paginación retro ── */
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .pagination-btn {
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: rgba(167, 139, 250, 0.7);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: #a78bfa;
+            color: #e0d7ff;
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
+        }
+
+        .pagination-ellipsis {
+            color: rgba(167, 139, 250, 0.4);
+            padding: 0.5rem 0.25rem;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .pagination-info {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.8rem;
+            color: rgba(167, 139, 250, 0.5);
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Título en modal JS-generado ── */
+        #modal-noticia-content h2 {
+            font-family: 'Russo One', sans-serif;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        #modal-noticia-content .noticia-meta {
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
             .modal-content {
                 margin: 1rem;
@@ -133,7 +272,17 @@
             }
 
             .noticia-title {
-                font-size: 1.25rem;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* ── Reducción de movimiento ── */
+        @media (prefers-reduced-motion: reduce) {
+            .noticia-card,
+            .btn-leer-mas,
+            .modal-close,
+            .pagination-btn {
+                transition: none !important;
             }
         }
     </style>
@@ -168,7 +317,7 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h1 class="card-title">📰 Noticias y Anuncios</h1>
+                <h1 class="card-title">Noticias y Anuncios</h1>
                 <p class="card-subtitle">Últimas noticias sobre torneos, mazos y eventos</p>
             </div>
 
@@ -187,7 +336,7 @@
     <!-- Modal para ver noticia completa -->
     <div id="modal-noticia" class="modal-noticia">
         <div class="modal-content">
-            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar">&times;</button>
             <div id="modal-noticia-content"></div>
         </div>
     </div>
@@ -254,7 +403,7 @@
                         <div class="noticia-header">
                             <div>
                                 <h2 class="noticia-title">${noticia.titulo}</h2>
-                                <p class="noticia-meta">📅 ${fecha} | Por: ${noticia.autor_nombre}</p>
+                                <p class="noticia-meta">${fecha} &mdash; ${noticia.autor_nombre}</p>
                             </div>
                         </div>
                         ${noticia.imagen_url ? `<img src="${noticia.imagen_url}" alt="${noticia.titulo}" class="noticia-imagen">` : ''}
@@ -283,7 +432,7 @@
             // Botón Anterior
             html += `
                 <button class="pagination-btn" ${!pagination.hasPrevPage ? 'disabled' : ''} onclick="cargarNoticias(${pagination.page - 1})">
-                    ❮❮ Anterior
+                    &laquo; Anterior
                 </button>
             `;
 
@@ -324,7 +473,7 @@
             // Botón Siguiente
             html += `
                 <button class="pagination-btn" ${!pagination.hasNextPage ? 'disabled' : ''} onclick="cargarNoticias(${pagination.page + 1})">
-                    Siguiente ❯❯
+                    Siguiente &raquo;
                 </button>
             `;
 
@@ -359,8 +508,8 @@
 
                     const modalContent = document.getElementById('modal-noticia-content');
                     modalContent.innerHTML = `
-                        <h2 style="color: var(--primary-color); margin-bottom: 1rem;">${noticia.titulo}</h2>
-                        <p class="noticia-meta" style="margin-bottom: 1.5rem;">📅 ${fecha} | Por: ${noticia.autor_nombre}</p>
+                        <h2>${noticia.titulo}</h2>
+                        <p class="noticia-meta" style="margin-bottom: 1.5rem;">${fecha} &mdash; ${noticia.autor_nombre}</p>
                         ${noticia.imagen_url ? `<img src="${noticia.imagen_url}" alt="${noticia.titulo}" class="modal-imagen">` : ''}
                         <div class="modal-content-text">${noticia.contenido}</div>
                     `;

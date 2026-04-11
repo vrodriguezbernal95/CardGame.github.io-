@@ -11,6 +11,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
         }
 
         .register-container {
@@ -20,24 +21,35 @@
         }
 
         .register-card {
-            background: white;
-            border-radius: 12px;
-            padding: 3rem;
-            box-shadow: var(--shadow-lg);
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.97), rgba(35, 30, 80, 0.92));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.2), 0 30px 80px rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
         }
 
-        .logo {
+        .register-logo {
             text-align: center;
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .register-logo-icon {
+            display: inline-block;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 16px;
+            box-shadow: 0 0 24px rgba(124, 58, 237, 0.5);
+            line-height: 64px;
+            font-size: 2rem;
         }
 
         .register-title {
             text-align: center;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.85rem;
+            margin-bottom: 0.4rem;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -45,15 +57,94 @@
 
         .register-subtitle {
             text-align: center;
-            color: var(--text-secondary);
+            color: rgba(167, 139, 250, 0.6);
             margin-bottom: 2rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .form-label {
+            color: rgba(167, 139, 250, 0.85) !important;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .form-control {
+            background: rgba(15, 12, 41, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0d7ff !important;
+            font-family: 'Chakra Petch', sans-serif;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control::placeholder {
+            color: rgba(167, 139, 250, 0.35);
+        }
+
+        .form-control:focus {
+            border-color: rgba(167, 139, 250, 0.7) !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2) !important;
+            outline: none;
+        }
+
+        .form-control:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+            border: none !important;
+            color: #fff !important;
+            font-family: 'Russo One', sans-serif !important;
+            letter-spacing: 0.06em;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary { transition: none; }
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.65);
+            transform: translateY(-1px);
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: rgba(167, 139, 250, 0.55);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .register-footer a {
+            color: #a78bfa;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .register-footer a:hover {
+            color: #e0d7ff;
+        }
+
+        *:focus-visible {
+            outline: 2px solid #a78bfa;
+            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
     <div class="register-container">
         <div class="register-card">
-            <div class="logo">🎴</div>
+            <div class="register-logo">
+                <span class="register-logo-icon">&#9830;</span>
+            </div>
             <h1 class="register-title">Card Game Anime</h1>
             <p class="register-subtitle">Crea tu cuenta para empezar</p>
 
@@ -80,8 +171,8 @@
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Crear Cuenta</button>
 
-                <p class="text-center mt-3" style="color: var(--text-secondary);">
-                    ¿Ya tienes cuenta? <a href="login.html" style="color: var(--primary-color); font-weight: 600;">Inicia Sesión</a>
+                <p class="register-footer mt-3">
+                    ¿Ya tienes cuenta? <a href="login.html">Inicia Sesión</a>
                 </p>
             </form>
 
