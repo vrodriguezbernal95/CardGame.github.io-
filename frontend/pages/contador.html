@@ -335,23 +335,21 @@
             outline-offset: 2px;
         }
 
-        /* ===== MOBILE ===== */
-        @media (max-width: 768px) {
+        /* ===== MOBILE PORTRAIT: grid apilado con rotación ===== */
+        @media (max-width: 900px) and (orientation: portrait) {
             .contador-container {
                 display: grid;
-                /* 4 rows: top bar | player 2 | player 1 | bottom bar */
                 grid-template-rows: env(safe-area-inset-top, 0px) 1fr 1fr env(safe-area-inset-bottom, 0px);
                 flex-direction: unset;
             }
 
-            /* Black safe-area bars (real HTML elements, NOT pseudo) */
             .bar-top,
             .bar-bottom {
                 background: #06030f;
                 width: 100%;
             }
 
-            /* Divider becomes horizontal on mobile */
+            /* Divider horizontal en portrait */
             .divider {
                 top: 50%;
                 left: 0;
@@ -375,31 +373,19 @@
                 overflow: hidden;
             }
 
-            /* Jugador 2 en fila 2, rotado */
             .jugador-2 {
                 grid-row: 2;
                 transform: rotate(180deg);
             }
 
-            /* Jugador 1 en fila 3 */
             .jugador-1 {
                 grid-row: 3;
             }
 
-            .vidas-display {
-                font-size: 13vh;
-                margin: 0;
-            }
+            .vidas-display { font-size: 13vh; margin: 0; }
+            .nombre-jugador { font-size: max(1.4vh, 10px); margin: 0; }
 
-            .nombre-jugador {
-                font-size: max(1.4vh, 10px);
-                margin: 0;
-            }
-
-            .hp-bar-container {
-                width: 65%;
-                margin-bottom: 0.3rem;
-            }
+            .hp-bar-container { width: 65%; margin-bottom: 0.3rem; }
 
             .btn-vida {
                 width: 18vw;
@@ -417,13 +403,8 @@
 
             .controles { gap: 4vw; margin: 0; }
             .controles-secundarios { gap: 4vw; margin: 0; }
+            .label-control { font-size: max(1.3vh, 9px); margin: 0; }
 
-            .label-control {
-                font-size: max(1.3vh, 9px);
-                margin: 0;
-            }
-
-            /* Reset button goes to left side, vertical text */
             .btn-reset {
                 top: 50%;
                 left: 0;
@@ -437,17 +418,80 @@
                 border-left: none;
             }
 
-            .btn-reset:hover {
-                transform: translateY(-50%);
+            .btn-reset:hover { transform: translateY(-50%); }
+        }
+
+        /* iPhone notch safe areas (portrait only) */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            @media (max-width: 900px) and (orientation: portrait) {
+                .bar-top   { height: env(safe-area-inset-top, 12px);    min-height: 8px; }
+                .bar-bottom{ height: env(safe-area-inset-bottom, 12px); min-height: 8px; }
             }
         }
 
-        /* iPhone notch/Dynamic Island safe areas */
-        @supports (padding-top: env(safe-area-inset-top)) {
-            @media (max-width: 768px) {
-                .bar-top  { height: env(safe-area-inset-top, 12px); min-height: 8px; }
-                .bar-bottom { height: env(safe-area-inset-bottom, 12px); min-height: 8px; }
+        /* ===== LANDSCAPE en móvil/tablet: side-by-side adaptado a altura reducida ===== */
+        @media (orientation: landscape) and (max-height: 560px) {
+            /* Ocultar barras de safe area (no necesarias en landscape) */
+            .bar-top, .bar-bottom { display: none; }
+
+            /* Mantener flex como desktop */
+            .contador-container { display: flex; }
+
+            /* Sin rotación */
+            .jugador-2 { transform: none !important; grid-row: unset; }
+            .jugador-1 { grid-row: unset; }
+
+            .jugador { padding: 0.5rem 1.5rem; justify-content: center; gap: 0.4rem; }
+
+            /* Número más pequeño — controlado por altura */
+            .vidas-display {
+                font-size: clamp(4rem, 16vh, 7rem);
+                margin: 0;
             }
+
+            .nombre-jugador { font-size: 0.7rem; margin-bottom: 0.25rem; }
+
+            .hp-bar-container { width: 70%; margin-bottom: 0.4rem; }
+
+            /* Botones compactos en landscape */
+            .btn-vida {
+                width: 52px;
+                height: 52px;
+                font-size: 1rem;
+                border-radius: 50%;
+            }
+
+            .btn-vida-small {
+                width: 42px;
+                height: 42px;
+                font-size: 0.8rem;
+                border-radius: 50%;
+            }
+
+            .controles { gap: 0.75rem; margin-bottom: 0.2rem; }
+            .controles-secundarios { gap: 0.6rem; }
+            .label-control { font-size: 0.6rem; margin-bottom: 0.2rem; }
+
+            /* Reset centrado arriba, compacto */
+            .btn-reset {
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                writing-mode: unset;
+                text-orientation: unset;
+                border-radius: 20px;
+                border-left: 1px solid rgba(139, 92, 246, 0.4);
+                padding: 0.35rem 1rem;
+                font-size: 0.65rem;
+            }
+
+            .btn-reset:hover {
+                transform: translateX(-50%) translateY(-1px);
+            }
+
+            /* Ajuste safe area lateral (notch iPhone landscape) */
+            .jugador-1 { padding-right: max(1.5rem, env(safe-area-inset-right, 0px)); }
+            .jugador-2 { padding-left:  max(1.5rem, env(safe-area-inset-left,  0px)); }
         }
     </style>
 </head>
