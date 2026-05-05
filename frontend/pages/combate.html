@@ -6,6 +6,37 @@
     <title>Registrar Combate - Card Game Anime</title>
     <link rel="stylesheet" href="../css/global.css">
     <style>
+        body { font-family: 'Chakra Petch', 'Segoe UI', sans-serif; }
+
+        /* ===== CARD OVERRIDE (dark gaming) ===== */
+        .card {
+            background: linear-gradient(145deg, rgba(15, 12, 41, 0.95), rgba(35, 30, 80, 0.9));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.15), 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(139, 92, 246, 0.25);
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.9rem;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-subtitle {
+            font-family: 'Chakra Petch', sans-serif;
+            color: rgba(167, 139, 250, 0.6);
+            font-size: 0.9rem;
+        }
+
         .combate-form {
             max-width: 700px;
             margin: 0 auto;
@@ -88,24 +119,24 @@
         }
 
         .limite-info {
-            background: rgba(76, 29, 149, 0.2);
-            border: 1px solid rgba(139, 92, 246, 0.35);
+            background: rgba(76, 29, 149, 0.25);
+            border: 1px solid rgba(139, 92, 246, 0.4);
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 1.5rem;
             text-align: center;
             font-family: 'Chakra Petch', sans-serif;
-            color: rgba(167, 139, 250, 0.8);
+            color: #c4b5fd;
         }
 
         .limite-info strong {
-            color: #a78bfa;
+            color: #e0d7ff;
             font-size: 1.4rem;
             font-family: 'Russo One', sans-serif;
         }
 
         .form-label {
-            color: rgba(167, 139, 250, 0.85);
+            color: #c4b5fd;
             font-family: 'Chakra Petch', sans-serif;
             font-size: 0.85rem;
             font-weight: 600;
