@@ -504,24 +504,13 @@
                 </div>
             </div>
 
-            <!-- Alerta de migración (si es necesario) -->
-            <div id="migracion-alert">
+            <!-- Alerta de migración: solo se muestra si hay error al cargar partidas pendientes -->
+            <div id="migracion-alert" style="display: none;">
                 <div class="alert alert-warning">
-                    <strong>Migración del Sistema de Aprobación</strong>
-                    <p>Si registrar combates da error 500, ejecuta esta migración una vez (crea tablas necesarias en la base de datos).</p>
+                    <strong>Error del Sistema de Aprobación</strong>
+                    <p>No se pudo cargar el sistema de aprobación. Ejecuta esta migración para repararlo.</p>
                     <button onclick="ejecutarMigracion()" class="migrar-btn">
-                        Ejecutar Migración Ahora
-                    </button>
-                </div>
-            </div>
-
-            <!-- Alerta de corrección de estadísticas -->
-            <div id="estadisticas-fix-alert" style="margin-bottom: 1rem;">
-                <div class="alert alert-warning">
-                    <strong>Corregir Estadísticas</strong>
-                    <p>Si las estadísticas solo muestran datos de 50 partidas, ejecuta esta corrección para calcular sobre TODAS las partidas aprobadas.</p>
-                    <button onclick="corregirEstadisticas()" class="migrar-btn">
-                        Corregir Estadísticas Ahora
+                        Ejecutar Migración
                     </button>
                 </div>
             </div>
@@ -809,6 +798,55 @@
                 </div>
             </div>
         </div>
+
+        <!-- Herramientas de mantenimiento (colapsable, oculto por defecto) -->
+        <div style="margin-top: 3rem;">
+            <button onclick="toggleMantenimiento()" id="btn-mantenimiento"
+                style="background: transparent; border: 1px solid rgba(139,92,246,0.25); color: rgba(167,139,250,0.5);
+                       font-family: 'Chakra Petch', sans-serif; font-size: 0.75rem; letter-spacing: 0.08em;
+                       text-transform: uppercase; padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer;
+                       display: flex; align-items: center; gap: 0.5rem; transition: color 0.2s, border-color 0.2s;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                Herramientas de mantenimiento
+            </button>
+            <div id="panel-mantenimiento" style="display: none; margin-top: 1rem;
+                 background: linear-gradient(145deg, rgba(15,12,41,0.8), rgba(25,20,60,0.7));
+                 border: 1px solid rgba(139,92,246,0.15); border-radius: 10px; padding: 1.5rem;">
+                <p style="font-family:'Chakra Petch',sans-serif; font-size:0.8rem; color:rgba(167,139,250,0.5);
+                           margin-bottom: 1.25rem; letter-spacing: 0.03em;">
+                    Utilidades de administración de base de datos. Solo ejecutar si hay un problema concreto.
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                    <div style="flex: 1; min-width: 240px; padding: 1rem;
+                                background: rgba(10,8,35,0.6); border: 1px solid rgba(139,92,246,0.12); border-radius: 8px;">
+                        <p style="font-family:'Chakra Petch',sans-serif; font-size:0.8rem; font-weight:600;
+                                  color: #a78bfa; margin-bottom: 0.4rem;">Migración del sistema de aprobación</p>
+                        <p style="font-family:'Chakra Petch',sans-serif; font-size:0.75rem; color:rgba(167,139,250,0.45);
+                                  margin-bottom: 0.85rem; line-height: 1.4;">
+                            Ejecutar si registrar combates da error 500. Crea las tablas necesarias.
+                        </p>
+                        <button onclick="ejecutarMigracion()" class="migrar-btn" style="margin-bottom:0;">
+                            Ejecutar migración
+                        </button>
+                    </div>
+                    <div style="flex: 1; min-width: 240px; padding: 1rem;
+                                background: rgba(10,8,35,0.6); border: 1px solid rgba(139,92,246,0.12); border-radius: 8px;">
+                        <p style="font-family:'Chakra Petch',sans-serif; font-size:0.8rem; font-weight:600;
+                                  color: #a78bfa; margin-bottom: 0.4rem;">Recalcular estadísticas</p>
+                        <p style="font-family:'Chakra Petch',sans-serif; font-size:0.75rem; color:rgba(167,139,250,0.45);
+                                  margin-bottom: 0.85rem; line-height: 1.4;">
+                            Ejecutar si las estadísticas muestran datos incorrectos o incompletos.
+                        </p>
+                        <button onclick="corregirEstadisticas()" class="migrar-btn" style="margin-bottom:0;">
+                            Recalcular estadísticas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal para editar mazo -->
@@ -1010,48 +1048,34 @@
             }
         }
 
-        // Ejecutar migración de noticias
-        async function ejecutarMigracionNoticias() {
-            if (!confirm('¿Ejecutar migración del sistema de noticias? Esto creará la tabla de noticias en la base de datos.')) return;
-
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Ejecutando migración...';
-
-            try {
-                const result = await API.ejecutarMigracionNoticias();
-                if (result.success) {
-                    UI.showAlert('✅ Migración de noticias ejecutada exitosamente. Sistema activado!', 'success');
-                    document.getElementById('migracion-noticias-alert').style.display = 'none';
-                    setTimeout(() => location.reload(), 1500);
-                }
-            } catch (error) {
-                UI.showAlert('Error en migración: ' + error.message, 'error');
-                btn.disabled = false;
-                btn.textContent = 'Ejecutar Migración de Noticias';
-            }
-        }
-
         // Corregir estadísticas
         async function corregirEstadisticas() {
-            if (!confirm('¿Corregir las vistas de estadísticas? Esto recalculará las estadísticas sobre TODAS las partidas aprobadas.')) return;
+            if (!confirm('¿Recalcular las estadísticas sobre TODAS las partidas aprobadas?')) return;
 
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = 'Corrigiendo estadísticas...';
+            btn.textContent = 'Recalculando...';
 
             try {
                 const result = await API.corregirVistasEstadisticas();
                 if (result.success) {
-                    UI.showAlert('✅ Estadísticas corregidas exitosamente. Ahora calculan sobre todas las partidas aprobadas!', 'success');
-                    document.getElementById('estadisticas-fix-alert').style.display = 'none';
+                    UI.showAlert('Estadísticas recalculadas correctamente.', 'success');
                     setTimeout(() => location.reload(), 1500);
                 }
             } catch (error) {
-                UI.showAlert('Error al corregir estadísticas: ' + error.message, 'error');
+                UI.showAlert('Error al recalcular estadísticas: ' + error.message, 'error');
                 btn.disabled = false;
-                btn.textContent = '🔧 Corregir Estadísticas Ahora';
+                btn.textContent = 'Recalcular estadísticas';
             }
+        }
+
+        function toggleMantenimiento() {
+            const panel = document.getElementById('panel-mantenimiento');
+            const btn = document.getElementById('btn-mantenimiento');
+            const open = panel.style.display === 'none';
+            panel.style.display = open ? 'block' : 'none';
+            btn.style.color = open ? 'rgba(167,139,250,0.75)' : 'rgba(167,139,250,0.5)';
+            btn.style.borderColor = open ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.25)';
         }
 
         // Cargar selectores
