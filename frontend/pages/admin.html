@@ -2103,11 +2103,99 @@
             }
         }
 
+        // ── Polling de partidas pendientes ──────────────────────────────────────
+        // Comprueba cada 60s si hay nuevas partidas pendientes sin recargar la página.
+        let _ultimasCantidadPendientes = 0;
+
+        async function pollPartidasPendientes() {
+            try {
+                const result = await API.getPartidasPendientes();
+                if (!result.success) return;
+
+                const nuevas = result.total || 0;
+                const badge = document.getElementById('badge-pendientes');
+                if (badge) badge.textContent = nuevas;
+                document.getElementById('total-pendientes').textContent = nuevas;
+
+                if (nuevas > _ultimasCantidadPendientes) {
+                    const diff = nuevas - _ultimasCantidadPendientes;
+                    mostrarNotificacionPendientes(diff);
+
+                    // Si la tab de pendientes está activa, recargar la lista
+                    if (document.getElementById('tab-pendientes').classList.contains('active')) {
+                        cargarPartidasPendientes();
+                    }
+                }
+                _ultimasCantidadPendientes = nuevas;
+            } catch {}
+        }
+
+        function mostrarNotificacionPendientes(cantidad) {
+            // Flash del badge
+            const badge = document.getElementById('badge-pendientes');
+            if (badge) {
+                badge.style.transition = 'transform 0.15s, background 0.15s';
+                badge.style.background = '#f59e0b';
+                badge.style.transform = 'scale(1.4)';
+                setTimeout(() => {
+                    badge.style.transform = 'scale(1)';
+                    badge.style.background = '';
+                }, 600);
+            }
+
+            // Banner en el dashboard
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999;
+                background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(168,85,247,0.9));
+                color: #fff; padding: 1rem 1.5rem; border-radius: 12px;
+                font-family: 'Chakra Petch', sans-serif; font-size: 0.9rem; font-weight: 600;
+                box-shadow: 0 0 30px rgba(124,58,237,0.6), 0 8px 24px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.15);
+                display: flex; align-items: center; gap: 0.75rem;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            banner.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                ${cantidad === 1 ? '1 nueva partida pendiente' : `${cantidad} nuevas partidas pendientes`} de aprobación
+            `;
+
+            // Animación CSS
+            if (!document.getElementById('notif-keyframes')) {
+                const style = document.createElement('style');
+                style.id = 'notif-keyframes';
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(120%); opacity: 0; }
+                        to   { transform: translateX(0);    opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 6000);
+        }
+        // ────────────────────────────────────────────────────────────────────────
+
         // Inicializar
-        document.addEventListener('DOMContentLoaded', () => {
-            cargarResumen();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cargarResumen();
             cargarPartidasPendientes();
             cargarSelectores();
+
+            // Guardar el total inicial para que el polling no dispare al arrancar
+            try {
+                const r = await API.getPartidasPendientes();
+                _ultimasCantidadPendientes = r.total || 0;
+            } catch {}
+
+            // Polling cada 60s
+            setInterval(pollPartidasPendientes, 60 * 1000);
 
             // Establecer fecha de hoy por defecto en el formulario de añadir partida
             const fechaInput = document.getElementById('fecha-partida');
