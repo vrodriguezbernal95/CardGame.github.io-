@@ -3,6 +3,33 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:3000/api'  // Desarrollo local
     : 'https://cardgame-api-kqm4.onrender.com/api';  // Producción
 
+// ── Keep-alive: ping cada 10 min para evitar el cold start de Render (free tier)
+// Solo en producción para no interferir con desarrollo local.
+if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    setInterval(() => fetch(API_URL + '/mazos?limit=1').catch(() => {}), 10 * 60 * 1000);
+}
+
+// ── Caché en sessionStorage para datos que raramente cambian.
+// TTL en ms: mazos/noticias/estadísticas se refrescan cada 5 min.
+const _cache = {
+    TTL: 5 * 60 * 1000,
+    get(key) {
+        try {
+            const raw = sessionStorage.getItem('apicache_' + key);
+            if (!raw) return null;
+            const { ts, data } = JSON.parse(raw);
+            if (Date.now() - ts > this.TTL) { sessionStorage.removeItem('apicache_' + key); return null; }
+            return data;
+        } catch { return null; }
+    },
+    set(key, data) {
+        try { sessionStorage.setItem('apicache_' + key, JSON.stringify({ ts: Date.now(), data })); } catch {}
+    },
+    clear(key) {
+        try { sessionStorage.removeItem('apicache_' + key); } catch {}
+    }
+};
+
 // Clase para manejar las peticiones a la API
 class API {
     static getToken() {
@@ -136,7 +163,11 @@ class API {
 
     // Mazos
     static async getMazos() {
-        return await this.request('/mazos');
+        const cached = _cache.get('mazos');
+        if (cached) return cached;
+        const data = await this.request('/mazos');
+        _cache.set('mazos', data);
+        return data;
     }
 
     static async getMazo(id) {
@@ -144,32 +175,35 @@ class API {
     }
 
     static async getMazosPorSerie() {
-        return await this.request('/mazos/series/all');
+        const cached = _cache.get('mazos_serie');
+        if (cached) return cached;
+        const data = await this.request('/mazos/series/all');
+        _cache.set('mazos_serie', data);
+        return data;
     }
 
     static async createMazo(mazoData) {
-        return await this.request('/mazos', {
-            method: 'POST',
-            body: JSON.stringify(mazoData)
-        });
+        _cache.clear('mazos'); _cache.clear('mazos_serie');
+        return await this.request('/mazos', { method: 'POST', body: JSON.stringify(mazoData) });
     }
 
     static async updateMazo(id, mazoData) {
-        return await this.request(`/mazos/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(mazoData)
-        });
+        _cache.clear('mazos'); _cache.clear('mazos_serie');
+        return await this.request(`/mazos/${id}`, { method: 'PUT', body: JSON.stringify(mazoData) });
     }
 
     static async deleteMazo(id) {
-        return await this.request(`/mazos/${id}`, {
-            method: 'DELETE'
-        });
+        _cache.clear('mazos'); _cache.clear('mazos_serie');
+        return await this.request(`/mazos/${id}`, { method: 'DELETE' });
     }
 
     // Estadísticas
     static async getEstadisticasJugadores() {
-        return await this.request('/estadisticas/jugadores');
+        const cached = _cache.get('stats_jugadores');
+        if (cached) return cached;
+        const data = await this.request('/estadisticas/jugadores');
+        _cache.set('stats_jugadores', data);
+        return data;
     }
 
     static async getEstadisticasJugador(id) {
@@ -177,7 +211,11 @@ class API {
     }
 
     static async getEstadisticasMazos() {
-        return await this.request('/estadisticas/mazos');
+        const cached = _cache.get('stats_mazos');
+        if (cached) return cached;
+        const data = await this.request('/estadisticas/mazos');
+        _cache.set('stats_mazos', data);
+        return data;
     }
 
     static async getEstadisticasMazo(id) {
@@ -185,12 +223,20 @@ class API {
     }
 
     static async getUsuarios() {
-        return await this.request('/estadisticas/usuarios/list');
+        const cached = _cache.get('usuarios');
+        if (cached) return cached;
+        const data = await this.request('/estadisticas/usuarios/list');
+        _cache.set('usuarios', data);
+        return data;
     }
 
     // Opciones de filtros (jugadores y mazos únicos) - endpoint ligero
     static async getOpcionesFiltrosPartidas() {
-        return await this.request('/partidas/opciones-filtros');
+        const cached = _cache.get('filtros_partidas');
+        if (cached) return cached;
+        const data = await this.request('/partidas/opciones-filtros');
+        _cache.set('filtros_partidas', data);
+        return data;
     }
 
     // Estadísticas filtradas (calculadas en servidor)
@@ -304,7 +350,12 @@ class API {
     }
 
     static async getNoticiasRecientes(limit = 5) {
-        return await this.request(`/noticias/recientes?limit=${limit}`);
+        const key = `noticias_recientes_${limit}`;
+        const cached = _cache.get(key);
+        if (cached) return cached;
+        const data = await this.request(`/noticias/recientes?limit=${limit}`);
+        _cache.set(key, data);
+        return data;
     }
 
     static async getNoticia(id) {

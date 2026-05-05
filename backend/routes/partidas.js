@@ -4,6 +4,28 @@ const db = require('../config/db-selector');
 const { verifyToken, verifyAdmin } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
+// Cache del resultado de SHOW COLUMNS — se comprueba una sola vez al arrancar el servidor
+// en vez de en cada petición, evitando una consulta de metadatos cara en cada request.
+let _estadoColumnExists = null;
+async function estadoColumnExists() {
+    if (_estadoColumnExists !== null) return _estadoColumnExists;
+    const dbType = process.env.DB_TYPE || 'mysql';
+    try {
+        if (dbType === 'postgres') {
+            const [cols] = await db.query(
+                `SELECT column_name FROM information_schema.columns WHERE table_name='partidas' AND column_name='estado'`
+            );
+            _estadoColumnExists = cols.length > 0;
+        } else {
+            const [cols] = await db.query(`SHOW COLUMNS FROM partidas LIKE 'estado'`);
+            _estadoColumnExists = cols.length > 0;
+        }
+    } catch (e) {
+        _estadoColumnExists = false;
+    }
+    return _estadoColumnExists;
+}
+
 // ========== RUTAS ESPECÍFICAS (DEBEN IR ANTES DE /:id) ==========
 
 // Obtener partidas pendientes (solo admin)
@@ -146,24 +168,9 @@ router.get('/opciones-filtros', async (req, res) => {
     try {
         const dbType = process.env.DB_TYPE || 'mysql';
 
-        // Verificar si la columna estado existe
-        let estadoFilter = '';
-        try {
-            if (dbType === 'postgres') {
-                const [cols] = await db.query(`
-                    SELECT column_name FROM information_schema.columns
-                    WHERE table_name='partidas' AND column_name='estado'
-                `);
-                if (cols.length > 0) estadoFilter = "WHERE (p.estado = 'aprobada' OR p.estado IS NULL)";
-            } else {
-                const [cols] = await db.query(`
-                    SHOW COLUMNS FROM partidas LIKE 'estado'
-                `);
-                if (cols.length > 0) estadoFilter = "WHERE (p.estado = 'aprobada' OR p.estado IS NULL)";
-            }
-        } catch (e) {
-            // Si hay error, asumimos que no existe la columna
-        }
+        const estadoFilter = await estadoColumnExists()
+            ? "WHERE (p.estado = 'aprobada' OR p.estado IS NULL)"
+            : '';
 
         const [jugadores] = await db.query(`
             SELECT DISTINCT u.nombre
@@ -200,8 +207,6 @@ router.get('/opciones-filtros', async (req, res) => {
 // Soporta filtros: ?fechaDesde=YYYY-MM-DD&fechaHasta=YYYY-MM-DD&jugador=nombre&mazo=nombre
 router.get('/', async (req, res) => {
     try {
-        const dbType = process.env.DB_TYPE || 'mysql';
-
         // Parámetros de paginación
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
@@ -213,26 +218,10 @@ router.get('/', async (req, res) => {
         const jugadorNombre = req.query.jugador || null;
         const mazoNombre = req.query.mazo || null;
 
-        // Verificar si la columna estado existe (para compatibilidad)
-        let whereConditions = [];
-        let queryParams = [];
+        const whereConditions = [];
+        const queryParams = [];
 
-        try {
-            if (dbType === 'postgres') {
-                const [cols] = await db.query(`
-                    SELECT column_name FROM information_schema.columns
-                    WHERE table_name='partidas' AND column_name='estado'
-                `);
-                if (cols.length > 0) whereConditions.push("p.estado = 'aprobada'");
-            } else {
-                const [cols] = await db.query(`
-                    SHOW COLUMNS FROM partidas LIKE 'estado'
-                `);
-                if (cols.length > 0) whereConditions.push("p.estado = 'aprobada'");
-            }
-        } catch (e) {
-            // Si hay error, asumimos que no existe la columna
-        }
+        if (await estadoColumnExists()) whereConditions.push("p.estado = 'aprobada'");
 
         // Agregar filtros si existen
         if (fechaDesde) {
