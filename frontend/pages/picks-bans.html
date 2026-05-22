@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picks &amp; Bans - Card Game Anime</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            min-height: 100%;
+            font-family: 'Chakra Petch', sans-serif;
+            background: linear-gradient(135deg, #06030f 0%, #0f0c29 50%, #13082a 100%);
+            color: #e0d7ff;
+        }
+
+        /* ── SCREEN SYSTEM ── */
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── SHARED LAYOUT ── */
+        .page-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.25rem;
+            gap: 2rem;
+        }
+
+        .page-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            letter-spacing: 0.06em;
+            text-align: center;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-sub {
+            font-size: 0.85rem;
+            color: rgba(167, 139, 250, 0.6);
+            letter-spacing: 0.04em;
+            text-align: center;
+            margin-top: -1.25rem;
+        }
+
+        .card-dark {
+            background: linear-gradient(145deg, rgba(15,12,41,0.97), rgba(35,30,80,0.93));
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 0 40px rgba(124,58,237,0.12), 0 16px 40px rgba(0,0,0,0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.07em;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(124,58,237,0.4);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { box-shadow: 0 0 28px rgba(124,58,237,0.65); transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .btn-secondary {
+            background: transparent;
+            color: #a78bfa;
+            border: 1px solid rgba(139,92,246,0.4);
+            padding: 0.65rem 1.5rem;
+            border-radius: 10px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(124,58,237,0.12); border-color: rgba(139,92,246,0.65); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary, .btn-secondary { transition: none; }
+        }
+
+        /* ── SCREEN 1: FORMAT ── */
+        .format-cards {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .format-card {
+            flex: 1;
+            min-width: 180px;
+            max-width: 240px;
+            background: linear-gradient(145deg, rgba(15,12,41,0.95), rgba(35,30,80,0.9));
+            border: 2px solid rgba(139,92,246,0.25);
+            border-radius: 14px;
+            padding: 2rem 1.25rem;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+        }
+        .format-card:hover {
+            border-color: rgba(139,92,246,0.7);
+            box-shadow: 0 0 28px rgba(124,58,237,0.35);
+            transform: translateY(-4px);
+        }
+        .format-card.selected {
+            border-color: #a855f7;
+            box-shadow: 0 0 32px rgba(168,85,247,0.5);
+        }
+        .format-card-num {
+            font-family: 'Russo One', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(135deg, #e0d7ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .format-card-label {
+            font-size: 0.85rem;
+            color: rgba(167,139,250,0.65);
+            letter-spacing: 0.05em;
+        }
+        .format-card-sub {
+            font-size: 0.75rem;
+            color: rgba(167,139,250,0.4);
+            margin-top: 0.35rem;
+        }
+
+        /* ── SCREEN 2: DICE ── */
+        .dice-arena {
+            display: flex;
+            gap: 3rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dice-player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .dice-label {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+        }
+        .dice-label.j1 { color: #818cf8; }
+        .dice-label.j2 { color: #e879f9; }
+
+        .dice-face {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(145deg, rgba(15,12,41,0.97), rgba(35,30,80,0.93));
+            border: 2px solid rgba(139,92,246,0.35);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.6rem;
+            color: #e0d7ff;
+            transition: transform 0.1s;
+        }
+        .dice-face.rolling { animation: diceAnim 0.08s infinite alternate; }
+        .dice-face.winner-j1 { border-color: #818cf8; box-shadow: 0 0 24px rgba(129,140,248,0.6); color: #a5b4fc; }
+        .dice-face.winner-j2 { border-color: #e879f9; box-shadow: 0 0 24px rgba(232,121,249,0.6); color: #f0abfc; }
+
+        @keyframes diceAnim {
+            from { transform: rotate(-4deg) scale(1.04); }
+            to   { transform: rotate(4deg)  scale(0.97); }
+        }
+
+        .dice-vs {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #818cf8, #e879f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dice-result {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.95rem;
+            color: #c4b5fd;
+            text-align: center;
+            min-height: 1.4em;
+        }
+
+        .dice-choice-btns {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .choice-btn {
+            padding: 0.85rem 1.75rem;
+            border-radius: 10px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+        .choice-btn.j1 {
+            background: linear-gradient(135deg, rgba(79,70,229,0.3), rgba(124,58,237,0.25));
+            border-color: #818cf8;
+            color: #a5b4fc;
+        }
+        .choice-btn.j1:hover { box-shadow: 0 0 20px rgba(129,140,248,0.5); transform: translateY(-2px); }
+        .choice-btn.j2 {
+            background: linear-gradient(135deg, rgba(217,70,239,0.25), rgba(168,85,247,0.2));
+            border-color: #e879f9;
+            color: #f0abfc;
+        }
+        .choice-btn.j2:hover { box-shadow: 0 0 20px rgba(232,121,249,0.5); transform: translateY(-2px); }
+
+        /* ── SCREEN 3: DRAFT ── */
+        #screen-draft.active { display: block; min-height: 100vh; }
+
+        .draft-layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 3rem;
+        }
+
+        .draft-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .draft-game-badge {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            color: rgba(167,139,250,0.6);
+        }
+
+        .draft-phase-badge {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+        }
+        .draft-phase-badge.ban {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fca5a5;
+        }
+        .draft-phase-badge.pick {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.4);
+            color: #6ee7b7;
+        }
+
+        .draft-turn-indicator {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+        }
+        .draft-turn-indicator strong {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.15rem;
+        }
+        .draft-turn-indicator.j1 strong { color: #818cf8; }
+        .draft-turn-indicator.j2 strong { color: #e879f9; }
+
+        /* Bans/picks tracker */
+        .draft-tracker {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tracker-col {
+            background: rgba(10,8,30,0.6);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(139,92,246,0.12);
+        }
+
+        .tracker-col-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.5rem;
+        }
+        .tracker-col-title.j1 { color: #818cf8; }
+        .tracker-col-title.j2 { color: #e879f9; }
+
+        .tracker-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            min-height: 1.6rem;
+        }
+
+        .tracker-pill {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tracker-pill.ban  { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+        .tracker-pill.pick { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+        .tracker-pill.ban-game  { background: rgba(239,68,68,0.25);  border: 1px solid rgba(239,68,68,0.5);  color: #fca5a5; }
+
+        /* Deck grid */
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .deck-card {
+            position: relative;
+            background: linear-gradient(145deg, rgba(20,17,55,0.9), rgba(35,28,80,0.85));
+            border: 1px solid rgba(139,92,246,0.2);
+            border-radius: 10px;
+            padding: 0.9rem 0.75rem;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, opacity 0.2s;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            overflow: hidden;
+        }
+        .deck-card:hover:not(.disabled) {
+            border-color: rgba(139,92,246,0.65);
+            box-shadow: 0 0 16px rgba(124,58,237,0.35);
+            transform: translateY(-2px);
+        }
+
+        .deck-card.disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .deck-card.banned-this-game {
+            opacity: 0.35;
+            border-color: rgba(239,68,68,0.3);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .deck-card.banned-this-game::after {
+            content: 'BANEADO';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(239,68,68,0.12);
+            color: #fca5a5;
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+        }
+
+        .deck-card-name {
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #e0d7ff;
+            line-height: 1.3;
+        }
+        .deck-card-serie {
+            font-size: 0.68rem;
+            color: rgba(167,139,250,0.5);
+        }
+
+        /* ── SCREEN 4: GAME READY ── */
+        .matchup-display {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .matchup-player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            text-align: center;
+        }
+
+        .matchup-player-label {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+        }
+        .matchup-player-label.j1 { color: #818cf8; }
+        .matchup-player-label.j2 { color: #e879f9; }
+
+        .matchup-deck {
+            background: linear-gradient(145deg, rgba(15,12,41,0.97), rgba(35,30,80,0.93));
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 12px;
+            padding: 1.25rem 1.75rem;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #e0d7ff;
+            min-width: 160px;
+        }
+        .matchup-deck.j1 { border-color: rgba(129,140,248,0.5); box-shadow: 0 0 16px rgba(129,140,248,0.2); }
+        .matchup-deck.j2 { border-color: rgba(232,121,249,0.5); box-shadow: 0 0 16px rgba(232,121,249,0.2); }
+
+        .matchup-vs {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #818cf8, #e879f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .matchup-btn-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ── SCREEN 5: SERIES COMPLETE ── */
+        .series-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .series-row {
+            background: rgba(10,8,30,0.6);
+            border: 1px solid rgba(139,92,246,0.15);
+            border-radius: 10px;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .series-row-game {
+            font-family: 'Russo One', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            color: rgba(167,139,250,0.5);
+            min-width: 70px;
+        }
+
+        .series-row-matchup {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .series-deck-j1 { color: #a5b4fc; font-size: 0.85rem; font-weight: 600; }
+        .series-deck-j2 { color: #f0abfc; font-size: 0.85rem; font-weight: 600; }
+        .series-vs      { color: rgba(167,139,250,0.4); font-size: 0.75rem; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .draft-tracker { grid-template-columns: 1fr; }
+            .deck-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+            .draft-header { flex-direction: column; align-items: flex-start; }
+        }
+
+        *:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 1: Formato (Bo3 / Bo5)
+    ══════════════════════════════════════════ -->
+    <div id="screen-format" class="screen active">
+        <div class="page-wrap">
+            <p class="page-title">Picks &amp; Bans</p>
+            <p class="page-sub">Elige el formato de la serie</p>
+            <div class="format-cards">
+                <button class="format-card" id="btn-bo3" onclick="elegirFormato('bo3')">
+                    <div class="format-card-num">3</div>
+                    <div class="format-card-label">AL MEJOR DE 3</div>
+                    <div class="format-card-sub">Rondas previas a final</div>
+                </button>
+                <button class="format-card" id="btn-bo5" onclick="elegirFormato('bo5')">
+                    <div class="format-card-num">5</div>
+                    <div class="format-card-label">AL MEJOR DE 5</div>
+                    <div class="format-card-sub">Final</div>
+                </button>
+            </div>
+            <a href="contador.html" class="btn-secondary" style="text-decoration:none; text-align:center;">
+                ← Volver al inicio
+            </a>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 2: Tirada de dado
+    ══════════════════════════════════════════ -->
+    <div id="screen-dice" class="screen">
+        <div class="page-wrap">
+            <p class="page-title">Tirada de Dado</p>
+            <p class="page-sub">El jugador con el número más alto elige quién inicia baneando</p>
+
+            <div class="dice-arena">
+                <div class="dice-player">
+                    <div class="dice-label j1">JUGADOR 1</div>
+                    <div class="dice-face" id="dice-j1">?</div>
+                </div>
+                <div class="dice-vs">VS</div>
+                <div class="dice-player">
+                    <div class="dice-label j2">JUGADOR 2</div>
+                    <div class="dice-face" id="dice-j2">?</div>
+                </div>
+            </div>
+
+            <div class="dice-result" id="dice-result"></div>
+
+            <button class="btn-primary" id="btn-roll" onclick="lanzarDados()">Lanzar Dados</button>
+
+            <div class="dice-choice-btns" id="dice-choice" style="display:none;">
+                <p style="width:100%; text-align:center; font-size:0.85rem; color:rgba(167,139,250,0.6); margin-bottom:0.25rem;"
+                   id="dice-winner-text"></p>
+                <button class="choice-btn j1" onclick="elegirPrimero('j1')">J1 inicia baneando</button>
+                <button class="choice-btn j2" onclick="elegirPrimero('j2')">J2 inicia baneando</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 3: Draft (bans + picks por partida)
+    ══════════════════════════════════════════ -->
+    <div id="screen-draft" class="screen">
+        <div class="draft-layout">
+            <div class="draft-header">
+                <span class="draft-game-badge" id="draft-game-label">Partida 1</span>
+                <span class="draft-phase-badge ban" id="draft-phase-badge">FASE: BANS</span>
+            </div>
+
+            <div class="draft-turn-indicator j1" id="draft-turn-indicator">
+                Turno de <strong id="draft-turn-player">Jugador 1</strong> — <span id="draft-turn-action">elige un mazo para banear</span>
+            </div>
+
+            <!-- Tracker de bans y picks acumulados -->
+            <div class="draft-tracker">
+                <div class="tracker-col">
+                    <div class="tracker-col-title j1">JUGADOR 1</div>
+                    <div style="font-size:0.68rem; color:rgba(167,139,250,0.4); margin-bottom:0.35rem;">Baneados por J1</div>
+                    <div class="tracker-pills" id="tracker-bans-j1"></div>
+                    <div style="font-size:0.68rem; color:rgba(167,139,250,0.4); margin: 0.4rem 0 0.35rem;">Jugados por J1</div>
+                    <div class="tracker-pills" id="tracker-picks-j1"></div>
+                </div>
+                <div class="tracker-col">
+                    <div class="tracker-col-title j2">JUGADOR 2</div>
+                    <div style="font-size:0.68rem; color:rgba(167,139,250,0.4); margin-bottom:0.35rem;">Baneados por J2</div>
+                    <div class="tracker-pills" id="tracker-bans-j2"></div>
+                    <div style="font-size:0.68rem; color:rgba(167,139,250,0.4); margin: 0.4rem 0 0.35rem;">Jugados por J2</div>
+                    <div class="tracker-pills" id="tracker-picks-j2"></div>
+                </div>
+            </div>
+
+            <div id="draft-loading" style="text-align:center; padding:3rem; color:rgba(167,139,250,0.5);">
+                Cargando mazos...
+            </div>
+            <div class="deck-grid" id="deck-grid" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 4: Partida lista
+    ══════════════════════════════════════════ -->
+    <div id="screen-game-ready" class="screen">
+        <div class="page-wrap">
+            <p class="page-title" id="game-ready-title">Partida 1 lista</p>
+            <p class="page-sub">Los mazos han sido seleccionados</p>
+
+            <div class="card-dark" style="width:100%;max-width:560px;">
+                <div class="matchup-display">
+                    <div class="matchup-player">
+                        <div class="matchup-player-label j1">JUGADOR 1</div>
+                        <div class="matchup-deck j1" id="ready-deck-j1">—</div>
+                    </div>
+                    <div class="matchup-vs">VS</div>
+                    <div class="matchup-player">
+                        <div class="matchup-player-label j2">JUGADOR 2</div>
+                        <div class="matchup-deck j2" id="ready-deck-j2">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de partidas jugadas en esta serie -->
+            <div id="series-history" style="width:100%; max-width:560px; display:none;">
+                <p style="font-size:0.8rem; color:rgba(167,139,250,0.5); letter-spacing:0.05em; margin-bottom:0.5rem;">
+                    SERIE ACTUAL
+                </p>
+                <div class="series-list" id="series-history-list"></div>
+            </div>
+
+            <div class="matchup-btn-row">
+                <a href="contador.html" class="btn-primary" style="text-decoration:none; text-align:center;">
+                    Abrir Contador
+                </a>
+                <button class="btn-secondary" id="btn-next-game" onclick="siguientePartida()">
+                    Siguiente Partida →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 5: Serie completada
+    ══════════════════════════════════════════ -->
+    <div id="screen-complete" class="screen">
+        <div class="page-wrap">
+            <p class="page-title">Serie Completada</p>
+            <p class="page-sub" id="complete-sub">Resumen de la serie</p>
+
+            <div class="series-list" id="complete-list"></div>
+
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
+                <button class="btn-primary" onclick="reiniciarSerie()">Nueva Serie</button>
+                <a href="contador.html" class="btn-secondary" style="text-decoration:none; text-align:center;">
+                    Ir al Contador
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+    // ═══════════════════════════════════════════════
+    //  ESTADO GLOBAL
+    // ═══════════════════════════════════════════════
+    const st = {
+        format:      null,   // 'bo3' | 'bo5'
+        maxGames:    0,
+        firstBanner: null,   // 'j1' | 'j2'
+        currentGame: 1,
+
+        // Acumulado entre partidas
+        bannedByJ1:  new Set(),  // IDs que J1 ya ha baneado (no puede re-banear)
+        bannedByJ2:  new Set(),  // IDs que J2 ya ha baneado
+        pickedByJ1:  new Set(),  // IDs que J1 ya ha jugado (no puede re-jugar)
+        pickedByJ2:  new Set(),  // IDs que J2 ya ha jugado
+
+        // Estado de la partida actual
+        currentGameBans:  [],   // [{ player, id, nombre }]
+        currentGamePicks: {},   // { j1: {id,nombre}, j2: {id,nombre} }
+        currentTurnIndex: 0,    // 0=ban1, 1=ban2, 2=pick1, 3=pick2
+
+        // Historial
+        games: [],   // [{ game, j1:nombre, j2:nombre }]
+
+        // Mazos cargados de la API
+        mazos: []
+    };
+
+    // ═══════════════════════════════════════════════
+    //  NAVEGACIÓN ENTRE PANTALLAS
+    // ═══════════════════════════════════════════════
+    function goTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SCREEN 1: FORMATO
+    // ═══════════════════════════════════════════════
+    function elegirFormato(fmt) {
+        st.format   = fmt;
+        st.maxGames = fmt === 'bo3' ? 3 : 5;
+        document.getElementById('btn-bo3').classList.toggle('selected', fmt === 'bo3');
+        document.getElementById('btn-bo5').classList.toggle('selected', fmt === 'bo5');
+        setTimeout(() => goTo('screen-dice'), 220);
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SCREEN 2: DADO
+    // ═══════════════════════════════════════════════
+    async function rollOne(elemId) {
+        const el = document.getElementById(elemId);
+        el.classList.add('rolling');
+        return new Promise(resolve => {
+            let ticks = 0;
+            const iv = setInterval(() => {
+                el.textContent = Math.floor(Math.random() * 6) + 1;
+                ticks++;
+                if (ticks >= 18) {
+                    clearInterval(iv);
+                    el.classList.remove('rolling');
+                    const val = Math.floor(Math.random() * 6) + 1;
+                    el.textContent = val;
+                    resolve(val);
+                }
+            }, 75);
+        });
+    }
+
+    async function lanzarDados() {
+        const btn = document.getElementById('btn-roll');
+        btn.disabled = true;
+        document.getElementById('dice-choice').style.display = 'none';
+        document.getElementById('dice-result').textContent = '';
+        document.getElementById('dice-j1').className = 'dice-face';
+        document.getElementById('dice-j2').className = 'dice-face';
+
+        const [r1, r2] = await Promise.all([rollOne('dice-j1'), rollOne('dice-j2')]);
+
+        if (r1 === r2) {
+            document.getElementById('dice-result').textContent = '¡Empate! Lanza de nuevo.';
+            btn.disabled = false;
+            return;
+        }
+
+        const winnerJ1 = r1 > r2;
+        document.getElementById('dice-j1').classList.add(winnerJ1 ? 'winner-j1' : '');
+        document.getElementById('dice-j2').classList.add(!winnerJ1 ? 'winner-j2' : '');
+        document.getElementById('dice-result').textContent =
+            `${winnerJ1 ? 'Jugador 1' : 'Jugador 2'} gana la tirada con un ${winnerJ1 ? r1 : r2}`;
+        document.getElementById('dice-winner-text').textContent =
+            `${winnerJ1 ? 'Jugador 1' : 'Jugador 2'} elige quién inicia baneando:`;
+        document.getElementById('dice-choice').style.display = 'flex';
+    }
+
+    async function elegirPrimero(who) {
+        st.firstBanner = who;
+        await cargarMazos();
+        iniciarPartida();
+        goTo('screen-draft');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  CARGA DE MAZOS
+    // ═══════════════════════════════════════════════
+    async function cargarMazos() {
+        try {
+            const r = await API.getMazos();
+            st.mazos = (r.mazos || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
+        } catch {
+            st.mazos = [];
+        }
+    }
+
+    // ═══════════════════════════════════════════════
+    //  ORDEN DE TURNOS POR PARTIDA
+    // ═══════════════════════════════════════════════
+    // Devuelve [ban1, ban2, pick1, pick2] — cada valor es 'j1' o 'j2'
+    function getTurnOrder(game) {
+        const other = st.firstBanner === 'j1' ? 'j2' : 'j1';
+        const leader   = game % 2 === 1 ? st.firstBanner : other;
+        const follower = game % 2 === 1 ? other : st.firstBanner;
+        return [leader, follower, leader, follower];
+    }
+
+    // ═══════════════════════════════════════════════
+    //  INICIAR / REINICIAR PARTIDA
+    // ═══════════════════════════════════════════════
+    function iniciarPartida() {
+        st.currentGameBans  = [];
+        st.currentGamePicks = {};
+        st.currentTurnIndex = 0;
+        renderDraft();
+    }
+
+    // ═══════════════════════════════════════════════
+    //  RENDER DEL DRAFT
+    // ═══════════════════════════════════════════════
+    function renderDraft() {
+        const turns = getTurnOrder(st.currentGame);
+        const idx   = st.currentTurnIndex;
+        const actor = turns[idx];        // 'j1' o 'j2'
+        const isBan = idx < 2;
+
+        // Header
+        document.getElementById('draft-game-label').textContent =
+            `Partida ${st.currentGame} de ${st.maxGames}`;
+
+        const phaseBadge = document.getElementById('draft-phase-badge');
+        phaseBadge.textContent = isBan ? 'FASE: BANS' : 'FASE: PICKS';
+        phaseBadge.className   = `draft-phase-badge ${isBan ? 'ban' : 'pick'}`;
+
+        // Turn indicator
+        const indicator = document.getElementById('draft-turn-indicator');
+        const playerName = actor === 'j1' ? 'Jugador 1' : 'Jugador 2';
+        const action     = isBan ? 'elige un mazo para banear' : 'elige su mazo para jugar';
+        indicator.className = `draft-turn-indicator ${actor}`;
+        document.getElementById('draft-turn-player').textContent = playerName;
+        document.getElementById('draft-turn-action').textContent = action;
+
+        // Tracker
+        renderTracker();
+
+        // Grid
+        renderDeckGrid(actor, isBan);
+    }
+
+    function renderTracker() {
+        // Bans del juego actual como pills especiales
+        const currentBanIds = st.currentGameBans.map(b => b.id);
+
+        ['j1', 'j2'].forEach(p => {
+            const banSet  = p === 'j1' ? st.bannedByJ1  : st.bannedByJ2;
+            const pickSet = p === 'j1' ? st.pickedByJ1  : st.pickedByJ2;
+
+            // Pills de baneados históricos
+            const bansEl  = document.getElementById(`tracker-bans-${p}`);
+            bansEl.innerHTML = [...banSet].map(id => {
+                const m = st.mazos.find(x => x.id === id);
+                if (!m) return '';
+                const isThisGame = currentBanIds.includes(id);
+                return `<span class="tracker-pill ${isThisGame ? 'ban-game' : 'ban'}" title="${m.nombre}">${m.nombre}</span>`;
+            }).join('');
+
+            // Pills de picks históricos
+            const picksEl = document.getElementById(`tracker-picks-${p}`);
+            picksEl.innerHTML = [...pickSet].map(id => {
+                const m = st.mazos.find(x => x.id === id);
+                if (!m) return '';
+                return `<span class="tracker-pill pick" title="${m.nombre}">${m.nombre}</span>`;
+            }).join('');
+        });
+    }
+
+    function renderDeckGrid(actor, isBan) {
+        const grid = document.getElementById('deck-grid');
+        const loading = document.getElementById('draft-loading');
+
+        if (st.mazos.length === 0) {
+            loading.style.display = 'block';
+            grid.style.display = 'none';
+            return;
+        }
+        loading.style.display = 'none';
+        grid.style.display    = 'grid';
+
+        const banSet   = actor === 'j1' ? st.bannedByJ1  : st.bannedByJ2;
+        const pickSet  = actor === 'j1' ? st.pickedByJ1  : st.pickedByJ2;
+        const banIds   = st.currentGameBans.map(b => b.id);
+        // Deck elegido por el primer picker en esta partida (si ya se hizo)
+        const partnerPick = actor === 'j1'
+            ? (st.currentGamePicks.j2 ? st.currentGamePicks.j2.id : null)
+            : (st.currentGamePicks.j1 ? st.currentGamePicks.j1.id : null);
+
+        grid.innerHTML = st.mazos.map(m => {
+            const isBannedThisGame = banIds.includes(m.id);
+            let extraClass = '';
+
+            if (isBannedThisGame) {
+                extraClass = 'banned-this-game';
+            } else if (isBan && banSet.has(m.id)) {
+                // Ya baneado por este jugador en partidas anteriores
+                extraClass = 'disabled';
+            } else if (!isBan) {
+                // Fase de pick
+                if (pickSet.has(m.id))       extraClass = 'disabled'; // ya lo jugó antes
+                if (m.id === partnerPick)    extraClass = 'disabled'; // lo eligió el rival ahora
+            }
+
+            return `
+                <button class="deck-card ${extraClass}" onclick="seleccionarMazo(${m.id})">
+                    <div class="deck-card-name">${escHtml(m.nombre)}</div>
+                    <div class="deck-card-serie">${escHtml(m.serie)}</div>
+                </button>`;
+        }).join('');
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SELECCIÓN DE MAZO
+    // ═══════════════════════════════════════════════
+    function seleccionarMazo(deckId) {
+        const turns = getTurnOrder(st.currentGame);
+        const idx   = st.currentTurnIndex;
+        const actor = turns[idx];
+        const isBan = idx < 2;
+        const mazo  = st.mazos.find(m => m.id === deckId);
+        if (!mazo) return;
+
+        if (isBan) {
+            // Registrar ban
+            st.currentGameBans.push({ player: actor, id: deckId, nombre: mazo.nombre });
+            if (actor === 'j1') st.bannedByJ1.add(deckId);
+            else                st.bannedByJ2.add(deckId);
+        } else {
+            // Registrar pick
+            st.currentGamePicks[actor] = { id: deckId, nombre: mazo.nombre };
+            if (actor === 'j1') st.pickedByJ1.add(deckId);
+            else                st.pickedByJ2.add(deckId);
+        }
+
+        st.currentTurnIndex++;
+
+        // ¿Terminaron los 4 turnos (ban-ban-pick-pick)?
+        if (st.currentTurnIndex >= 4) {
+            mostrarPartidaLista();
+        } else {
+            renderDraft();
+        }
+    }
+
+    // ═══════════════════════════════════════════════
+    //  PARTIDA LISTA (screen-game-ready)
+    // ═══════════════════════════════════════════════
+    function mostrarPartidaLista() {
+        const j1 = st.currentGamePicks.j1;
+        const j2 = st.currentGamePicks.j2;
+
+        document.getElementById('game-ready-title').textContent = `Partida ${st.currentGame} lista`;
+        document.getElementById('ready-deck-j1').textContent = j1 ? j1.nombre : '—';
+        document.getElementById('ready-deck-j2').textContent = j2 ? j2.nombre : '—';
+
+        // Guardar en historial
+        st.games.push({ game: st.currentGame, j1: j1?.nombre || '—', j2: j2?.nombre || '—' });
+
+        // Mostrar historial si hay más de 1 partida
+        const histEl = document.getElementById('series-history');
+        const histList = document.getElementById('series-history-list');
+        if (st.games.length > 0) {
+            histEl.style.display = 'block';
+            histList.innerHTML = st.games.map(g => `
+                <div class="series-row">
+                    <span class="series-row-game">PARTIDA ${g.game}</span>
+                    <div class="series-row-matchup">
+                        <span class="series-deck-j1">${escHtml(g.j1)}</span>
+                        <span class="series-vs">vs</span>
+                        <span class="series-deck-j2">${escHtml(g.j2)}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        // Ocultar "Siguiente partida" si ya es la última
+        const btnNext = document.getElementById('btn-next-game');
+        btnNext.style.display = st.currentGame >= st.maxGames ? 'none' : 'inline-flex';
+
+        goTo('screen-game-ready');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SIGUIENTE PARTIDA
+    // ═══════════════════════════════════════════════
+    function siguientePartida() {
+        st.currentGame++;
+        if (st.currentGame > st.maxGames) {
+            mostrarSerieCompleta();
+            return;
+        }
+        iniciarPartida();
+        goTo('screen-draft');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  SERIE COMPLETA
+    // ═══════════════════════════════════════════════
+    function mostrarSerieCompleta() {
+        document.getElementById('complete-sub').textContent =
+            `Serie ${st.format === 'bo3' ? 'Bo3' : 'Bo5'} — ${st.games.length} partidas`;
+
+        document.getElementById('complete-list').innerHTML = st.games.map(g => `
+            <div class="series-row">
+                <span class="series-row-game">PARTIDA ${g.game}</span>
+                <div class="series-row-matchup">
+                    <span class="series-deck-j1">${escHtml(g.j1)}</span>
+                    <span class="series-vs">vs</span>
+                    <span class="series-deck-j2">${escHtml(g.j2)}</span>
+                </div>
+            </div>`).join('');
+
+        goTo('screen-complete');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  REINICIAR SERIE
+    // ═══════════════════════════════════════════════
+    function reiniciarSerie() {
+        st.format = null; st.maxGames = 0; st.firstBanner = null;
+        st.currentGame = 1;
+        st.bannedByJ1.clear(); st.bannedByJ2.clear();
+        st.pickedByJ1.clear(); st.pickedByJ2.clear();
+        st.currentGameBans = []; st.currentGamePicks = {};
+        st.currentTurnIndex = 0; st.games = [];
+        document.getElementById('btn-bo3').classList.remove('selected');
+        document.getElementById('btn-bo5').classList.remove('selected');
+        document.getElementById('dice-j1').textContent = '?';
+        document.getElementById('dice-j2').textContent = '?';
+        document.getElementById('dice-j1').className = 'dice-face';
+        document.getElementById('dice-j2').className = 'dice-face';
+        document.getElementById('dice-result').textContent = '';
+        document.getElementById('dice-choice').style.display = 'none';
+        document.getElementById('btn-roll').disabled = false;
+        goTo('screen-format');
+    }
+    </script>
+</body>
+</html>
