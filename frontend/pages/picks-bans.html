@@ -770,8 +770,8 @@
         }
 
         const winnerJ1 = r1 > r2;
-        document.getElementById('dice-j1').classList.add(winnerJ1 ? 'winner-j1' : '');
-        document.getElementById('dice-j2').classList.add(!winnerJ1 ? 'winner-j2' : '');
+        if (winnerJ1) document.getElementById('dice-j1').classList.add('winner-j1');
+        else          document.getElementById('dice-j2').classList.add('winner-j2');
         document.getElementById('dice-result').textContent =
             `${winnerJ1 ? 'Jugador 1' : 'Jugador 2'} gana la tirada con un ${winnerJ1 ? r1 : r2}`;
         document.getElementById('dice-winner-text').textContent =
