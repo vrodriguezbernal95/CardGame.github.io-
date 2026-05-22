@@ -766,7 +766,11 @@
             `${winnerJ1 ? 'Jugador 1' : 'Jugador 2'} gana la tirada con un ${winnerJ1 ? r1 : r2}`;
         document.getElementById('dice-winner-text').textContent =
             `${winnerJ1 ? 'Jugador 1' : 'Jugador 2'} elige quién inicia baneando:`;
-        document.getElementById('dice-choice').style.display = 'flex';
+        const choiceEl = document.getElementById('dice-choice');
+        choiceEl.style.display = 'flex';
+        // Ocultar el botón de lanzar para ganar espacio y hacer scroll a los botones de elección
+        document.getElementById('btn-roll').style.display = 'none';
+        setTimeout(() => choiceEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
     }
 
     async function elegirPrimero(who) {
@@ -1036,7 +1040,9 @@
         document.getElementById('dice-j2').className = 'dice-face';
         document.getElementById('dice-result').textContent = '';
         document.getElementById('dice-choice').style.display = 'none';
-        document.getElementById('btn-roll').disabled = false;
+        const rollBtn = document.getElementById('btn-roll');
+        rollBtn.disabled = false;
+        rollBtn.style.display = '';
         goTo('screen-format');
     }
     </script>
