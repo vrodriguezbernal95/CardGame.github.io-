@@ -371,6 +371,61 @@
             font-size: 0.9rem;
         }
 
+        /* ── Fila de desglose por mazo ── */
+        .fila-jugador { cursor: pointer; }
+        .fila-jugador td:first-child::before {
+            content: '▶';
+            font-size: 0.6rem;
+            color: rgba(167,139,250,0.4);
+            margin-right: 0.4rem;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .fila-jugador.expanded td:first-child::before {
+            transform: rotate(90deg);
+            color: #a78bfa;
+        }
+        .fila-desglose { display: none; }
+        .fila-desglose.open { display: table-row; }
+        .fila-desglose td { padding: 0 !important; }
+        .desglose-inner {
+            background: rgba(10, 8, 30, 0.7);
+            border-left: 3px solid rgba(124,58,237,0.5);
+            margin: 0.25rem 0.5rem 0.5rem 2rem;
+            border-radius: 0 8px 8px 0;
+            overflow: hidden;
+        }
+        .desglose-inner table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.82rem;
+        }
+        .desglose-inner thead th {
+            background: rgba(76,29,149,0.35);
+            color: rgba(167,139,250,0.7);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            padding: 0.45rem 0.75rem;
+            text-align: center;
+            font-family: 'Russo One', sans-serif;
+        }
+        .desglose-inner thead th:first-child { text-align: left; }
+        .desglose-inner tbody tr { border-bottom: 1px solid rgba(139,92,246,0.08); }
+        .desglose-inner tbody tr:last-child { border-bottom: none; }
+        .desglose-inner tbody td {
+            padding: 0.4rem 0.75rem;
+            color: #c4b5fd;
+            text-align: center;
+        }
+        .desglose-inner tbody td:first-child { text-align: left; color: #e0d7ff; }
+        .desglose-loading {
+            padding: 0.75rem 1rem;
+            color: rgba(167,139,250,0.45);
+            font-size: 0.8rem;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
         /* ── Inputs/Selects retro ── */
         .form-control {
             background: rgba(15, 12, 41, 0.8) !important;
@@ -821,6 +876,73 @@
             }
         });
 
+        // Desglose de mazos por jugador (fila expandible)
+        const _desgloseCache = {};
+        async function toggleDesgloseJugador(fila, jugadorId) {
+            const desgloseRow = document.getElementById(`desglose-${jugadorId}`);
+            const isOpen = desgloseRow.classList.contains('open');
+
+            if (isOpen) {
+                desgloseRow.classList.remove('open');
+                fila.classList.remove('expanded');
+                return;
+            }
+
+            desgloseRow.classList.add('open');
+            fila.classList.add('expanded');
+
+            if (_desgloseCache[jugadorId]) {
+                renderDesglose(jugadorId, _desgloseCache[jugadorId]);
+                return;
+            }
+
+            try {
+                const r = await API.getMazosDeJugador(jugadorId);
+                if (r.success) {
+                    _desgloseCache[jugadorId] = r.mazos;
+                    renderDesglose(jugadorId, r.mazos);
+                }
+            } catch (e) {
+                document.getElementById(`desglose-loading-${jugadorId}`).textContent = 'Error al cargar mazos.';
+            }
+        }
+
+        function renderDesglose(jugadorId, mazos) {
+            const inner = document.querySelector(`#desglose-${jugadorId} .desglose-inner`);
+            if (!mazos || mazos.length === 0) {
+                inner.innerHTML = '<div class="desglose-loading">Sin partidas registradas con mazos.</div>';
+                return;
+            }
+            let html = `
+                <table>
+                    <thead><tr>
+                        <th>Mazo</th>
+                        <th>Partidas</th>
+                        <th>Victorias</th>
+                        <th>Derrotas</th>
+                        <th>Empates</th>
+                        <th>Winrate</th>
+                    </tr></thead>
+                    <tbody>`;
+            mazos.forEach(m => {
+                const wr = parseFloat(m.winrate) || 0;
+                let wrColor = '#a78bfa';
+                if (wr >= 70) wrColor = '#6ee7b7';
+                else if (wr >= 50) wrColor = '#fcd34d';
+                else if (wr > 0)  wrColor = '#fca5a5';
+                html += `<tr>
+                    <td><strong>${m.nombre}</strong><br><span style="font-size:0.72rem;color:rgba(167,139,250,0.45);">${m.serie}</span></td>
+                    <td>${m.total_partidas}</td>
+                    <td><span class="badge badge-success" style="white-space:nowrap;">${m.victorias}</span></td>
+                    <td><span class="badge badge-error" style="white-space:nowrap;">${m.derrotas}</span></td>
+                    <td><span class="badge badge-warning" style="white-space:nowrap;">${m.empates}</span></td>
+                    <td><strong style="color:${wrColor};">${Math.round(wr)}%</strong></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            inner.innerHTML = html;
+        }
+
         // Seleccionar/deseleccionar todos
         function toggleAllJugadores(checked) {
             document.querySelectorAll('#jugadores-checkboxes input[type="checkbox"]').forEach(cb => {
@@ -977,7 +1099,7 @@
                     else if (winrate > 0) winrateColor = 'var(--error)';
 
                     html += `
-                        <tr>
+                        <tr class="fila-jugador" onclick="toggleDesgloseJugador(this, ${stat.id})">
                             <td style="font-size: 1.5rem;">${medal} ${posicion}</td>
                             <td><strong>${stat.nombre}</strong></td>
                             <td style="text-align: center;">${stat.total_partidas}</td>
@@ -988,6 +1110,13 @@
                                 <strong style="color: ${winrateColor}; font-size: 1.1rem;">
                                     ${Math.round(winrate)}%
                                 </strong>
+                            </td>
+                        </tr>
+                        <tr class="fila-desglose" id="desglose-${stat.id}">
+                            <td colspan="7">
+                                <div class="desglose-inner">
+                                    <div class="desglose-loading" id="desglose-loading-${stat.id}">Cargando mazos...</div>
+                                </div>
                             </td>
                         </tr>
                     `;

@@ -202,6 +202,84 @@ router.get('/jugadores/:id', async (req, res) => {
     }
 });
 
+// Desglose de mazos jugados por un jugador específico
+// GET /estadisticas/jugadores/:id/mazos
+router.get('/jugadores/:id/mazos', async (req, res) => {
+    const jugadorId = req.params.id;
+    const dbType = process.env.DB_TYPE || 'mysql';
+    try {
+        let query, rows;
+        if (dbType === 'postgres') {
+            query = `
+                SELECT
+                    m.id, m.nombre, m.serie,
+                    COUNT(p.id) as total_partidas,
+                    SUM(CASE
+                        WHEN (p.jugador1_id = $1 AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1')
+                          OR (p.jugador2_id = $1 AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0 END) as victorias,
+                    SUM(CASE
+                        WHEN (p.jugador1_id = $1 AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2')
+                          OR (p.jugador2_id = $1 AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
+                        THEN 1 ELSE 0 END) as derrotas,
+                    SUM(CASE
+                        WHEN ((p.jugador1_id = $1 AND p.mazo1_id = m.id)
+                           OR (p.jugador2_id = $1 AND p.mazo2_id = m.id))
+                         AND p.resultado = 'empate' THEN 1 ELSE 0 END) as empates,
+                    ROUND(SUM(CASE
+                        WHEN (p.jugador1_id = $1 AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1')
+                          OR (p.jugador2_id = $1 AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(p.id), 0), 1) as winrate
+                FROM mazos m
+                JOIN partidas p ON (
+                    (p.jugador1_id = $1 AND p.mazo1_id = m.id) OR
+                    (p.jugador2_id = $1 AND p.mazo2_id = m.id)
+                )
+                WHERE (p.estado = 'aprobada' OR p.estado IS NULL)
+                GROUP BY m.id, m.nombre, m.serie
+                ORDER BY total_partidas DESC, victorias DESC`;
+            [rows] = await db.query(query, [jugadorId]);
+        } else {
+            query = `
+                SELECT
+                    m.id, m.nombre, m.serie,
+                    COUNT(p.id) as total_partidas,
+                    SUM(CASE
+                        WHEN (p.jugador1_id = ? AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1')
+                          OR (p.jugador2_id = ? AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0 END) as victorias,
+                    SUM(CASE
+                        WHEN (p.jugador1_id = ? AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador2')
+                          OR (p.jugador2_id = ? AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador1')
+                        THEN 1 ELSE 0 END) as derrotas,
+                    SUM(CASE
+                        WHEN ((p.jugador1_id = ? AND p.mazo1_id = m.id)
+                           OR (p.jugador2_id = ? AND p.mazo2_id = m.id))
+                         AND p.resultado = 'empate' THEN 1 ELSE 0 END) as empates,
+                    ROUND(SUM(CASE
+                        WHEN (p.jugador1_id = ? AND p.mazo1_id = m.id AND p.resultado = 'victoria_jugador1')
+                          OR (p.jugador2_id = ? AND p.mazo2_id = m.id AND p.resultado = 'victoria_jugador2')
+                        THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(p.id), 0), 1) as winrate
+                FROM mazos m
+                JOIN partidas p ON (
+                    (p.jugador1_id = ? AND p.mazo1_id = m.id) OR
+                    (p.jugador2_id = ? AND p.mazo2_id = m.id)
+                )
+                WHERE (p.estado = 'aprobada' OR p.estado IS NULL)
+                GROUP BY m.id, m.nombre, m.serie
+                ORDER BY total_partidas DESC, victorias DESC`;
+            [rows] = await db.query(query,
+                [jugadorId, jugadorId, jugadorId, jugadorId,
+                 jugadorId, jugadorId, jugadorId, jugadorId,
+                 jugadorId, jugadorId]);
+        }
+        res.json({ success: true, mazos: rows });
+    } catch (error) {
+        console.error('Error obteniendo mazos del jugador:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener desglose de mazos' });
+    }
+});
+
 // Obtener estadísticas de mazos
 router.get('/mazos', async (req, res) => {
     try {
