@@ -301,6 +301,14 @@
             font-family: 'Chakra Petch', sans-serif;
         }
 
+        /* ===== TABLE SCROLL WRAPPER ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+        }
+        .table-wrapper .table { border-radius: 0; min-width: 720px; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .filtros-container {
@@ -323,6 +331,11 @@
                 width: 100%;
                 padding: 0.75rem;
             }
+
+            /* En móvil ocultar columna VS y compactar fechas */
+            .col-vs { display: none; }
+            .table thead th, .table tbody td { font-size: 0.78rem; padding: 0.5rem 0.6rem; }
+            .table tbody td small { display: none; } /* ocultar serie del mazo */
         }
 
         /* ===== ACCESSIBILITY ===== */
@@ -517,13 +530,14 @@
             }
 
             let html = `
+                <div class="table-wrapper">
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Fecha</th>
                             <th>Jugador 1</th>
                             <th>Mazo 1</th>
-                            <th style="text-align: center;">VS</th>
+                            <th class="col-vs" style="text-align: center;">VS</th>
                             <th>Jugador 2</th>
                             <th>Mazo 2</th>
                             <th>Resultado</th>
@@ -546,7 +560,7 @@
                             <span class="badge badge-info">${partida.mazo1_nombre}</span>
                             <br><small>${partida.mazo1_serie}</small>
                         </td>
-                        <td class="vs-cell">VS</td>
+                        <td class="vs-cell col-vs">VS</td>
                         <td><strong>${partida.jugador2_nombre}</strong></td>
                         <td>
                             <span class="badge badge-info">${partida.mazo2_nombre}</span>
@@ -571,6 +585,7 @@
             html += `
                     </tbody>
                 </table>
+                </div>
             `;
 
             container.innerHTML = html;
