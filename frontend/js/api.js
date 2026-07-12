@@ -214,6 +214,10 @@ class API {
         return await this.request(`/estadisticas/jugadores/${id}/mazos`);
     }
 
+    static async getJugadoresDeMazo(id) {
+        return await this.request(`/estadisticas/mazos/${id}/jugadores`);
+    }
+
     static async getEstadisticasMazos() {
         const cached = _cache.get('stats_mazos');
         if (cached) return cached;

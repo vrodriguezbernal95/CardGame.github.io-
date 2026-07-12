@@ -943,6 +943,73 @@
             inner.innerHTML = html;
         }
 
+        // Desglose de jugadores por mazo (fila expandible)
+        const _desgloseMazoCache = {};
+        async function toggleDesgloseMazo(fila, mazoId) {
+            const desgloseRow = document.getElementById(`desglose-mazo-${mazoId}`);
+            const isOpen = desgloseRow.classList.contains('open');
+
+            if (isOpen) {
+                desgloseRow.classList.remove('open');
+                fila.classList.remove('expanded');
+                return;
+            }
+
+            desgloseRow.classList.add('open');
+            fila.classList.add('expanded');
+
+            if (_desgloseMazoCache[mazoId]) {
+                renderDesgloseMazo(mazoId, _desgloseMazoCache[mazoId]);
+                return;
+            }
+
+            try {
+                const r = await API.getJugadoresDeMazo(mazoId);
+                if (r.success) {
+                    _desgloseMazoCache[mazoId] = r.jugadores;
+                    renderDesgloseMazo(mazoId, r.jugadores);
+                }
+            } catch (e) {
+                document.getElementById(`desglose-mazo-loading-${mazoId}`).textContent = 'Error al cargar jugadores.';
+            }
+        }
+
+        function renderDesgloseMazo(mazoId, jugadores) {
+            const inner = document.querySelector(`#desglose-mazo-${mazoId} .desglose-inner`);
+            if (!jugadores || jugadores.length === 0) {
+                inner.innerHTML = '<div class="desglose-loading">Sin partidas registradas con este mazo.</div>';
+                return;
+            }
+            let html = `
+                <table>
+                    <thead><tr>
+                        <th>Jugador</th>
+                        <th>Partidas</th>
+                        <th>Victorias</th>
+                        <th>Derrotas</th>
+                        <th>Empates</th>
+                        <th>Winrate</th>
+                    </tr></thead>
+                    <tbody>`;
+            jugadores.forEach(j => {
+                const wr = parseFloat(j.winrate) || 0;
+                let wrColor = '#a78bfa';
+                if (wr >= 70) wrColor = '#6ee7b7';
+                else if (wr >= 50) wrColor = '#fcd34d';
+                else if (wr > 0)  wrColor = '#fca5a5';
+                html += `<tr>
+                    <td><strong>${j.nombre}</strong></td>
+                    <td>${j.total_partidas}</td>
+                    <td><span class="badge badge-success" style="white-space:nowrap;">${j.victorias}</span></td>
+                    <td><span class="badge badge-error" style="white-space:nowrap;">${j.derrotas}</span></td>
+                    <td><span class="badge badge-warning" style="white-space:nowrap;">${j.empates}</span></td>
+                    <td><strong style="color:${wrColor};">${Math.round(wr)}%</strong></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            inner.innerHTML = html;
+        }
+
         // Seleccionar/deseleccionar todos
         function toggleAllJugadores(checked) {
             document.querySelectorAll('#jugadores-checkboxes input[type="checkbox"]').forEach(cb => {
@@ -1198,7 +1265,7 @@
                     else if (winrate > 0) winrateColor = 'var(--error)';
 
                     html += `
-                        <tr>
+                        <tr class="fila-jugador" onclick="toggleDesgloseMazo(this, ${stat.id})">
                             <td style="font-size: 1.5rem;">${medal} ${posicion}</td>
                             <td><strong>${stat.nombre}</strong></td>
                             <td><span class="badge badge-info">${stat.serie}</span></td>
@@ -1210,6 +1277,13 @@
                                 <strong style="color: ${winrateColor}; font-size: 1.1rem;">
                                     ${Math.round(winrate)}%
                                 </strong>
+                            </td>
+                        </tr>
+                        <tr class="fila-desglose" id="desglose-mazo-${stat.id}">
+                            <td colspan="8">
+                                <div class="desglose-inner">
+                                    <div class="desglose-loading" id="desglose-mazo-loading-${stat.id}">Cargando jugadores...</div>
+                                </div>
                             </td>
                         </tr>
                     `;
