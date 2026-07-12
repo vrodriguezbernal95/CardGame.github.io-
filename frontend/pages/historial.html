@@ -142,7 +142,6 @@
         /* ===== TABLE OVERRIDE ===== */
         .table {
             border-radius: 8px;
-            overflow: hidden;
         }
 
         .table thead {
@@ -307,7 +306,14 @@
             -webkit-overflow-scrolling: touch;
             border-radius: 8px;
         }
-        .table-wrapper .table { border-radius: 0; min-width: 720px; }
+        /* Forzar que la tabla sea display:table normal (global.css en móvil la cambia a display:block) */
+        .table-wrapper .table {
+            border-radius: 0;
+            min-width: 720px;
+            display: table !important;
+            overflow: visible !important;
+            white-space: normal !important;
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
